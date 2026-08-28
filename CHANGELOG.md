@@ -8,6 +8,22 @@ This project uses [Semantic Versioning](https://semver.org/):
 - **Minor** (`1.1.0`): new backward-compatible features or pages
 - **Major** (`2.0.0`): large redesigns or incompatible changes
 
+## [1.1.0] - 2026-08-28
+
+### Added
+
+- Editable applicant profile page
+- Nickname customization across the app
+- Profile photo selection from the device library
+- Guest mode with a dedicated applicant setup flow
+- Profile reset and guest-mode exit controls
+- Illustrated CvSU guide avatar asset
+
+### Changed
+
+- Home is now the first tab in the main navigation
+- Applicant profile data and photo are shared with Home and Journey
+
 ## [1.0.0] - 2026-08-28
 
 ### Added
@@ -24,4 +40,5 @@ This project uses [Semantic Versioning](https://semver.org/):
 - Searchable and filterable FAQ page with 27 answers
 - Animated FAQ guide and 12 rotating campus trivia facts
 
+[1.1.0]: https://github.com/Rodch456/CvSU_Guide/tree/v1.1.0
 [1.0.0]: https://github.com/Rodch456/CvSU_Guide/tree/v1.0.0

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Image, Linking, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import * as ImagePicker from 'expo-image-picker';
 
 const exceptionProgramKeywords = ['Nursing', 'Medical Technology', 'Midwifery', 'Tourism Management', 'Hospitality Management', 'Accountancy', 'International Studies'];
 const defaultStatusSteps = ['Online Application', 'Validation Appointment', 'Admission Examination', 'Medical Examination', 'Enrollment'];
@@ -40,13 +41,77 @@ const statusStepDetails = {
     requirements: ['Original Form 138 or Senior High School Report Card', 'Original Certificate of Good Moral Character', 'Original PSA Birth Certificate', 'Official Medical Clearance issued by CvSU Health Services Unit', 'Printed Admission or Eligibility Slip', '2x2 ID photos with white background', 'Completed Student Personal Data Sheet or Enrollment Form']
   }
 };
-const mainTabs = ['Status', 'Journey', 'Home', 'Map', 'FAQ'];
+const mainTabs = ['Home', 'Status', 'Journey', 'Map', 'FAQ'];
 const tabIcons = { Status: 'list-outline', Journey: 'footsteps-outline', Home: 'home-outline', Map: 'map-outline', FAQ: 'help-circle-outline' };
 
-const profiles = [['12', 'Current Grade 12 Student'], ['SH', 'SHS Graduate'], ['A', 'ALS Completer']];
-const tracks = ['STEM', 'ABM', 'HUMSS', 'GAS', 'TVL', 'Arts and Design', 'Sports'];
+const profiles = [
+  ['12', 'Current Grade 12 Student', 'Expecting to finish Senior High School at the end of the 2025-2026 school year.'],
+  ['SH', 'SHS Graduate', 'A Senior High School graduate who has never been enrolled in any college or university.'],
+  ['A', 'ALS Completer', 'Completed the Alternative Learning System and is eligible to enroll in college.']
+];
+const tracks = [
+  ['STEM', 'Science, Technology, Engineering, and Mathematics'],
+  ['ABM', 'Accountancy, Business, and Management'],
+  ['HUMSS', 'Humanities and Social Sciences'],
+  ['GAS', 'General Academic Strand'],
+  ['TVL', 'Technical-Vocational-Livelihood Track'],
+  ['Arts and Design', 'Arts and Design Track'],
+  ['Sports', 'Sports Track']
+];
 const programs = [
-  'BS Agriculture — Animal Science', 'BS Agricultural Entrepreneurship', 'BS Agriculture — Crop Science', 'BS Environmental Science', 'BS Food Technology', 'BS Biology', 'BA Communication', 'BS Development Communication', 'BA English Language Studies', 'BA Journalism', 'BS Applied Mathematics', 'BA Political Science', 'BS Psychology', 'BS Social Work', 'BS Criminology', 'BS Industrial Security Management', 'BS Accountancy', 'BS Economics', 'BS Business Management', 'BS Development Management', 'BS International Studies', 'Bachelor of Arts in International Studies', 'BS Office Administration', 'Bachelor of Early Childhood Education', 'Bachelor of Elementary Education', 'Bachelor of Secondary Education', 'Bachelor of Special Needs Education', 'Bachelor of Technology and Livelihood Education', 'Teacher Certificate Program', 'BS Agricultural and Biosystems Engineering', 'BS Civil Engineering', 'BS Computer Engineering', 'BS Electrical Engineering', 'BS Electronics Engineering', 'BS Industrial Engineering', 'BS Industrial Technology', 'BS Computer Science', 'BS Information Technology', 'BS Architecture', 'BS Nursing', 'BS Medical Technology', 'BS Midwifery', 'Diploma in Midwifery', 'Doctor of Medicine', 'Bachelor of Physical Education', 'Bachelor of Exercise and Sports Sciences', 'Doctor of Veterinary Medicine', 'BS Animal Health and Management', 'BS Veterinary Technology', 'Master in Veterinary Studies', 'Master in Veterinary Science', 'BS Biomedical Science', 'BS Hospitality Management', 'BS Tourism Management'
+  'Bachelor of Science in Agriculture',
+  'Bachelor of Science in Agricultural Entrepreneurship',
+  'Bachelor of Science in Environmental Science',
+  'Bachelor of Science in Food Technology',
+  'Bachelor of Science in Biology',
+  'Bachelor of Arts in Communication',
+  'Bachelor of Science in Development Communication',
+  'Bachelor of Arts in English Language Studies',
+  'Bachelor of Arts in Journalism',
+  'Bachelor of Science in Applied Mathematics',
+  'Bachelor of Arts in Political Science',
+  'Bachelor of Science in Psychology',
+  'Bachelor of Science in Social Work',
+  'Bachelor of Science in Criminology',
+  'Bachelor of Science in Industrial Security Management',
+  'Bachelor of Science in Accountancy',
+  'Bachelor of Science in Economics',
+  'Bachelor of Science in Business Management',
+  'Bachelor of Science in Development Management',
+  'Bachelor of Science in International Studies',
+  'Bachelor of Arts in International Studies',
+  'Bachelor of Science in Office Administration',
+  'Bachelor of Early Childhood Education',
+  'Bachelor of Elementary Education',
+  'Bachelor of Secondary Education',
+  'Bachelor of Special Needs Education',
+  'Bachelor of Technology and Livelihood Education',
+  'Teacher Certificate Program',
+  'Bachelor of Science in Agricultural and Biosystems Engineering',
+  'Bachelor of Science in Civil Engineering',
+  'Bachelor of Science in Computer Engineering',
+  'Bachelor of Science in Electrical Engineering',
+  'Bachelor of Science in Electronics Engineering',
+  'Bachelor of Science in Industrial Engineering',
+  'Bachelor of Science in Industrial Technology',
+  'Bachelor of Science in Computer Science',
+  'Bachelor of Science in Information Technology',
+  'Bachelor of Science in Architecture',
+  'Bachelor of Science in Nursing',
+  'Bachelor of Science in Medical Technology',
+  'Bachelor of Science in Midwifery',
+  'Diploma in Midwifery',
+  'Doctor of Medicine',
+  'Bachelor of Physical Education',
+  'Bachelor of Exercise and Sports Sciences',
+  'Doctor of Veterinary Medicine',
+  'Bachelor of Science in Animal Health and Management',
+  'Bachelor of Science in Veterinary Technology',
+  'Master in Veterinary Studies',
+  'Master in Veterinary Science',
+  'Bachelor of Science in Biomedical Science',
+  'Bachelor of Science in Hospitality Management',
+  'Bachelor of Science in Tourism Management'
 ];
 const faqItems = [
   ['Application', 'How do I apply for admission?', 'Visit the official University Admission Portal, create an account, complete the Application Form, and upload the required documents.'],
@@ -91,38 +156,129 @@ const faqTrivia = [
   'Did you know CvSU Indang serves as the main campus and headquarters of the university system, which now has more than 11 campuses across Cavite?',
   'Did you know the Laya at Diwa monument\'s torch flame has CvSU written on it, and the sculpture represents the university\'s vision of Truth, Excellence, and Service?'
 ];
-const faqGuideImage = require('../assets/Profile.png');
+const faqGuideImage = require('../assets/Avatar.png');
 
 export default function ExpoApp() {
   const [step, setStep] = useState(1), [profile, setProfile] = useState(''), [track, setTrack] = useState(''), [program, setProgram] = useState(''), [query, setQuery] = useState('');
+  const [profilePhoto, setProfilePhoto] = useState(null);
+  const [nickname, setNickname] = useState('');
   const results = programs.filter((item) => item.toLowerCase().includes(query.toLowerCase().trim()));
   const next = (value, setter, number) => <Action disabled={!value} onPress={() => { setter(value); setStep(number); }} />;
   return <SafeAreaView style={styles.safe}><StatusBar style={step === 4 ? 'dark' : 'light'} /><View style={styles.greenWash} />{step < 4 ? <><ScrollView contentContainerStyle={styles.screen} keyboardShouldPersistTaps="handled"><View style={styles.header}><View style={styles.brand}><Image source={require('../assets/CvSU_Logo.png')} style={styles.logo} /><View><Text style={styles.eyebrow}>CAVITE STATE UNIVERSITY</Text><Text style={styles.brandName}>Admission Guide</Text></View></View><Text style={styles.help}>?</Text></View><Progress currentStep={step} />
-    {step === 1 && <Page kicker="LET'S GET STARTED" title="Tell us about your journey." intro="Choose the description that best matches your current academic status."><View style={styles.list}>{profiles.map(([value, label]) => <Option key={value} label={label} value={value} selected={profile === value} onPress={() => setProfile(value)} />)}</View></Page>}
-    {step === 2 && <Page kicker="STEP 2 · ACADEMIC BACKGROUND" title="What was your track or strand?" intro="This helps us recommend programs that fit what you already enjoy."><View style={styles.list}>{tracks.map((item) => <Option key={item} label={item} value={item[0]} selected={track === item} onPress={() => setTrack(item)} />)}</View></Page>}
+    {step === 1 && <Page kicker="LET'S GET STARTED" title="Tell us about your journey." intro="Choose the description that best matches your current academic status."><View style={styles.list}>{profiles.map(([value, label, caption]) => <Option key={value} label={label} caption={caption} value={value} selected={profile === value} onPress={() => setProfile(value)} profileCard />)}</View></Page>}
+    {step === 2 && <Page kicker="STEP 2 · ACADEMIC BACKGROUND" title="What was your track or strand?" intro="This helps us recommend programs that fit what you already enjoy."><View style={styles.list}>{tracks.map(([label, caption]) => <Option key={label} label={label} caption={caption} value={label} selected={track === label} onPress={() => setTrack(label)} profileCard />)}</View></Page>}
     {step === 3 && <Page kicker="STEP 3 · YOUR DIRECTION" title="Which program feels like you?" intro={`Your ${track} background is a great starting point. Search the catalog and choose a first choice.`}><View style={styles.search}><Text style={styles.searchIcon}>⌕</Text><TextInput value={query} onChangeText={setQuery} placeholder="Search programs" placeholderTextColor="#8aa294" style={styles.input} /><Pressable onPress={() => setQuery('')} style={styles.clear}><Text style={styles.clearText}>×</Text></Pressable></View>{results.length === 0 && <Text style={styles.muted}>No matching programs found.</Text>}<View style={styles.list}>{results.map((item) => <Option key={item} label={item} value="→" selected={program === item} onPress={() => setProgram(item)} compact />)}</View></Page>}
-  </ScrollView><View style={styles.fixedActions}>{step > 1 && <Back onPress={() => setStep(step - 1)} />}{next(step === 1 ? profile : step === 2 ? track : program, step === 1 ? setProfile : step === 2 ? setTrack : setProgram, step + 1)}</View></> : <MainApp profile={profile} program={program} track={track} onRestart={() => setStep(1)} />}</SafeAreaView>;
+  </ScrollView><View style={styles.fixedActions}>{step > 1 && <Back onPress={() => setStep(step - 1)} />}{next(step === 1 ? profile : step === 2 ? track : program, step === 1 ? setProfile : step === 2 ? setTrack : setProgram, step + 1)}</View></> : <MainApp profile={profile} program={program} track={track} profilePhoto={profilePhoto} nickname={nickname} onProfilePhotoChange={setProfilePhoto} onNicknameChange={setNickname} onRestart={() => setStep(1)} />}</SafeAreaView>;
 }
 function Page({ kicker, title, intro, children }) { return <><Text style={styles.kicker}>{kicker}</Text><Text style={styles.title}>{title}</Text><Text style={styles.intro}>{intro}</Text>{children}</>; }
 function Progress({ currentStep }) { return <View style={styles.progress}><View style={styles.progressTrack}>{[1, 2, 3, 4].map((item, index) => <View key={item} style={styles.progressSegment}><View style={[styles.progressDot, item === currentStep && styles.activeProgressDot, item < currentStep && styles.completeProgressDot]} />{index < 3 && <View style={[styles.progressLine, item < currentStep && styles.completeProgressLine]} />}</View>)}</View><Text style={styles.progressText}>{currentStep} / 4</Text></View>; }
-function Option({ label, value, selected, onPress, compact }) { return <Pressable onPress={onPress} style={({ pressed }) => [styles.option, compact && styles.compact, selected && styles.selected, pressed && styles.pressed]}><Text style={[styles.icon, selected && styles.selectedIcon]}>{value}</Text><Text style={styles.optionText}>{label}</Text>{selected && <Text style={styles.check}>✓</Text>}</Pressable>; }
+function Option({ label, caption, value, selected, onPress, compact, profileCard = false }) { return <Pressable accessibilityRole="radio" accessibilityState={{ checked: selected }} onPress={onPress} style={({ pressed }) => [styles.option, compact && styles.compact, profileCard && styles.profileOption, selected && styles.selected, pressed && styles.pressed]}>{!profileCard && <Text style={[styles.icon, selected && styles.selectedIcon]}>{value}</Text>}<View style={styles.optionCopy}><View style={styles.optionHeader}><Text style={[styles.optionText, profileCard && styles.profileOptionText, selected && profileCard && styles.profileOptionTextSelected]}>{label}</Text>{selected && <Text style={styles.selectedLabel}>SELECTED</Text>}</View>{caption && <Text style={styles.optionCaption}>{caption}</Text>}</View></Pressable>; }
 function Action({ label = 'Continue', disabled, onPress }) { return <Pressable disabled={disabled} onPress={onPress} style={[styles.action, disabled && styles.disabled]}><Text style={styles.actionText}>{label}</Text></Pressable>; }
 function Back({ onPress }) { return <Pressable onPress={onPress} style={styles.back}><Text style={styles.backText}>Back</Text></Pressable>; }
 function Tile({ label }) { return <View style={styles.tile}><Text style={styles.tileLabel}>{label}</Text><Text style={styles.muted}>See what to prepare next</Text></View>; }
-function MainApp({ profile, program, track, onRestart }) {
+function MainApp({ profile, program, track, profilePhoto, nickname, onProfilePhotoChange, onNicknameChange, onRestart }) {
   const [activeTab, setActiveTab] = useState('Home');
+  const [showProfile, setShowProfile] = useState(false);
+  const [guestMode, setGuestMode] = useState(false);
+  const [showGuestSetup, setShowGuestSetup] = useState(false);
+  const [guestSetupStep, setGuestSetupStep] = useState(1);
+  const [guestProfile, setGuestProfile] = useState('');
+  const [guestTrack, setGuestTrack] = useState('');
+  const [guestProgram, setGuestProgram] = useState('');
   const [currentStatusIndex, setCurrentStatusIndex] = useState(0);
   const [selectedStepIndex, setSelectedStepIndex] = useState(null);
   const [checkedRequirements, setCheckedRequirements] = useState({});
   const [examinationAttempt, setExaminationAttempt] = useState('initial');
+  const [guestStatusIndex, setGuestStatusIndex] = useState(0);
+  const [guestSelectedStepIndex, setGuestSelectedStepIndex] = useState(null);
+  const [guestCheckedRequirements, setGuestCheckedRequirements] = useState({});
+  const [guestExaminationAttempt, setGuestExaminationAttempt] = useState('initial');
   const hasInterview = exceptionProgramKeywords.some((keyword) => program.includes(keyword));
-  const steps = hasInterview ? exceptionStatusSteps : defaultStatusSteps;
+  const steps = guestMode ? defaultStatusSteps : hasInterview ? exceptionStatusSteps : defaultStatusSteps;
   const openStep = (index) => {
-    setSelectedStepIndex(index);
+    if (guestMode) setGuestSelectedStepIndex(index);
+    else setSelectedStepIndex(index);
     setActiveTab('Status');
   };
-  return <View style={styles.mainApp}><View style={styles.mainHeader}><Image source={require('../assets/CvSU_Logo.png')} style={styles.mainLogo} /><Text style={styles.mainTitle}>CvSU Admission</Text><Pressable onPress={onRestart} style={({ pressed }) => [styles.profileButton, pressed && styles.pressed]}><Image source={require('../assets/Profile.png')} style={styles.profileImage} /></Pressable></View><ScrollView style={styles.mainContent} contentContainerStyle={[styles.mainContentInner, activeTab === 'Home' && homeStyles.content]} keyboardShouldPersistTaps="handled">{activeTab === 'Status' ? <StatusPage profile={profile} program={program} track={track} steps={steps} currentStatusIndex={currentStatusIndex} onStatusChange={setCurrentStatusIndex} selectedStepIndex={selectedStepIndex} onSelectStep={setSelectedStepIndex} checkedRequirements={checkedRequirements} onRequirementsChange={setCheckedRequirements} examinationAttempt={examinationAttempt} onExaminationAttemptChange={setExaminationAttempt} /> : activeTab === 'Journey' ? <JourneyPage program={program} steps={steps} currentStatusIndex={currentStatusIndex} examinationAttempt={examinationAttempt} onOpenStep={openStep} /> : activeTab === 'Home' ? <HomePage profile={profile} program={program} track={track} steps={steps} currentStatusIndex={currentStatusIndex} examinationAttempt={examinationAttempt} onOpenStep={openStep} onRestart={onRestart} onOpenTab={setActiveTab} /> : activeTab === 'Map' ? <MapPage /> : <FAQPage />}</ScrollView><View style={styles.bottomNav}>{mainTabs.map((tab) => <Pressable key={tab} onPress={() => setActiveTab(tab)} style={({ pressed }) => [styles.navItem, activeTab === tab && styles.activeNavItem, pressed && styles.pressed]}><Ionicons name={tabIcons[tab]} size={27} color={activeTab === tab ? '#009c29' : '#698073'} /><Text style={[styles.navLabel, activeTab === tab && styles.activeNavText]}>{tab}</Text></Pressable>)}</View></View>;
+  const resetJourney = () => {
+    if (guestMode) {
+      setGuestStatusIndex(0);
+      setGuestSelectedStepIndex(null);
+      setGuestCheckedRequirements({});
+      setGuestExaminationAttempt('initial');
+      setShowProfile(false);
+      setActiveTab('Home');
+      return;
+    }
+    setCurrentStatusIndex(0);
+    setSelectedStepIndex(null);
+    setCheckedRequirements({});
+    setExaminationAttempt('initial');
+    setGuestMode(false);
+    setShowProfile(false);
+    setActiveTab('Home');
+  };
+  const viewAsGuest = () => {
+    setGuestProfile('');
+    setGuestTrack('');
+    setGuestProgram('');
+    setGuestSetupStep(1);
+    setGuestStatusIndex(0);
+    setGuestSelectedStepIndex(null);
+    setGuestCheckedRequirements({});
+    setGuestExaminationAttempt('initial');
+    setGuestMode(true);
+    setShowProfile(false);
+    setShowGuestSetup(true);
+    setActiveTab('Home');
+  };
+  const exitGuestMode = () => {
+    setGuestMode(false);
+    setShowProfile(false);
+    setShowGuestSetup(false);
+    setActiveTab('Home');
+  };
+  const displayedProfile = guestMode ? guestProfile || 'Guest' : profile;
+  const displayedTrack = guestMode ? guestTrack || 'Not selected' : track;
+  const displayedProgram = guestMode ? guestProgram || 'Not selected' : program;
+  const displayedStatusIndex = guestMode ? guestStatusIndex : currentStatusIndex;
+  const displayedSelectedStepIndex = guestMode ? guestSelectedStepIndex : selectedStepIndex;
+  const displayedCheckedRequirements = guestMode ? guestCheckedRequirements : checkedRequirements;
+  const displayedExaminationAttempt = guestMode ? guestExaminationAttempt : examinationAttempt;
+  return <View style={styles.mainApp}>
+    <View style={styles.mainHeader}><View style={profileStyles.headerBrand}>{showProfile && <Pressable accessibilityLabel="Back to home" onPress={() => { setShowProfile(false); setActiveTab('Home'); }} style={({ pressed }) => [profileStyles.headerBack, pressed && styles.pressed]}><Ionicons name="chevron-back" size={24} color="#183225" /></Pressable>}<Image source={require('../assets/CvSU_Logo.png')} style={styles.mainLogo} /><Text style={styles.mainTitle}>CvSU Admission</Text></View><Pressable accessibilityLabel="Open applicant profile" onPress={() => setShowProfile(true)} style={({ pressed }) => [styles.profileButton, pressed && styles.pressed]}><Image source={!guestMode && profilePhoto ? { uri: profilePhoto } : require('../assets/Profile.png')} style={styles.profileImage} /></Pressable></View>
+    {guestMode && (showGuestSetup || showProfile || activeTab === 'Home') && <Pressable accessibilityLabel="Exit guest mode" onPress={exitGuestMode} style={({ pressed }) => [profileStyles.guestModeBar, pressed && styles.pressed]}><View><Text style={profileStyles.guestModeLabel}>GUEST MODE</Text><Text style={profileStyles.guestModeCopy}>Your saved applicant profile is hidden.</Text></View><View style={profileStyles.exitGuestAction}><Ionicons name="log-out-outline" size={18} color="#075b31" /><Text style={profileStyles.exitGuestText}>Exit Guest Mode</Text></View></Pressable>}
+    <ScrollView style={styles.mainContent} contentContainerStyle={[styles.mainContentInner, (activeTab === 'Home' || showProfile) && homeStyles.content, showGuestSetup && guestSetupStyles.content]} keyboardShouldPersistTaps="handled">{showGuestSetup ? <GuestProfileSetup step={guestSetupStep} profile={guestProfile} track={guestTrack} program={guestProgram} onProfileChange={setGuestProfile} onTrackChange={setGuestTrack} onProgramChange={setGuestProgram} onBack={() => setGuestSetupStep((current) => Math.max(1, current - 1))} onNext={() => setGuestSetupStep((current) => Math.min(3, current + 1))} onComplete={() => { setShowGuestSetup(false); setActiveTab('Home'); }} /> : showProfile ? <ApplicantProfilePage profile={displayedProfile} track={displayedTrack} program={displayedProgram} photo={profilePhoto} nickname={nickname} isGuest={guestMode} onPhotoChange={onProfilePhotoChange} onNicknameChange={onNicknameChange} onEdit={onRestart} onEditGuest={() => { setShowProfile(false); setShowGuestSetup(true); }} onBack={() => { setShowProfile(false); setActiveTab('Home'); }} onGuest={viewAsGuest} onReset={resetJourney} /> : activeTab === 'Status' ? <StatusPage profile={displayedProfile} program={displayedProgram} track={displayedTrack} steps={steps} currentStatusIndex={displayedStatusIndex} onStatusChange={guestMode ? setGuestStatusIndex : setCurrentStatusIndex} selectedStepIndex={displayedSelectedStepIndex} onSelectStep={guestMode ? setGuestSelectedStepIndex : setSelectedStepIndex} checkedRequirements={displayedCheckedRequirements} onRequirementsChange={guestMode ? setGuestCheckedRequirements : setCheckedRequirements} examinationAttempt={displayedExaminationAttempt} onExaminationAttemptChange={guestMode ? setGuestExaminationAttempt : setExaminationAttempt} /> : activeTab === 'Journey' ? <JourneyPage program={displayedProgram} profilePhoto={guestMode ? null : profilePhoto} steps={steps} currentStatusIndex={displayedStatusIndex} examinationAttempt={displayedExaminationAttempt} onOpenStep={openStep} /> : activeTab === 'Home' ? <HomePage profile={displayedProfile} program={displayedProgram} track={displayedTrack} steps={steps} currentStatusIndex={displayedStatusIndex} examinationAttempt={displayedExaminationAttempt} onOpenStep={openStep} onRestart={() => setShowProfile(true)} onOpenTab={setActiveTab} /> : activeTab === 'Map' ? <MapPage /> : <FAQPage />}</ScrollView>
+    {!showProfile && !showGuestSetup && <View style={styles.bottomNav}>{mainTabs.map((tab) => <Pressable key={tab} onPress={() => setActiveTab(tab)} style={({ pressed }) => [styles.navItem, activeTab === tab && styles.activeNavItem, pressed && styles.pressed]}><Ionicons name={tabIcons[tab]} size={27} color={activeTab === tab ? '#009c29' : '#698073'} /><Text style={[styles.navLabel, activeTab === tab && styles.activeNavText]}>{tab}</Text></Pressable>)}</View>}
+  </View>;
 }
+function ProfilePhotoEditor({ photo, onChange }) {
+  const choosePhoto = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.8 });
+    if (!result.canceled) onChange(result.assets[0].uri);
+  };
+  return <View style={profileStyles.photoEditor}><Image source={photo ? { uri: photo } : require('../assets/Profile.png')} style={profileStyles.photoPreview} /><View style={profileStyles.photoActions}><Text style={profileStyles.photoTitle}>Profile Picture</Text><Pressable accessibilityLabel={photo ? 'Change profile picture' : 'Upload profile picture'} onPress={choosePhoto} style={({ pressed }) => [profileStyles.photoButton, pressed && styles.pressed]}><Ionicons name="camera-outline" size={18} color="#075b31" /><Text style={profileStyles.photoButtonText}>{photo ? 'Change Picture' : 'Upload Picture'}</Text></Pressable>{photo && <Pressable accessibilityLabel="Remove profile picture" onPress={() => onChange(null)} style={({ pressed }) => [profileStyles.removePhotoButton, pressed && styles.pressed]}><Text style={profileStyles.removePhotoText}>Remove</Text></Pressable>}</View></View>;
+}
+function GuestProfileSetup({ step, profile, track, program, onProfileChange, onTrackChange, onProgramChange, onBack, onNext, onComplete }) {
+  const [query, setQuery] = useState('');
+  const filteredPrograms = programs.filter((item) => item.toLowerCase().includes(query.trim().toLowerCase()));
+  const selection = step === 1 ? profile : step === 2 ? track : program;
+  return <View style={guestSetupStyles.page}><Text style={guestSetupStyles.eyebrow}>TEMPORARY GUEST PROFILE · {step} / 3</Text><Text style={guestSetupStyles.title}>{step === 1 ? 'Choose your academic status.' : step === 2 ? 'Choose your track or strand.' : 'Choose a program.'}</Text><Text style={guestSetupStyles.copy}>These choices apply only to this guest session and will not change the saved applicant profile.</Text>{step === 1 && <View style={styles.list}>{profiles.map(([value, label, caption]) => <Option key={value} label={label} caption={caption} value={value} selected={profile === value} onPress={() => onProfileChange(value)} profileCard />)}</View>}{step === 2 && <View style={styles.list}>{tracks.map(([label, caption]) => <Option key={label} label={label} caption={caption} value={label} selected={track === label} onPress={() => onTrackChange(label)} profileCard />)}</View>}{step === 3 && <><View style={styles.search}><Ionicons name="search" size={20} color="#075b31" /><TextInput value={query} onChangeText={setQuery} placeholder="Search programs" placeholderTextColor="#8aa294" style={styles.input} />{query.length > 0 && <Pressable accessibilityLabel="Clear program search" onPress={() => setQuery('')} style={styles.clear}><Ionicons name="close" size={16} color="#078743" /></Pressable>}</View><View style={styles.list}>{filteredPrograms.map((item) => <Option key={item} label={item} value="→" selected={program === item} onPress={() => onProgramChange(item)} compact />)}</View></>}<View style={guestSetupStyles.actions}>{step > 1 && <Back onPress={onBack} />}<Action label={step === 3 ? 'Start as Guest' : 'Continue'} disabled={!selection} onPress={step === 3 ? onComplete : onNext} /></View></View>;
+}
+function ApplicantProfilePage({ profile, track, program, photo, nickname, isGuest = false, onPhotoChange, onNicknameChange, onEdit, onEditGuest, onBack, onGuest, onReset }) {
+  const profileLabel = profiles.find(([value]) => value === profile)?.[1] || profile;
+  return <View style={profileStyles.page}>
+    <Text style={profileStyles.title}>{isGuest ? 'Guest Profile' : 'Applicant Profile'}</Text>
+    <Text style={profileStyles.subtitle}>{isGuest ? 'This is a temporary profile. Your saved applicant details and progress remain private.' : 'Your application profile is saved. You can update it anytime.'}</Text>
+    {!isGuest && <ProfilePhotoEditor photo={photo} onChange={onPhotoChange} />}
+    {!isGuest && <View style={profileStyles.nicknameEditor}><Text style={profileStyles.nicknameLabel}>NICKNAME</Text><TextInput value={nickname} onChangeText={onNicknameChange} maxLength={30} placeholder="Enter your nickname" placeholderTextColor="#8aa294" style={profileStyles.nicknameInput} /></View>}
+    <View style={profileStyles.summary}><ProfileSummaryItem label="APPLICANT TYPE" value={profileLabel} /><ProfileSummaryItem label="TRACK / STRAND" value={track} /><ProfileSummaryItem label="PROGRAM" value={program} last /></View>
+    <View style={profileStyles.primaryActions}><Pressable onPress={isGuest ? onEditGuest : onEdit} style={({ pressed }) => [profileStyles.editButton, pressed && styles.pressed]}><Text style={profileStyles.editButtonText}>{isGuest ? 'Edit Guest Profile' : 'Edit Profile'}</Text></Pressable><Pressable onPress={onBack} style={({ pressed }) => [profileStyles.backButton, pressed && styles.pressed]}><Text style={profileStyles.backButtonText}>Back to Home</Text></Pressable></View>
+    {!isGuest && <Pressable onPress={onGuest} style={({ pressed }) => [profileStyles.guestButton, pressed && styles.pressed]}><Text style={profileStyles.guestTitle}>View App as Guest</Text><Text style={profileStyles.guestCopy}>View procedures without showing or saving your profile progress.</Text></Pressable>}
+    <Pressable onPress={onReset} style={({ pressed }) => [profileStyles.resetButton, pressed && styles.pressed]}><Text style={profileStyles.resetTitle}>{isGuest ? 'Reset Temporary Journey' : 'Reset Admission Journey'}</Text><Text style={profileStyles.resetCopy}>{isGuest ? 'Start this guest session again' : 'Keep your profile, start progress again'}</Text></Pressable>
+  </View>;
+}
+function ProfileSummaryItem({ label, value, last = false }) { return <View style={!last && profileStyles.summaryItem}><Text style={profileStyles.summaryLabel}>{label}</Text><Text style={profileStyles.summaryValue}>{value}</Text></View>; }
 function HomePage({ profile, program, track, steps, currentStatusIndex, examinationAttempt, onOpenStep, onRestart, onOpenTab }) {
   const profileLabel = profiles.find(([value]) => value === profile)?.[1] || profile;
   const applicationStopped = examinationAttempt === 'stopped';
@@ -245,7 +401,7 @@ function StatusPage({ profile, program, track, steps, currentStatusIndex, onStat
     return <Pressable key={item} onPress={() => onSelectStep(index)} style={({ pressed }) => [styles.statusStep, pressed && styles.pressed]}><View style={[styles.statusDot, isComplete && styles.currentStatusDot, isCurrent && { backgroundColor: '#fff7d6', borderColor: '#f7d521', borderWidth: 3 }]}>{isCurrent ? <Ionicons name="time" size={18} color="#8a5e12" /> : <Text style={[styles.statusNumber, isComplete && { color: '#fff' }]}>{isComplete ? '✓' : index + 1}</Text>}</View><View style={styles.statusStepCopy}><Text style={styles.statusStepTitle}>{item}</Text><Text style={[styles.statusStepState, isComplete && { color: '#009c29', fontWeight: '700' }, isCurrent && { color: '#8a5e12', fontWeight: '800' }]}>{state}</Text><Text style={styles.statusStepDescription}>{statusStepDetails[item].description}</Text><Text style={{ color: checkedCount === requirementCount ? '#009c29' : '#698073', fontSize: 11, fontWeight: '700', marginTop: 5 }}>{checkedCount} / {requirementCount} requirements ready</Text></View>{index < steps.length - 1 && <View style={[styles.statusConnector, isComplete && { backgroundColor: '#009c29' }]} />}</Pressable>;
   })}{isFinished && <Pressable onPress={() => onStatusChange(0)} style={({ pressed }) => [styles.back, { marginTop: 8, alignItems: 'center' }, pressed && styles.pressed]}><Text style={styles.backText}>Reset progress</Text></Pressable>}</View><Modal visible={selectedStep !== null} transparent animationType="slide" onRequestClose={() => onSelectStep(null)}><View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(8, 35, 21, 0.55)' }}><View style={{ maxHeight: '88%', backgroundColor: '#fff', borderTopLeftRadius: 12, borderTopRightRadius: 12, paddingTop: 8 }}><View style={{ alignItems: 'center', paddingBottom: 4 }}><View style={{ width: 42, height: 4, borderRadius: 2, backgroundColor: '#b8d3bc' }} /></View><ScrollView contentContainerStyle={{ padding: 22, paddingBottom: 30 }}><View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}><View style={{ flex: 1, paddingRight: 14 }}><Text style={styles.cardEyebrow}>ADMISSION STEP {selectedStepIndex + 1}</Text><Text style={[styles.statusHeading, { marginTop: 8 }]}>{selectedStep}</Text></View><Pressable accessibilityLabel="Close details" onPress={() => onSelectStep(null)} style={({ pressed }) => [{ width: 38, height: 38, alignItems: 'center', justifyContent: 'center', borderRadius: 19, backgroundColor: '#e4eee4' }, pressed && styles.pressed]}><Ionicons name="close" size={22} color="#075b31" /></Pressable></View><Text style={[styles.statusCaption, { fontSize: 14, marginBottom: 20 }]}>{selectedDetails?.description}</Text><DetailSection title="Instructions" items={selectedDetails?.instructions} numbered /><RequirementChecklist items={selectedDetails?.requirements} checked={selectedChecks} onToggle={toggleRequirement} />{selectedDetails?.location && <DetailSection title="Location" items={[selectedDetails.location]} />}{selectedDetails?.details && <DetailSection title="Medical details" items={selectedDetails.details} />}{selectedStepIndex < currentStatusIndex ? selectedStepIndex === currentStatusIndex - 1 && !applicationStopped ? <Pressable onPress={undoLatestCompletedStep} style={({ pressed }) => [styles.back, { marginTop: 4, alignItems: 'center' }, pressed && styles.pressed]}><Text style={styles.backText}>Undo completion</Text></Pressable> : <View style={{ padding: 14, borderRadius: 8, backgroundColor: '#dff5df', alignItems: 'center' }}><Text style={{ color: '#075b31', fontWeight: '700' }}>Completed</Text></View> : selectedStepIndex > currentStatusIndex ? <View style={{ padding: 14, borderRadius: 8, backgroundColor: '#eef3ee', alignItems: 'center' }}><Text style={{ color: '#52695b', fontWeight: '700', textAlign: 'center' }}>{applicationStopped ? 'The application process has ended' : 'Complete the previous step first'}</Text></View> : selectedStep === 'Admission Examination' ? <ExaminationResultActions attempt={examinationAttempt} onPassed={passExamination} onFailed={failExamination} onReapply={() => onExaminationAttemptChange('reapplication')} /> : <Pressable onPress={completeSelectedStep} style={({ pressed }) => [styles.action, { flex: 0, marginTop: 4 }, pressed && styles.pressed]}><Text style={styles.actionText}>Mark as completed</Text></Pressable>}</ScrollView></View></View></Modal></View>;
 }
-function JourneyPage({ program, steps, currentStatusIndex, examinationAttempt, onOpenStep }) {
+function JourneyPage({ program, profilePhoto, steps, currentStatusIndex, examinationAttempt, onOpenStep }) {
   const roadGlow = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     const animation = Animated.loop(Animated.sequence([
@@ -266,7 +422,7 @@ function JourneyPage({ program, steps, currentStatusIndex, examinationAttempt, o
     const locked = !completed && !current && !stopped;
     const icon = completed ? 'checkmark' : stopped ? 'close' : 'lock-closed';
     const stateLabel = completed ? 'Mission complete' : stopped ? 'Trail ended' : current ? 'Open mission' : 'Locked';
-    return <View key={step} style={journeyStyles.stationRow}>{index < steps.length - 1 && <GlowRoad glow={roadGlow} direction={index % 2 === 0 ? 'right' : 'left'} completed={completed} />}<Pressable accessibilityLabel={`${step}, ${stateLabel}`} onPress={() => onOpenStep(index)} style={({ pressed }) => [journeyStyles.station, index % 2 === 0 ? journeyStyles.stationLeft : journeyStyles.stationRight, pressed && styles.pressed]}>{current && <View style={journeyStyles.currentMarker}><Image source={require('../assets/Profile.png')} style={journeyStyles.avatarImage} /></View>}<View style={[journeyStyles.node, completed && journeyStyles.nodeComplete, current && journeyStyles.nodeCurrent, locked && journeyStyles.nodeLocked, stopped && journeyStyles.nodeStopped]}>{current ? <Text style={journeyStyles.nodeNumber}>{index + 1}</Text> : <Ionicons name={icon} size={completed ? 28 : 21} color={completed || stopped ? '#fff' : '#829489'} />}</View><Text style={[journeyStyles.nodeLabel, current && journeyStyles.nodeLabelCurrent, stopped && journeyStyles.nodeLabelStopped]} numberOfLines={2}>{step}</Text></Pressable></View>;
+    return <View key={step} style={journeyStyles.stationRow}>{index < steps.length - 1 && <GlowRoad glow={roadGlow} direction={index % 2 === 0 ? 'right' : 'left'} completed={completed} />}<Pressable accessibilityLabel={`${step}, ${stateLabel}`} onPress={() => onOpenStep(index)} style={({ pressed }) => [journeyStyles.station, index % 2 === 0 ? journeyStyles.stationLeft : journeyStyles.stationRight, pressed && styles.pressed]}>{current && <View style={journeyStyles.currentMarker}><Image source={profilePhoto ? { uri: profilePhoto } : require('../assets/Profile.png')} style={journeyStyles.avatarImage} /></View>}<View style={[journeyStyles.node, completed && journeyStyles.nodeComplete, current && journeyStyles.nodeCurrent, locked && journeyStyles.nodeLocked, stopped && journeyStyles.nodeStopped]}>{current ? <Text style={journeyStyles.nodeNumber}>{index + 1}</Text> : <Ionicons name={icon} size={completed ? 28 : 21} color={completed || stopped ? '#fff' : '#829489'} />}</View><Text style={[journeyStyles.nodeLabel, current && journeyStyles.nodeLabelCurrent, stopped && journeyStyles.nodeLabelStopped]} numberOfLines={2}>{step}</Text></Pressable></View>;
   })}<View style={journeyStyles.finish}><Ionicons name="flag" size={26} color="#f7d521" /><View style={{ flex: 1, marginHorizontal: 12 }}><Text style={journeyStyles.finishLabel}>FINAL DESTINATION</Text><Text style={journeyStyles.finishTitle}>{isFinished ? 'WELCOME TO CvSU' : 'FINISH LINE'}</Text></View><Ionicons name="flag" size={26} color="#f7d521" /></View></View></View><Text style={journeyStyles.program}>{program}</Text></View>;
 }
 function GlowRoad({ direction, completed, glow }) {
@@ -387,6 +543,52 @@ const mapStyles = StyleSheet.create({
   closeControl: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#f2f5f2', alignItems: 'center', justifyContent: 'center' },
   fullscreenMap: { flex: 1, height: 'auto', borderRadius: 0 }
 });
+const profileStyles = StyleSheet.create({
+  headerBrand: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  headerBack: { width: 30, height: 42, alignItems: 'center', justifyContent: 'center' },
+  photoEditor: { minHeight: 112, marginBottom: 20, flexDirection: 'row', alignItems: 'center' },
+  photoPreview: { width: 88, height: 88, borderRadius: 44, backgroundColor: '#e6f6e4', marginRight: 16 },
+  photoActions: { flex: 1, alignItems: 'flex-start' },
+  photoTitle: { color: '#fff', fontSize: 14, fontWeight: '800', marginBottom: 8 },
+  photoButton: { minHeight: 38, borderRadius: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: '#d8e2d9', paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 7 },
+  photoButtonText: { color: '#075b31', fontSize: 11, fontWeight: '800' },
+  removePhotoButton: { minHeight: 30, justifyContent: 'center', paddingHorizontal: 4, marginTop: 3 },
+  removePhotoText: { color: '#fff', fontSize: 10, fontWeight: '700' },
+  nicknameEditor: { marginBottom: 20 },
+  nicknameLabel: { color: '#fff', fontSize: 10, fontWeight: '800', letterSpacing: 1, marginBottom: 7 },
+  nicknameInput: { minHeight: 48, borderRadius: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: '#d8e2d9', color: '#183225', fontSize: 14, paddingHorizontal: 14, paddingVertical: 11 },
+  guestModeBar: { minHeight: 64, backgroundColor: '#fffde8', borderBottomWidth: 1, borderBottomColor: '#e3d274', paddingHorizontal: 18, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  guestModeLabel: { color: '#735f37', fontSize: 9, fontWeight: '800', letterSpacing: 1 },
+  guestModeCopy: { color: '#735f37', fontSize: 10, marginTop: 3 },
+  exitGuestAction: { flexDirection: 'row', alignItems: 'center', gap: 6, marginLeft: 12 },
+  exitGuestText: { color: '#075b31', fontSize: 11, fontWeight: '800' },
+  page: { paddingBottom: 24 },
+  title: { color: '#fff', fontSize: 29, lineHeight: 34, fontWeight: '800' },
+  subtitle: { color: '#effff1', fontSize: 13, lineHeight: 19, marginTop: 8, marginBottom: 22, maxWidth: 420 },
+  summary: { borderRadius: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: '#d8e2d9', padding: 18, marginBottom: 22 },
+  summaryItem: { marginBottom: 16 },
+  summaryLabel: { color: '#698073', fontSize: 10, lineHeight: 14, fontWeight: '800', letterSpacing: 1, marginBottom: 4 },
+  summaryValue: { color: '#183225', fontSize: 15, lineHeight: 21, fontWeight: '600' },
+  primaryActions: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
+  editButton: { minHeight: 52, minWidth: 122, borderRadius: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: '#d8e2d9', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18 },
+  editButtonText: { color: '#183225', fontSize: 13, fontWeight: '700' },
+  backButton: { flex: 1, minHeight: 52, alignItems: 'flex-end', justifyContent: 'center', paddingHorizontal: 8 },
+  backButtonText: { color: '#fff', fontSize: 13, fontWeight: '800' },
+  guestButton: { minHeight: 76, borderRadius: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: '#d8e2d9', alignItems: 'center', justifyContent: 'center', padding: 13, marginBottom: 12 },
+  guestTitle: { color: '#183225', fontSize: 12, fontWeight: '800', textAlign: 'center' },
+  guestCopy: { color: '#75877b', fontSize: 10, lineHeight: 15, textAlign: 'center', marginTop: 5, maxWidth: 310 },
+  resetButton: { minHeight: 68, borderRadius: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: '#efb8b8', justifyContent: 'center', padding: 14 },
+  resetTitle: { color: '#c73a48', fontSize: 13, fontWeight: '800' },
+  resetCopy: { color: '#c86a72', fontSize: 10, marginTop: 5 }
+});
+const guestSetupStyles = StyleSheet.create({
+  content: { backgroundColor: '#f2fbf0', paddingTop: 24 },
+  page: { paddingBottom: 24 },
+  eyebrow: { color: '#078743', fontSize: 10, fontWeight: '800', letterSpacing: 1, marginBottom: 10 },
+  title: { color: '#075b31', fontSize: 28, lineHeight: 34, fontWeight: '800' },
+  copy: { color: '#698073', fontSize: 13, lineHeight: 19, marginTop: 9, marginBottom: 22 },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 22 }
+});
 const homeStyles = StyleSheet.create({
   content: { backgroundColor: '#009c29', paddingTop: 24 },
   page: { paddingBottom: 18 },
@@ -490,4 +692,4 @@ const statusInfoStyles = StyleSheet.create({
   profileLabel: { width: 102, color: '#698073', fontSize: 13 },
   profileValue: { flex: 1, color: '#183225', fontSize: 13, lineHeight: 18, fontWeight: '700' }
 });
-const styles = StyleSheet.create({ safe: { flex: 1, backgroundColor: '#075b31' }, screen: { padding: 23, paddingBottom: 110, backgroundColor: '#f2fbf0', minHeight: '100%' }, greenWash: { position: 'absolute', top: 0, left: 0, right: 0, height: 150, backgroundColor: '#075b31' }, header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 12, borderRadius: 12, backgroundColor: '#dff5df' }, brand: { flexDirection: 'row', alignItems: 'center' }, logo: { width: 51, height: 51, marginRight: 11 }, eyebrow: { color: '#698073', fontSize: 10, fontWeight: '700', letterSpacing: 1 }, brandName: { color: '#075b31', fontSize: 18, fontWeight: '700' }, help: { color: '#075b31', borderWidth: 1, borderColor: '#b8d3bc', borderRadius: 20, width: 32, height: 32, textAlign: 'center', paddingTop: 5, fontWeight: '700', backgroundColor: '#fff' }, progress: { marginTop: 34, marginBottom: 42 }, progressTrack: { flexDirection: 'row', alignItems: 'center' }, progressSegment: { flex: 1, flexDirection: 'row', alignItems: 'center' }, progressDot: { width: 10, height: 10, borderRadius: 6, borderWidth: 2, borderColor: '#b8d3bc', backgroundColor: '#f2fbf0' }, activeProgressDot: { width: 14, height: 14, borderRadius: 8, borderWidth: 3, borderColor: '#078743' }, completeProgressDot: { borderColor: '#078743', backgroundColor: '#078743' }, progressLine: { height: 2, flex: 1, backgroundColor: '#cfe1d0' }, completeProgressLine: { backgroundColor: '#078743' }, progressText: { color: '#698073', fontSize: 12, fontWeight: '700', marginTop: 8 }, kicker: { color: '#078743', fontSize: 12, fontWeight: '700', letterSpacing: 1, marginBottom: 10 }, title: { color: '#075b31', fontSize: 38, fontWeight: '700', lineHeight: 42 }, intro: { color: '#698073', fontSize: 15, lineHeight: 23, marginTop: 15, marginBottom: 30 }, list: { gap: 12 }, option: { minHeight: 68, padding: 15, borderWidth: 1, borderColor: '#d9e7da', borderRadius: 10, backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center' }, compact: { minHeight: 58, padding: 11 }, selected: { borderWidth: 2, borderColor: '#078743', backgroundColor: '#dff5df' }, pressed: { opacity: 0.78, transform: [{ scale: 0.985 }] }, icon: { width: 38, height: 38, borderRadius: 20, backgroundColor: '#dff5df', color: '#078743', textAlign: 'center', paddingTop: 10, marginRight: 12, fontWeight: '700' }, selectedIcon: { backgroundColor: '#078743', color: '#fff' }, optionText: { flex: 1, color: '#183225', fontSize: 14, fontWeight: '700' }, check: { color: '#078743', fontSize: 18 }, actions: { flexDirection: 'row', gap: 12, marginTop: 28, alignItems: 'center' }, fixedActions: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: 18, paddingHorizontal: 23, flexDirection: 'row', gap: 12, backgroundColor: '#e5f6e3', borderTopWidth: 1, borderTopColor: '#b8d3bc' }, action: { flex: 1, minHeight: 48, borderRadius: 8, backgroundColor: '#075b31', justifyContent: 'center', alignItems: 'center' }, actionText: { color: '#fff', fontWeight: '700' }, disabled: { backgroundColor: '#9fbaaa' }, back: { minHeight: 48, paddingHorizontal: 16, borderWidth: 1, borderColor: '#b8d3bc', borderRadius: 8, justifyContent: 'center', backgroundColor: '#fff' }, backText: { color: '#075b31', fontWeight: '700' }, search: { height: 48, borderWidth: 1, borderColor: '#b8d3bc', borderRadius: 8, backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 13, marginBottom: 15 }, searchIcon: { color: '#078743', fontSize: 24, marginRight: 9 }, input: { flex: 1, color: '#183225' }, clear: { width: 24, height: 24, borderRadius: 13, backgroundColor: '#dff5df', alignItems: 'center', justifyContent: 'center' }, clearText: { color: '#078743', fontSize: 18 }, muted: { color: '#698073', fontSize: 13 }, welcome: { borderWidth: 1, borderColor: '#d9e7da', backgroundColor: '#fff', padding: 21 }, welcomeTitle: { color: '#075b31', fontSize: 23, fontWeight: '700' }, tiles: { flexDirection: 'row', gap: 10, marginVertical: 12 }, tile: { flex: 1, padding: 17, backgroundColor: '#dff5df', borderWidth: 1, borderColor: '#d9e7da' }, tileLabel: { color: '#075b31', fontSize: 16, fontWeight: '700', marginBottom: 5 }, mainApp: { flex: 1, backgroundColor: '#078743' }, mainHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12, backgroundColor: '#fff' }, mainLogo: { width: 42, height: 42 }, mainTitle: { color: '#075b31', fontSize: 19, fontWeight: '700' }, profileButton: { padding: 2, borderRadius: 24, backgroundColor: '#e6f6e4' }, profileImage: { width: 42, height: 42, borderRadius: 22 }, mainContent: { flex: 1 }, mainContentInner: { padding: 23, paddingBottom: 100 }, statusTitle: { color: '#fff', fontSize: 30, fontWeight: '700', lineHeight: 35 }, statusIntro: { color: '#dff5df', fontSize: 14, marginTop: 8, marginBottom: 22 }, statusCard: { padding: 18, borderWidth: 1, borderColor: '#b8d3bc', borderRadius: 12, backgroundColor: '#fff' }, cardEyebrow: { color: '#078743', fontSize: 10, fontWeight: '700', letterSpacing: 1 }, statusHeading: { color: '#183225', fontSize: 21, fontWeight: '700', marginTop: 6 }, statusCaption: { color: '#698073', fontSize: 13, lineHeight: 19, marginTop: 5, marginBottom: 20 }, statusStep: { minHeight: 104, flexDirection: 'row', alignItems: 'flex-start', position: 'relative' }, statusDot: { width: 34, height: 34, borderRadius: 18, backgroundColor: '#e4eee4', alignItems: 'center', justifyContent: 'center', zIndex: 1 }, currentStatusDot: { backgroundColor: '#078743' }, statusNumber: { color: '#698073', fontSize: 13, fontWeight: '700' }, statusStepCopy: { flex: 1, marginLeft: 12, paddingBottom: 18 }, statusStepTitle: { color: '#183225', fontSize: 14, fontWeight: '700' }, statusStepState: { color: '#8aa294', fontSize: 11, marginTop: 2 }, statusStepDescription: { color: '#52695b', fontSize: 12, lineHeight: 18, marginTop: 6 }, statusConnector: { position: 'absolute', left: 16, top: 34, bottom: 0, width: 2, backgroundColor: '#d9e7da' }, bottomNav: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', justifyContent: 'space-around', paddingTop: 13, paddingBottom: 8, borderTopWidth: 1, borderTopColor: '#b8d3bc', backgroundColor: '#fff' }, navItem: { alignItems: 'center', minWidth: 49, paddingVertical: 5, borderRadius: 8 }, activeNavItem: { borderTopWidth: 2, borderTopColor: '#078743', backgroundColor: '#dff5df' }, navLabel: { color: '#698073', fontSize: 10, marginTop: 3 }, activeNavText: { color: '#075b31', fontWeight: '700' } });
+const styles = StyleSheet.create({ safe: { flex: 1, backgroundColor: '#075b31' }, screen: { padding: 23, paddingBottom: 110, backgroundColor: '#f2fbf0', minHeight: '100%' }, greenWash: { position: 'absolute', top: 0, left: 0, right: 0, height: 150, backgroundColor: '#075b31' }, header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 12, borderRadius: 12, backgroundColor: '#dff5df' }, brand: { flexDirection: 'row', alignItems: 'center' }, logo: { width: 51, height: 51, marginRight: 11 }, eyebrow: { color: '#698073', fontSize: 10, fontWeight: '700', letterSpacing: 1 }, brandName: { color: '#075b31', fontSize: 18, fontWeight: '700' }, help: { color: '#075b31', borderWidth: 1, borderColor: '#b8d3bc', borderRadius: 20, width: 32, height: 32, textAlign: 'center', paddingTop: 5, fontWeight: '700', backgroundColor: '#fff' }, progress: { marginTop: 34, marginBottom: 42 }, progressTrack: { flexDirection: 'row', alignItems: 'center' }, progressSegment: { flex: 1, flexDirection: 'row', alignItems: 'center' }, progressDot: { width: 10, height: 10, borderRadius: 6, borderWidth: 2, borderColor: '#b8d3bc', backgroundColor: '#f2fbf0' }, activeProgressDot: { width: 14, height: 14, borderRadius: 8, borderWidth: 3, borderColor: '#078743' }, completeProgressDot: { borderColor: '#078743', backgroundColor: '#078743' }, progressLine: { height: 2, flex: 1, backgroundColor: '#cfe1d0' }, completeProgressLine: { backgroundColor: '#078743' }, progressText: { color: '#698073', fontSize: 12, fontWeight: '700', marginTop: 8 }, kicker: { color: '#078743', fontSize: 12, fontWeight: '700', letterSpacing: 1, marginBottom: 10 }, title: { color: '#075b31', fontSize: 38, fontWeight: '700', lineHeight: 42 }, intro: { color: '#698073', fontSize: 15, lineHeight: 23, marginTop: 15, marginBottom: 30 }, list: { gap: 12 }, option: { minHeight: 68, padding: 15, borderWidth: 1, borderColor: '#d9e7da', borderRadius: 10, backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center' }, compact: { minHeight: 58, padding: 11 }, profileOption: { minHeight: 112, padding: 20, alignItems: 'flex-start' }, selected: { borderWidth: 2, borderColor: '#078743', backgroundColor: '#dff5df' }, pressed: { opacity: 0.78, transform: [{ scale: 0.985 }] }, icon: { width: 38, height: 38, borderRadius: 20, backgroundColor: '#dff5df', color: '#078743', textAlign: 'center', paddingTop: 10, marginRight: 12, fontWeight: '700' }, selectedIcon: { backgroundColor: '#078743', color: '#fff' }, optionCopy: { flex: 1 }, optionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, optionText: { flex: 1, color: '#183225', fontSize: 14, fontWeight: '700' }, profileOptionText: { fontSize: 18, lineHeight: 23 }, profileOptionTextSelected: { color: '#078743' }, selectedLabel: { color: '#078743', fontSize: 11, fontWeight: '800', marginLeft: 12 }, optionCaption: { color: '#698073', fontSize: 14, lineHeight: 21, marginTop: 10 }, check: { color: '#078743', fontSize: 18 }, actions: { flexDirection: 'row', gap: 12, marginTop: 28, alignItems: 'center' }, fixedActions: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: 18, paddingHorizontal: 23, flexDirection: 'row', gap: 12, backgroundColor: '#e5f6e3', borderTopWidth: 1, borderTopColor: '#b8d3bc' }, action: { flex: 1, minHeight: 48, borderRadius: 8, backgroundColor: '#075b31', justifyContent: 'center', alignItems: 'center' }, actionText: { color: '#fff', fontWeight: '700' }, disabled: { backgroundColor: '#9fbaaa' }, back: { minHeight: 48, paddingHorizontal: 16, borderWidth: 1, borderColor: '#b8d3bc', borderRadius: 8, justifyContent: 'center', backgroundColor: '#fff' }, backText: { color: '#075b31', fontWeight: '700' }, search: { height: 48, borderWidth: 1, borderColor: '#b8d3bc', borderRadius: 8, backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 13, marginBottom: 15 }, searchIcon: { color: '#078743', fontSize: 24, marginRight: 9 }, input: { flex: 1, color: '#183225' }, clear: { width: 24, height: 24, borderRadius: 13, backgroundColor: '#dff5df', alignItems: 'center', justifyContent: 'center' }, clearText: { color: '#078743', fontSize: 18 }, muted: { color: '#698073', fontSize: 13 }, welcome: { borderWidth: 1, borderColor: '#d9e7da', backgroundColor: '#fff', padding: 21 }, welcomeTitle: { color: '#075b31', fontSize: 23, fontWeight: '700' }, tiles: { flexDirection: 'row', gap: 10, marginVertical: 12 }, tile: { flex: 1, padding: 17, backgroundColor: '#dff5df', borderWidth: 1, borderColor: '#d9e7da' }, tileLabel: { color: '#075b31', fontSize: 16, fontWeight: '700', marginBottom: 5 }, mainApp: { flex: 1, backgroundColor: '#078743' }, mainHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12, backgroundColor: '#fff' }, mainLogo: { width: 42, height: 42 }, mainTitle: { color: '#075b31', fontSize: 19, fontWeight: '700' }, profileButton: { padding: 2, borderRadius: 24, backgroundColor: '#e6f6e4' }, profileImage: { width: 42, height: 42, borderRadius: 22 }, mainContent: { flex: 1 }, mainContentInner: { padding: 23, paddingBottom: 100 }, statusTitle: { color: '#fff', fontSize: 30, fontWeight: '700', lineHeight: 35 }, statusIntro: { color: '#dff5df', fontSize: 14, marginTop: 8, marginBottom: 22 }, statusCard: { padding: 18, borderWidth: 1, borderColor: '#b8d3bc', borderRadius: 12, backgroundColor: '#fff' }, cardEyebrow: { color: '#078743', fontSize: 10, fontWeight: '700', letterSpacing: 1 }, statusHeading: { color: '#183225', fontSize: 21, fontWeight: '700', marginTop: 6 }, statusCaption: { color: '#698073', fontSize: 13, lineHeight: 19, marginTop: 5, marginBottom: 20 }, statusStep: { minHeight: 104, flexDirection: 'row', alignItems: 'flex-start', position: 'relative' }, statusDot: { width: 34, height: 34, borderRadius: 18, backgroundColor: '#e4eee4', alignItems: 'center', justifyContent: 'center', zIndex: 1 }, currentStatusDot: { backgroundColor: '#078743' }, statusNumber: { color: '#698073', fontSize: 13, fontWeight: '700' }, statusStepCopy: { flex: 1, marginLeft: 12, paddingBottom: 18 }, statusStepTitle: { color: '#183225', fontSize: 14, fontWeight: '700' }, statusStepState: { color: '#8aa294', fontSize: 11, marginTop: 2 }, statusStepDescription: { color: '#52695b', fontSize: 12, lineHeight: 18, marginTop: 6 }, statusConnector: { position: 'absolute', left: 16, top: 34, bottom: 0, width: 2, backgroundColor: '#d9e7da' }, bottomNav: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', justifyContent: 'space-around', paddingTop: 13, paddingBottom: 8, borderTopWidth: 1, borderTopColor: '#b8d3bc', backgroundColor: '#fff' }, navItem: { alignItems: 'center', minWidth: 49, paddingVertical: 5, borderRadius: 8 }, activeNavItem: { borderTopWidth: 2, borderTopColor: '#078743', backgroundColor: '#dff5df' }, navLabel: { color: '#698073', fontSize: 10, marginTop: 3 }, activeNavText: { color: '#075b31', fontWeight: '700' } });

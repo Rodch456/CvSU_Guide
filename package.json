@@ -1,6 +1,6 @@
 {
   "name": "cvsu-admission-guide",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "main": "index.js",
   "scripts": {
@@ -14,6 +14,7 @@
     "@expo/vector-icons": "^15.0.3",
     "expo": "~54.0.0",
     "expo-asset": "~12.0.13",
+    "expo-image-picker": "~17.0.11",
     "expo-status-bar": "~3.0.9",
     "react": "19.1.0",
     "react-dom": "19.1.0",
