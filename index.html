@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#087f3e" />
+    <title>CvSU Admission Guide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="app-frame" aria-label="CvSU Admission Guide">
+        <header class="topbar">
+          <div class="brand-lockup">
+            <img src="CvSU_Logo.png" alt="Cavite State University logo" class="brand-logo" />
+            <div>
+              <p class="eyebrow">Cavite State University</p>
+              <p class="brand-name">Admission Guide</p>
+            </div>
+          </div>
+          <button class="help-button" type="button" aria-label="Get help">?</button>
+        </header>
+
+        <div class="stepper" aria-label="Application progress">
+          <span class="step-dot is-active" data-step-dot="1"></span>
+          <span class="step-line"></span>
+          <span class="step-dot" data-step-dot="2"></span>
+          <span class="step-line"></span>
+          <span class="step-dot" data-step-dot="3"></span>
+          <span class="step-line"></span>
+          <span class="step-dot" data-step-dot="4"></span>
+          <span class="step-label"><span id="step-number">1</span> of 4</span>
+        </div>
+
+        <div id="app-content"></div>
+      </section>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "CvSU Admission Guide",
+    "slug": "cvsu-admission-guide",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/CvSU_Logo.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/CvSU_Logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#f2fbf0"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "plugins": [
+      "expo-asset"
+    ]
+  }
+}
