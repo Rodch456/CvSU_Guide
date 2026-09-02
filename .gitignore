@@ -1,5 +1,7 @@
 node_modules/
 .expo/
+.expo-validation/
+.expo-validation-map/
 dist/
 
 npm-debug.log*

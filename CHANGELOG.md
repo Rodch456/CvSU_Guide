@@ -8,6 +8,20 @@ This project uses [Semantic Versioning](https://semver.org/):
 - **Minor** (`1.1.0`): new backward-compatible features or pages
 - **Major** (`2.0.0`): large redesigns or incompatible changes
 
+## [1.2.0] - 2026-09-03
+
+### Added
+
+- Welcome screen with applicant setup and guest access
+- Applicant profile customization with nickname and photo support
+- Campus gate, office, uniform, and infirmary guide media
+- Onboarding personalization help and improved progress display
+
+### Changed
+
+- Expanded the app guide with video and image assets for key campus services
+- Added Expo font and video support for the new guide experience
+
 ## [1.1.0] - 2026-08-28
 
 ### Added
@@ -41,4 +55,5 @@ This project uses [Semantic Versioning](https://semver.org/):
 - Animated FAQ guide and 12 rotating campus trivia facts
 
 [1.1.0]: https://github.com/Rodch456/CvSU_Guide/tree/v1.1.0
+[1.2.0]: https://github.com/Rodch456/CvSU_Guide/tree/v1.2.0
 [1.0.0]: https://github.com/Rodch456/CvSU_Guide/tree/v1.0.0

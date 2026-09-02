@@ -2,7 +2,7 @@
   "expo": {
     "name": "CvSU Admission Guide",
     "slug": "cvsu-admission-guide",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/CvSU_Logo.png",
     "userInterfaceStyle": "light",
@@ -15,7 +15,9 @@
       "**/*"
     ],
     "plugins": [
-      "expo-asset"
+      "expo-asset",
+      "expo-font",
+      "expo-video"
     ]
   }
 }
