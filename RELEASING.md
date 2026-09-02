@@ -42,6 +42,17 @@ git push origin v1.1.0
 
 Replace `1.1.0` with the version being released. GitHub will show each snapshot under **Tags**, and a release can be created from any tag without changing its files.
 
+## Build an offline Android APK
+
+The app stores its guide images and videos as local Expo assets. Build the `preview` profile to create an installable APK with those assets bundled into the app:
+
+```powershell
+npx eas-cli login
+npm run build:android
+```
+
+When the build finishes, download the APK from the EAS build page and install it on Android devices. The guide content works without internet access after installation; external admission portal links still require a connection.
+
 ## Daily development
 
 Use normal descriptive commits while working. Create a version tag only when the update is ready to preserve as a recognizable release.
