@@ -1,6 +1,6 @@
 {
   "name": "cvsu-admission-guide",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "private": true,
   "main": "index.js",
   "scripts": {
@@ -13,6 +13,7 @@
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
     "@expo/vector-icons": "^15.0.3",
+    "@react-native-async-storage/async-storage": "^3.1.1",
     "expo": "~54.0.0",
     "expo-asset": "~12.0.13",
     "expo-font": "~14.0.12",

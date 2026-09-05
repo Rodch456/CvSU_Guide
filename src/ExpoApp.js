@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Image, Linking, Modal, PanResponder, Platform, Pressable, SafeAreaView, ScrollView, StatusBar as NativeStatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { useVideoPlayer, VideoView } from 'expo-video';
 
@@ -45,6 +46,8 @@ const statusStepDetails = {
 const mainTabs = ['Home', 'Status', 'Journey', 'Map', 'FAQ'];
 const tabIcons = { Status: 'list-outline', Journey: 'footsteps-outline', Home: 'home-outline', Map: 'map-outline', FAQ: 'help-circle-outline' };
 const androidTopInset = Platform.OS === 'android' ? NativeStatusBar.currentHeight || 0 : 0;
+const savedApplicantKey = 'cvsu-admission-guide-state';
+const savedProgressKey = 'cvsu-admission-guide-progress';
 
 const profiles = [
   ['12', 'Current Grade 12 Student', 'Expecting to finish Senior High School at the end of the current school year.'],
@@ -248,13 +251,34 @@ export default function ExpoApp() {
   const [showSetupHelp, setShowSetupHelp] = useState(false);
   const [startMode, setStartMode] = useState('start');
   const [showSplash, setShowSplash] = useState(true);
+  const [storageLoaded, setStorageLoaded] = useState(false);
   useEffect(() => {
     const splashTimer = setTimeout(() => setShowSplash(false), 2200);
     return () => clearTimeout(splashTimer);
   }, []);
+  useEffect(() => {
+    AsyncStorage.getItem(savedApplicantKey).then((storedState) => {
+      if (storedState) {
+        const savedState = JSON.parse(storedState);
+        setProfile(savedState.profile || '');
+        setTrack(savedState.track || '');
+        setProgram(savedState.program || '');
+        setProfilePhoto(savedState.profilePhoto || null);
+        setNickname(savedState.nickname || '');
+        if (savedState.profile) {
+          setStep(4);
+          setStartMode('saved');
+        }
+      }
+    }).catch(() => {}).finally(() => setStorageLoaded(true));
+  }, []);
+  useEffect(() => {
+    if (!storageLoaded || !profile) return;
+    AsyncStorage.setItem(savedApplicantKey, JSON.stringify({ profile, track, program, profilePhoto, nickname })).catch(() => {});
+  }, [storageLoaded, profile, track, program, profilePhoto, nickname]);
   const results = programs.filter((item) => item.toLowerCase().includes(query.toLowerCase().trim()));
   const next = (value, setter, number) => <Action disabled={!value} onPress={() => { setter(value); setStep(number); }} />;
-  if (showSplash) return <SplashScreen />;
+  if (showSplash || !storageLoaded) return <SplashScreen />;
   if (startMode === 'start') return <StartScreen onSetup={() => { setStartMode('setup'); setStep(1); }} onGuest={() => { setStartMode('guest'); setStep(4); }} />;
   return <SafeAreaView style={styles.safe}><StatusBar style={step === 4 ? 'dark' : 'light'} /><View style={styles.greenWash} />{step < 4 ? <><ScrollView contentContainerStyle={[styles.screen, onboardingSetupStyles.screen]} keyboardShouldPersistTaps="handled"><View style={[styles.header, onboardingSetupStyles.header]}><View style={styles.brand}><Image source={require('../assets/CvSU_Logo.png')} style={styles.logo} /><View><Text style={styles.eyebrow}>CAVITE STATE UNIVERSITY</Text><Text style={styles.brandName}>Admission Guide</Text></View></View><Pressable accessibilityLabel="How your profile personalizes your journey" onPress={() => setShowSetupHelp(true)} style={({ pressed }) => [styles.help, pressed && styles.pressed]}><Text style={onboardingHelpStyles.helpText}>?</Text></Pressable></View><Progress currentStep={step} />
     {step === 1 && <Page kicker="LET'S GET STARTED" title="Tell us about your journey." intro="Choose the description that best matches your current academic status."><View style={styles.list}>{profiles.map(([value, label, caption]) => <Option key={value} label={label} caption={caption} value={value} selected={profile === value} onPress={() => setProfile(value)} profileCard />)}</View></Page>}
@@ -288,6 +312,22 @@ function MainApp({ profile, program, track, profilePhoto, nickname, onProfilePho
   const [guestSelectedStepIndex, setGuestSelectedStepIndex] = useState(null);
   const [guestCheckedRequirements, setGuestCheckedRequirements] = useState({});
   const [guestExaminationAttempt, setGuestExaminationAttempt] = useState('initial');
+  const [progressLoaded, setProgressLoaded] = useState(false);
+  useEffect(() => {
+    AsyncStorage.getItem(savedProgressKey).then((storedProgress) => {
+      if (storedProgress) {
+        const savedProgress = JSON.parse(storedProgress);
+        setCurrentStatusIndex(savedProgress.currentStatusIndex || 0);
+        setCheckedRequirements(savedProgress.checkedRequirements || {});
+        setExaminationAttempt(savedProgress.examinationAttempt || 'initial');
+        setActiveProgram(savedProgress.activeProgram || program);
+      }
+    }).catch(() => {}).finally(() => setProgressLoaded(true));
+  }, [program]);
+  useEffect(() => {
+    if (!progressLoaded || guestMode) return;
+    AsyncStorage.setItem(savedProgressKey, JSON.stringify({ currentStatusIndex, checkedRequirements, examinationAttempt, activeProgram })).catch(() => {});
+  }, [progressLoaded, guestMode, currentStatusIndex, checkedRequirements, examinationAttempt, activeProgram]);
   const hasInterview = exceptionProgramKeywords.some((keyword) => activeProgram.includes(keyword));
   const steps = guestMode ? defaultStatusSteps : hasInterview ? exceptionStatusSteps : defaultStatusSteps;
   const openStep = (index) => {
@@ -342,20 +382,8 @@ function MainApp({ profile, program, track, profilePhoto, nickname, onProfilePho
     return <View style={styles.mainApp}>
       <View style={styles.mainHeader}>
         <View style={profileStyles.headerBrand}>
-          {showProfile && (
-            <Pressable
-              accessibilityLabel="Back to home"
-              onPress={() => {
-                setShowProfile(false);
-                setActiveTab('Home');
-              }}
-              style={({ pressed }) => [profileStyles.headerBack, pressed && styles.pressed]}
-            >
-              <Ionicons name="chevron-back" size={24} color="#183225" />
-            </Pressable>
-          )}
-          <Image source={require('../assets/CvSU_Logo.png')} style={styles.mainLogo} />
-          <Text style={styles.mainTitle}>CvSU Admission</Text>
+          <Pressable accessibilityRole="button" accessibilityLabel="Go to Home" onPress={() => { setShowProfile(false); setShowGuestSetup(false); setActiveTab('Home'); }}><Image source={require('../assets/CvSU_Logo.png')} style={styles.mainLogo} /></Pressable>
+          <Text style={[styles.mainTitle, { position: 'absolute', left: 58, right: 0, textAlign: 'center' }]}>CvSU Virtual Admission Guide</Text>
         </View>
         <Pressable
           accessibilityLabel="Return to start page"
@@ -525,8 +553,8 @@ function MainApp({ profile, program, track, profilePhoto, nickname, onProfilePho
     const [guestReapplicationProgram, setGuestReapplicationProgram] = useState('');
     const displayedFailedProgram = guestMode ? guestFailedProgram : failedProgram;
     const displayedReapplicationProgram = guestMode ? guestReapplicationProgram : reapplicationProgram;
-  return <View style={[styles.mainApp, { paddingTop: androidTopInset, backgroundColor: '#fff' }]}>
-    <View style={styles.mainHeader}><View style={profileStyles.headerBrand}>{showProfile && <Pressable accessibilityLabel="Back to home" onPress={() => { setShowProfile(false); setActiveTab('Home'); }} style={({ pressed }) => [profileStyles.headerBack, pressed && styles.pressed]}><Ionicons name="chevron-back" size={24} color="#183225" /></Pressable>}<Image source={require('../assets/CvSU_Logo.png')} style={styles.mainLogo} /><Text style={styles.mainTitle}>CvSU Admission</Text></View><Pressable accessibilityLabel="Open applicant profile" onPress={() => setShowProfile(true)} style={({ pressed }) => [styles.profileButton, pressed && styles.pressed]}><Image source={!guestMode && profilePhoto ? { uri: profilePhoto } : require('../assets/Profile.png')} style={styles.profileImage} /></Pressable></View>
+  return <View style={[styles.mainApp, { paddingTop: androidTopInset, backgroundColor: '#078743' }]}>
+    <View style={styles.mainHeader}><View style={profileStyles.headerBrand}><Pressable accessibilityRole="button" accessibilityLabel="Go to Home" onPress={() => { setShowProfile(false); setShowGuestSetup(false); setActiveTab('Home'); }}><Image source={require('../assets/CvSU_Logo.png')} style={styles.mainLogo} /></Pressable><Text style={[styles.mainTitle, { position: 'absolute', left: 58, right: 0, textAlign: 'center' }]}>CvSU Virtual Admission Guide</Text></View><Pressable accessibilityLabel="Open applicant profile" onPress={() => setShowProfile(true)} style={({ pressed }) => [styles.profileButton, pressed && styles.pressed]}><Image source={!guestMode && profilePhoto ? { uri: profilePhoto } : require('../assets/Profile.png')} style={styles.profileImage} /></Pressable></View>
     {guestMode && (showGuestSetup || showProfile || activeTab === 'Home') && <Pressable accessibilityLabel="Exit guest mode" onPress={exitGuestMode} style={({ pressed }) => [profileStyles.guestModeBar, pressed && styles.pressed]}><View><Text style={profileStyles.guestModeLabel}>GUEST MODE</Text><Text style={profileStyles.guestModeCopy}>Your saved applicant profile is hidden.</Text></View><View style={profileStyles.exitGuestAction}><Ionicons name="log-out-outline" size={18} color="#075b31" /><Text style={profileStyles.exitGuestText}>Exit Guest Mode</Text></View></Pressable>}
     <ScrollView style={styles.mainContent} contentContainerStyle={[styles.mainContentInner, (activeTab === 'Home' || showProfile) && homeStyles.content, showGuestSetup && guestSetupStyles.content]} keyboardShouldPersistTaps="handled">{showGuestSetup ? <GuestProfileSetup step={guestSetupStep} profile={guestProfile} track={guestTrack} program={guestProgram} onProfileChange={setGuestProfile} onTrackChange={setGuestTrack} onProgramChange={setGuestProgram} onBack={() => setGuestSetupStep((current) => Math.max(1, current - 1))} onNext={() => setGuestSetupStep((current) => Math.min(3, current + 1))} onComplete={() => { setShowGuestSetup(false); setActiveTab('Home'); }} /> : showProfile ? <ApplicantProfilePage profile={displayedProfile} track={displayedTrack} program={displayedProgram} photo={profilePhoto} nickname={nickname} isGuest={guestMode} onPhotoChange={onProfilePhotoChange} onNicknameChange={onNicknameChange} onEdit={onRestart} onEditGuest={() => { setShowProfile(false); setShowGuestSetup(true); }} onBack={() => { setShowProfile(false); setActiveTab('Home'); }} onGuest={viewAsGuest} onReset={resetJourney} /> : activeTab === 'Status' ? <StatusPage displayName={displayName} profile={displayedProfile} program={displayedProgram} track={displayedTrack} steps={steps} currentStatusIndex={displayedStatusIndex} onStatusChange={guestMode ? setGuestStatusIndex : setCurrentStatusIndex} selectedStepIndex={displayedSelectedStepIndex} onSelectStep={guestMode ? setGuestSelectedStepIndex : setSelectedStepIndex} checkedRequirements={displayedCheckedRequirements} onRequirementsChange={guestMode ? setGuestCheckedRequirements : setCheckedRequirements} examinationAttempt={displayedExaminationAttempt} onExaminationAttemptChange={guestMode ? setGuestExaminationAttempt : setExaminationAttempt} /> : activeTab === 'Journey' ? <JourneyPage displayName={displayName} program={displayedProgram} profilePhoto={guestMode ? null : profilePhoto} steps={steps} currentStatusIndex={displayedStatusIndex} examinationAttempt={displayedExaminationAttempt} onOpenStep={openStep} /> : activeTab === 'Home' ? <HomePage displayName={displayName} profile={displayedProfile} program={displayedProgram} track={displayedTrack} steps={steps} currentStatusIndex={displayedStatusIndex} examinationAttempt={displayedExaminationAttempt} onOpenStep={openStep} onRestart={() => setShowProfile(true)} onOpenTab={setActiveTab} /> : activeTab === 'Map' ? <MapPage profilePhoto={guestMode ? null : profilePhoto} /> : <FAQPage />}</ScrollView>
     {!showProfile && !showGuestSetup && <View style={styles.bottomNav}>{mainTabs.map((tab) => <Pressable key={tab} onPress={() => setActiveTab(tab)} style={({ pressed }) => [styles.navItem, activeTab === tab && styles.activeNavItem, pressed && styles.pressed]}><Ionicons name={tabIcons[tab]} size={27} color={activeTab === tab ? '#009c29' : '#698073'} /><Text style={[styles.navLabel, activeTab === tab && styles.activeNavText]}>{tab}</Text></Pressable>)}</View>}
@@ -554,7 +582,7 @@ function ApplicantProfilePage({ profile, track, program, photo, nickname, isGues
     {!isGuest && <View style={profileStyles.nicknameEditor}><Text style={profileStyles.nicknameLabel}>NICKNAME</Text><TextInput value={nickname} onChangeText={onNicknameChange} maxLength={30} placeholder="Enter your nickname" placeholderTextColor="#8aa294" style={profileStyles.nicknameInput} /></View>}
     <View style={profileStyles.summary}>{!isGuest && nickname.trim().length > 0 && <ProfileSummaryItem label="NICKNAME" value={nickname.trim()} />}<ProfileSummaryItem label="APPLICANT TYPE" value={profileLabel} /><ProfileSummaryItem label="TRACK / STRAND" value={track} /><ProfileSummaryItem label="PROGRAM" value={program} last /></View>
     <Pressable onPress={() => Linking.openURL('http://admission.cvsu.edu.ph')} style={({ pressed }) => [homeStyles.profilePortal, pressed && styles.pressed]}><View style={homeStyles.actionIcon}><Ionicons name="open-outline" size={22} color="#4c4a12" /></View><View style={homeStyles.actionCopy}><Text style={homeStyles.actionEyebrow}>OFFICIAL PORTAL</Text><Text style={homeStyles.portalTitle}>Open CvSU Admission</Text><Text style={homeStyles.portalSubtitle}>admission.cvsu.edu.ph</Text></View><Ionicons name="arrow-forward" size={22} color="#183225" /></Pressable>
-    <View style={profileStyles.primaryActions}><Pressable onPress={isGuest ? onEditGuest : onEdit} style={({ pressed }) => [profileStyles.editButton, pressed && styles.pressed]}><Text style={profileStyles.editButtonText}>{isGuest ? 'Edit Guest Profile' : 'Edit Profile'}</Text></Pressable><Pressable onPress={onBack} style={({ pressed }) => [profileStyles.backButton, pressed && styles.pressed]}><Text style={profileStyles.backButtonText}>Back to Home</Text></Pressable></View>
+    <View style={profileStyles.primaryActions}><Pressable onPress={isGuest ? onEditGuest : onEdit} style={({ pressed }) => [profileStyles.editButton, pressed && styles.pressed]}><Text style={profileStyles.editButtonText}>{isGuest ? 'Edit Guest Profile' : 'Edit Profile'}</Text></Pressable><Pressable accessibilityRole="button" accessibilityLabel="Back to Home" onPress={onBack} style={({ pressed }) => [profileStyles.backButton, pressed && styles.pressed]}><Ionicons name="arrow-back" size={18} color="#075b31" /><Text style={profileStyles.backButtonText}>Back to Home</Text></Pressable></View>
     {!isGuest && <Pressable onPress={onGuest} style={({ pressed }) => [profileStyles.guestButton, pressed && styles.pressed]}><Text style={profileStyles.guestTitle}>View App as Guest</Text><Text style={profileStyles.guestCopy}>View procedures without showing or saving your profile progress.</Text></Pressable>}
     <Pressable onPress={onReset} style={({ pressed }) => [profileStyles.resetButton, pressed && styles.pressed]}><Text style={profileStyles.resetTitle}>{isGuest ? 'Reset Temporary Journey' : 'Reset Admission Journey'}</Text><Text style={profileStyles.resetCopy}>{isGuest ? 'Start this guest session again' : 'Keep your profile, start progress again'}</Text></Pressable>
   </View>;
@@ -1053,7 +1081,7 @@ const mapStyles = StyleSheet.create({
   fullscreenMap: { width: '100%', height: undefined, aspectRatio: 1080 / 1350, borderRadius: 0 }
 });
 const profileStyles = StyleSheet.create({
-  headerBrand: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  headerBrand: { flex: 1, position: 'relative', flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 10 },
   headerBack: { width: 30, height: 42, alignItems: 'center', justifyContent: 'center' },
   photoEditor: { minHeight: 112, marginBottom: 20, flexDirection: 'row', alignItems: 'center' },
   photoPreview: { width: 88, height: 88, borderRadius: 44, backgroundColor: '#e6f6e4', marginRight: 16 },
@@ -1081,8 +1109,8 @@ const profileStyles = StyleSheet.create({
   primaryActions: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
   editButton: { minHeight: 52, minWidth: 122, borderRadius: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: '#d8e2d9', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18 },
   editButtonText: { color: '#183225', fontSize: 13, fontWeight: '700' },
-  backButton: { flex: 1, minHeight: 52, alignItems: 'flex-end', justifyContent: 'center', paddingHorizontal: 8 },
-  backButtonText: { color: '#fff', fontSize: 13, fontWeight: '800' },
+  backButton: { flex: 1, minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, borderRadius: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: '#d8e2d9', paddingHorizontal: 12 },
+  backButtonText: { color: '#075b31', fontSize: 13, fontWeight: '800' },
   guestButton: { minHeight: 76, borderRadius: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: '#d8e2d9', alignItems: 'center', justifyContent: 'center', padding: 13, marginBottom: 12 },
   guestTitle: { color: '#183225', fontSize: 12, fontWeight: '800', textAlign: 'center' },
   guestCopy: { color: '#75877b', fontSize: 10, lineHeight: 15, textAlign: 'center', marginTop: 5, maxWidth: 310 },
