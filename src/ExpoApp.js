@@ -234,7 +234,7 @@ const startStyles = StyleSheet.create({
   noticeAction: { flexDirection: 'row', minHeight: 50, marginTop: 20, borderRadius: 8, backgroundColor: '#075b31', alignItems: 'center', justifyContent: 'center' },
   noticeActionText: { color: '#fff', fontSize: 16, fontWeight: '800' },
   noticeActionIcon: { marginLeft: 8 },
-  noticeTrigger: { position: 'absolute', top: 16, right: 20, zIndex: 2, flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 11, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.95)' },
+  noticeTrigger: { position: 'absolute', top: androidTopInset + 16, right: 20, zIndex: 2, flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 11, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.95)' },
   noticeTriggerText: { marginLeft: 6, color: '#075b31', fontSize: 12, fontWeight: '800' },
   splashSafe: { flex: 1, paddingTop: androidTopInset, backgroundColor: '#009c29' },
   splashContent: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28 },
@@ -280,7 +280,8 @@ export default function ExpoApp() {
   const next = (value, setter, number) => <Action disabled={!value} onPress={() => { setter(value); setStep(number); }} />;
   if (showSplash || !storageLoaded) return <SplashScreen />;
   if (startMode === 'start') return <StartScreen onSetup={() => { setStartMode('setup'); setStep(1); }} onGuest={() => { setStartMode('guest'); setStep(4); }} />;
-  return <SafeAreaView style={styles.safe}><StatusBar style={step === 4 ? 'dark' : 'light'} /><View style={styles.greenWash} />{step < 4 ? <><ScrollView contentContainerStyle={[styles.screen, onboardingSetupStyles.screen]} keyboardShouldPersistTaps="handled"><View style={[styles.header, onboardingSetupStyles.header]}><View style={styles.brand}><Image source={require('../assets/CvSU_Logo.png')} style={styles.logo} /><View><Text style={styles.eyebrow}>CAVITE STATE UNIVERSITY</Text><Text style={styles.brandName}>Admission Guide</Text></View></View><Pressable accessibilityLabel="How your profile personalizes your journey" onPress={() => setShowSetupHelp(true)} style={({ pressed }) => [styles.help, pressed && styles.pressed]}><Text style={onboardingHelpStyles.helpText}>?</Text></Pressable></View><Progress currentStep={step} />
+  return <SafeAreaView style={[styles.safe, { paddingTop: androidTopInset }]}><StatusBar style={step === 4 ? 'dark' : 'light'} />
+    <View style={styles.greenWash} />{step < 4 ? <><ScrollView contentContainerStyle={[styles.screen, onboardingSetupStyles.screen]} keyboardShouldPersistTaps="handled"><View style={[styles.header, onboardingSetupStyles.header]}><View style={styles.brand}><Image source={require('../assets/CvSU_Logo.png')} style={styles.logo} /><View><Text style={styles.eyebrow}>CAVITE STATE UNIVERSITY</Text><Text style={styles.brandName}>Admission Guide</Text></View></View><Pressable accessibilityLabel="How your profile personalizes your journey" onPress={() => setShowSetupHelp(true)} style={({ pressed }) => [styles.help, pressed && styles.pressed]}><Text style={onboardingHelpStyles.helpText}>?</Text></Pressable></View><Progress currentStep={step} totalSteps={3} />
     {step === 1 && <Page kicker="LET'S GET STARTED" title="Tell us about your journey." intro="Choose the description that best matches your current academic status."><View style={styles.list}>{profiles.map(([value, label, caption]) => <Option key={value} label={label} caption={caption} value={value} selected={profile === value} onPress={() => setProfile(value)} profileCard />)}</View></Page>}
     {step === 2 && <Page kicker="STEP 2 · ACADEMIC BACKGROUND" title="What was your track or strand?" intro="This helps us recommend programs that fit what you already enjoy."><View style={styles.list}>{tracks.map(([label, caption]) => <Option key={label} label={label} caption={caption} value={label} selected={track === label} onPress={() => setTrack(label)} profileCard />)}</View></Page>}
     {step === 3 && <Page kicker="STEP 3 · YOUR DIRECTION" title="Which program feels like you?" intro={`Your ${track} background is a great starting point. Search the catalog and choose a first choice.`}><View style={styles.search}><Text style={styles.searchIcon}>⌕</Text><TextInput value={query} onChangeText={setQuery} placeholder="Search programs" placeholderTextColor="#8aa294" style={styles.input} /><Pressable onPress={() => setQuery('')} style={styles.clear}><Text style={styles.clearText}>×</Text></Pressable></View>{results.length === 0 && <Text style={styles.muted}>No matching programs found.</Text>}<View style={styles.list}>{results.map((item) => <Option key={item} label={item} value="→" selected={program === item} onPress={() => setProgram(item)} compact />)}</View></Page>}
@@ -289,7 +290,7 @@ export default function ExpoApp() {
 function SplashScreen() { return <SafeAreaView style={startStyles.splashSafe}><StatusBar style="light" /><View style={startStyles.splashContent}><Image source={require('../assets/CvSU_Logo.png')} style={startStyles.splashLogo} /><Text style={startStyles.splashKicker}>CAVITE STATE UNIVERSITY</Text><Text style={startStyles.splashTitle}>CvSU Virtual Admission Guide</Text><Text style={startStyles.splashCaption}>Preparing your admission guide</Text></View></SafeAreaView>; }
 function StartScreen({ onSetup, onGuest }) { const [showNotice, setShowNotice] = useState(true); const [showOptionInfo, setShowOptionInfo] = useState(null); return <SafeAreaView style={startStyles.safe}><StatusBar style="light" /><Pressable accessibilityRole="button" accessibilityLabel="Show important notice" onPress={() => setShowNotice(true)} style={({ pressed }) => [startStyles.noticeTrigger, pressed && styles.pressed]}><Ionicons name="information-circle-outline" size={18} color="#075b31" /><Text style={startStyles.noticeTriggerText}>Important notice</Text></Pressable><View style={startStyles.content}><View style={startStyles.heroCard}><Image source={require('../assets/CvSU_Logo.png')} style={startStyles.logo} /><Text style={startStyles.kicker}>CAVITE STATE UNIVERSITY</Text><Text style={startStyles.title}>CvSU Virtual Admission Guide</Text><Text style={startStyles.copy}>Your clear starting point for application requirements, admission steps, and campus guidance.</Text></View><View style={startStyles.secondaryAction}><Pressable onPress={onGuest} style={({ pressed }) => [startStyles.optionMain, pressed && styles.pressed]}><Text style={startStyles.secondaryTitle}>Continue as Guest</Text></Pressable><Pressable accessibilityRole="button" accessibilityLabel="About Continue as Guest" onPress={() => setShowOptionInfo('guest')} style={({ pressed }) => [startStyles.optionQuestion, pressed && styles.pressed]}><Text style={startStyles.optionQuestionText}>?</Text></Pressable></View><View style={startStyles.primaryAction}><Pressable onPress={onSetup} style={({ pressed }) => [startStyles.optionMain, pressed && styles.pressed]}><Text style={startStyles.primaryTitle}>Complete Applicant Profile</Text></Pressable><Pressable accessibilityRole="button" accessibilityLabel="About Complete Applicant Profile" onPress={() => setShowOptionInfo('profile')} style={({ pressed }) => [startStyles.optionQuestion, pressed && styles.pressed]}><Text style={startStyles.optionQuestionText}>?</Text></Pressable></View></View><Modal visible={showNotice} transparent animationType="fade" onRequestClose={() => {}}><View style={onboardingHelpStyles.backdrop}><View style={startStyles.noticeCard}><View style={startStyles.noticeHeader}><View style={startStyles.noticeIcon}><Ionicons name="information" size={24} color="#183225" /></View><View style={startStyles.noticeHeading}><Text style={startStyles.noticeKicker}>BEFORE YOU BEGIN</Text><Text style={startStyles.noticeTitle}>Important Notice</Text></View></View><Text style={startStyles.noticeCopy}>CvSU Virtual Admission Guide is designed to help prospective students understand the Cavite State University admission process. It provides application requirements, admission steps, examination and medical guidance, campus locations, FAQs, and progress tracking.</Text><View style={startStyles.noticeDisclaimer}><Ionicons name="shield-checkmark" size={19} color="#9a7c00" style={startStyles.noticeDisclaimerIcon} /><Text style={startStyles.noticeEmphasis}>This app is not the official CvSU admission portal and cannot process applications. It is intended only to guide applicants and help them prepare for the official admission process.</Text></View><Pressable accessibilityRole="button" onPress={() => setShowNotice(false)} style={({ pressed }) => [startStyles.noticeAction, pressed && styles.pressed]}><Text style={startStyles.noticeActionText}>Proceed to Guide</Text><Ionicons name="arrow-forward" size={19} color="#fff" style={startStyles.noticeActionIcon} /></Pressable></View></View></Modal><Modal visible={Boolean(showOptionInfo)} transparent animationType="fade" onRequestClose={() => setShowOptionInfo(null)}><View style={onboardingHelpStyles.backdrop}><View style={startStyles.noticeCard}><View style={startStyles.noticeHeader}><View style={startStyles.noticeIcon}><Ionicons name="help" size={24} color="#183225" /></View><View style={startStyles.noticeHeading}><Text style={startStyles.noticeKicker}>OPTION DETAILS</Text><Text style={startStyles.noticeTitle}>{showOptionInfo === 'guest' ? 'Continue as Guest' : 'Complete Applicant Profile'}</Text></View></View><Text style={startStyles.noticeCopy}>{showOptionInfo === 'guest' ? 'Choose this option if you are still exploring CvSU admission, helping another applicant, or only need to review general requirements, procedures, FAQs, and campus guidance. You can use the guide without entering applicant details, but your progress will not be personalized or saved as an applicant profile.' : 'Choose this option if you are a prospective applicant who wants guidance tailored to your academic background and preferred program. You will provide your applicant type, track or strand, and program choice so the guide can highlight relevant requirements, admission steps, and progress tracking for your journey.'}</Text><Pressable accessibilityRole="button" onPress={() => setShowOptionInfo(null)} style={({ pressed }) => [startStyles.noticeAction, pressed && styles.pressed]}><Text style={startStyles.noticeActionText}>Close</Text></Pressable></View></View></Modal></SafeAreaView>; }
 function Page({ kicker, title, intro, children }) { return <><Text style={[styles.kicker, onboardingSetupStyles.kicker]}>{kicker}</Text><Text style={[styles.title, onboardingSetupStyles.title]}>{title}</Text><Text style={[styles.intro, onboardingSetupStyles.intro]}>{intro}</Text>{children}</>; }
-function Progress({ currentStep }) { return <View style={[styles.progress, onboardingSetupStyles.progress]}><View style={onboardingSetupStyles.progressTrack}><View style={onboardingSetupStyles.progressRail} /><View style={[onboardingSetupStyles.progressFill, { width: `${Math.max(0, currentStep - 1) * 33.33}%` }]} /><View style={onboardingSetupStyles.progressDots}>{[1, 2, 3, 4].map((item) => <View key={item} style={[styles.progressDot, onboardingSetupStyles.progressDot, item === currentStep && onboardingSetupStyles.activeProgressDot, item < currentStep && onboardingSetupStyles.completeProgressDot]}><Text style={[onboardingSetupStyles.progressDotText, item === currentStep && onboardingSetupStyles.activeProgressDotText, item < currentStep && onboardingSetupStyles.completeProgressDotText]}>{item}</Text></View>)}</View></View><Text style={[styles.progressText, onboardingSetupStyles.progressText]}>Step {currentStep} of 4</Text></View>; }
+function Progress({ currentStep, totalSteps = 4 }) { const progress = totalSteps > 1 ? Math.max(0, (currentStep - 1) / (totalSteps - 1)) * 100 : 0; return <View style={[styles.progress, onboardingSetupStyles.progress]}><View style={onboardingSetupStyles.progressTrack}><View style={onboardingSetupStyles.progressRail} /><View style={[onboardingSetupStyles.progressFill, { width: `${progress}%` }]} /><View style={onboardingSetupStyles.progressDots}>{Array.from({ length: totalSteps }, (_, index) => index + 1).map((item) => <View key={item} style={[styles.progressDot, onboardingSetupStyles.progressDot, item === currentStep && onboardingSetupStyles.activeProgressDot, item < currentStep && onboardingSetupStyles.completeProgressDot]}><Text style={[onboardingSetupStyles.progressDotText, item === currentStep && onboardingSetupStyles.activeProgressDotText, item < currentStep && onboardingSetupStyles.completeProgressDotText]}>{item}</Text></View>)}</View></View><Text style={[styles.progressText, onboardingSetupStyles.progressText]}>Step {currentStep} of {totalSteps}</Text></View>; }
 function Option({ label, caption, value, selected, onPress, compact, profileCard = false }) { return <Pressable accessibilityRole="radio" accessibilityState={{ checked: selected }} onPress={onPress} style={({ pressed }) => [styles.option, onboardingSetupStyles.option, compact && styles.compact, profileCard && styles.profileOption, selected && styles.selected, selected && onboardingSetupStyles.selected, pressed && styles.pressed]}>{!profileCard && <Text style={[styles.icon, selected && styles.selectedIcon]}>{value}</Text>}<View style={styles.optionCopy}><View style={styles.optionHeader}><Text style={[styles.optionText, profileCard && styles.profileOptionText, selected && profileCard && styles.profileOptionTextSelected]}>{label}</Text><Text style={[styles.selectedLabel, onboardingSetupStyles.selectedLabel, !selected && onboardingSetupStyles.hiddenSelectedLabel]}>SELECTED</Text></View>{caption && <Text style={styles.optionCaption}>{caption}</Text>}</View></Pressable>; }
 function Action({ label = 'Continue', disabled, onPress }) { return <Pressable disabled={disabled} onPress={onPress} style={[styles.action, onboardingSetupStyles.action, disabled && styles.disabled]}><Text style={[styles.actionText, onboardingSetupStyles.actionText]}>{label}</Text></Pressable>; }
 function Back({ onPress }) { return <Pressable onPress={onPress} style={[styles.back, onboardingSetupStyles.back]}><Text style={[styles.backText, onboardingSetupStyles.backText]}>Back</Text></Pressable>; }
@@ -301,6 +302,7 @@ function MainApp({ profile, program, track, profilePhoto, nickname, onProfilePho
   const [guestMode, setGuestMode] = useState(startAsGuest);
   const [showGuestSetup, setShowGuestSetup] = useState(false);
   const [guestSetupStep, setGuestSetupStep] = useState(1);
+  const [guestSetupIsEditing, setGuestSetupIsEditing] = useState(false);
   const [guestProfile, setGuestProfile] = useState('');
   const [guestTrack, setGuestTrack] = useState('');
   const [guestProgram, setGuestProgram] = useState('');
@@ -320,16 +322,19 @@ function MainApp({ profile, program, track, profilePhoto, nickname, onProfilePho
         setCurrentStatusIndex(savedProgress.currentStatusIndex || 0);
         setCheckedRequirements(savedProgress.checkedRequirements || {});
         setExaminationAttempt(savedProgress.examinationAttempt || 'initial');
-        setActiveProgram(savedProgress.activeProgram || program);
       }
     }).catch(() => {}).finally(() => setProgressLoaded(true));
+  }, []);
+  useEffect(() => {
+    setActiveProgram(program);
   }, [program]);
   useEffect(() => {
     if (!progressLoaded || guestMode) return;
-    AsyncStorage.setItem(savedProgressKey, JSON.stringify({ currentStatusIndex, checkedRequirements, examinationAttempt, activeProgram })).catch(() => {});
-  }, [progressLoaded, guestMode, currentStatusIndex, checkedRequirements, examinationAttempt, activeProgram]);
-  const hasInterview = exceptionProgramKeywords.some((keyword) => activeProgram.includes(keyword));
-  const steps = guestMode ? defaultStatusSteps : hasInterview ? exceptionStatusSteps : defaultStatusSteps;
+    AsyncStorage.setItem(savedProgressKey, JSON.stringify({ currentStatusIndex, checkedRequirements, examinationAttempt })).catch(() => {});
+  }, [progressLoaded, guestMode, currentStatusIndex, checkedRequirements, examinationAttempt]);
+  const selectedProgramForSteps = guestMode ? guestProgram : activeProgram;
+  const hasInterview = exceptionProgramKeywords.some((keyword) => String(selectedProgramForSteps || '').toLowerCase().includes(keyword.toLowerCase()));
+  const steps = hasInterview ? exceptionStatusSteps : defaultStatusSteps;
   const openStep = (index) => {
     if (guestMode) setGuestSelectedStepIndex(index);
     else setSelectedStepIndex(index);
@@ -363,6 +368,7 @@ function MainApp({ profile, program, track, profilePhoto, nickname, onProfilePho
     setGuestTrack('');
     setGuestProgram('');
     setGuestSetupStep(1);
+    setGuestSetupIsEditing(false);
     setGuestStatusIndex(0);
     setGuestSelectedStepIndex(null);
     setGuestCheckedRequirements({});
@@ -412,7 +418,7 @@ function MainApp({ profile, program, track, profilePhoto, nickname, onProfilePho
         >
           <View>
             <Text style={profileStyles.guestModeLabel}>GUEST MODE</Text>
-            <Text style={profileStyles.guestModeCopy}>Your saved applicant profile is hidden.</Text>
+            <Text style={profileStyles.guestModeCopy}>{profile ? 'Your saved applicant profile is hidden.' : 'Exploring the app as a guest.'}</Text>
           </View>
           <View style={profileStyles.exitGuestAction}>
             <Ionicons name="log-out-outline" size={18} color="#075b31" />
@@ -438,12 +444,6 @@ function MainApp({ profile, program, track, profilePhoto, nickname, onProfilePho
             onProfileChange={setGuestProfile}
             onTrackChange={setGuestTrack}
             onProgramChange={setGuestProgram}
-            onBack={() => setGuestSetupStep((current) => Math.max(1, current - 1))}
-            onNext={() => setGuestSetupStep((current) => Math.min(3, current + 1))}
-            onComplete={() => {
-              setShowGuestSetup(false);
-              setActiveTab('Home');
-            }}
           />
         ) : showProfile ? (
           <ApplicantProfilePage
@@ -457,6 +457,8 @@ function MainApp({ profile, program, track, profilePhoto, nickname, onProfilePho
             onNicknameChange={onNicknameChange}
             onEdit={onRestart}
             onEditGuest={() => {
+              setGuestSetupStep(1);
+              setGuestSetupIsEditing(true);
               setShowProfile(false);
               setShowGuestSetup(true);
             }}
@@ -487,6 +489,7 @@ function MainApp({ profile, program, track, profilePhoto, nickname, onProfilePho
             onFailedProgramChange={guestMode ? setGuestFailedProgram : setFailedProgram}
             onReapplicationProgramChange={guestMode ? setGuestReapplicationProgram : setReapplicationProgram}
             onProgramChange={guestMode ? setGuestProgram : setActiveProgram}
+            isGuest={guestMode}
           />
         ) : activeTab === 'Journey' ? (
           <JourneyPage
@@ -497,6 +500,7 @@ function MainApp({ profile, program, track, profilePhoto, nickname, onProfilePho
             currentStatusIndex={displayedStatusIndex}
             examinationAttempt={displayedExaminationAttempt}
             onOpenStep={openStep}
+            isGuest={guestMode}
           />
         ) : activeTab === 'Home' ? (
           <HomePage
@@ -517,6 +521,34 @@ function MainApp({ profile, program, track, profilePhoto, nickname, onProfilePho
           <FAQPage />
         )}
       </ScrollView>
+      {showGuestSetup && (
+        <View style={guestSetupStyles.actions}>
+          <Pressable
+            onPress={() => {
+              setShowGuestSetup(false);
+              if (guestSetupIsEditing) setShowProfile(true);
+              else setActiveTab('Home');
+              setGuestSetupIsEditing(false);
+            }}
+            style={({ pressed }) => [profileStyles.backButton, pressed && styles.pressed]}
+          >
+            <Text style={profileStyles.backButtonText}>{guestSetupIsEditing ? 'Cancel' : 'Skip'}</Text>
+          </Pressable>
+          {guestSetupStep > 1 && <Back onPress={() => setGuestSetupStep((current) => current - 1)} />}
+          <Action
+            label={guestSetupStep === 3 ? (guestSetupIsEditing ? 'Save Guest Profile' : 'Start as Guest') : 'Continue'}
+            disabled={!(guestSetupStep === 1 ? guestProfile : guestSetupStep === 2 ? guestTrack : guestProgram)}
+            onPress={() => {
+              if (guestSetupStep < 3) setGuestSetupStep((current) => current + 1);
+              else {
+                setShowGuestSetup(false);
+                setGuestSetupIsEditing(false);
+                setActiveTab('Home');
+              }
+            }}
+          />
+        </View>
+      )}
       {!showProfile && !showGuestSetup && (
         <View style={styles.bottomNav}>
           {mainTabs.map((tab) => (
@@ -553,10 +585,57 @@ function MainApp({ profile, program, track, profilePhoto, nickname, onProfilePho
     const [guestReapplicationProgram, setGuestReapplicationProgram] = useState('');
     const displayedFailedProgram = guestMode ? guestFailedProgram : failedProgram;
     const displayedReapplicationProgram = guestMode ? guestReapplicationProgram : reapplicationProgram;
-  return <View style={[styles.mainApp, { paddingTop: androidTopInset, backgroundColor: '#078743' }]}>
+    if (showGuestSetup) {
+      return (
+        <View style={[styles.safe, { backgroundColor: '#009c29' }]}>
+          <StatusBar style="light" />
+          <ScrollView
+            contentContainerStyle={[styles.screen, onboardingSetupStyles.screen, guestSetupStyles.content]}
+            keyboardShouldPersistTaps="handled"
+          >
+            <GuestProfileSetup
+              step={guestSetupStep}
+              profile={guestProfile}
+              track={guestTrack}
+              program={guestProgram}
+              onProfileChange={setGuestProfile}
+              onTrackChange={setGuestTrack}
+              onProgramChange={setGuestProgram}
+            />
+          </ScrollView>
+          <View style={[styles.fixedActions, onboardingSetupStyles.fixedActions]}>
+            <Pressable
+              onPress={() => {
+                setShowGuestSetup(false);
+                setGuestSetupIsEditing(false);
+                if (guestSetupIsEditing) setShowProfile(true);
+                else setActiveTab('Home');
+              }}
+              style={[styles.back, onboardingSetupStyles.back]}
+            >
+              <Text style={[styles.backText, onboardingSetupStyles.backText]}>{guestSetupIsEditing ? 'Cancel' : 'Skip'}</Text>
+            </Pressable>
+            {guestSetupStep > 1 && <Back onPress={() => setGuestSetupStep((current) => current - 1)} />}
+            <Action
+              label={guestSetupStep === 3 ? (guestSetupIsEditing ? 'Save Guest Profile' : 'Start as Guest') : 'Continue'}
+              disabled={!(guestSetupStep === 1 ? guestProfile : guestSetupStep === 2 ? guestTrack : guestProgram)}
+              onPress={() => {
+                if (guestSetupStep < 3) setGuestSetupStep((current) => current + 1);
+                else {
+                  setShowGuestSetup(false);
+                  setGuestSetupIsEditing(false);
+                  setActiveTab('Home');
+                }
+              }}
+            />
+          </View>
+        </View>
+      );
+    }
+  return <View style={[styles.mainApp, { backgroundColor: '#078743' }]}>
     <View style={styles.mainHeader}><View style={profileStyles.headerBrand}><Pressable accessibilityRole="button" accessibilityLabel="Go to Home" onPress={() => { setShowProfile(false); setShowGuestSetup(false); setActiveTab('Home'); }}><Image source={require('../assets/CvSU_Logo.png')} style={styles.mainLogo} /></Pressable><Text style={[styles.mainTitle, { position: 'absolute', left: 58, right: 0, textAlign: 'center' }]}>CvSU Virtual Admission Guide</Text></View><Pressable accessibilityLabel="Open applicant profile" onPress={() => setShowProfile(true)} style={({ pressed }) => [styles.profileButton, pressed && styles.pressed]}><Image source={!guestMode && profilePhoto ? { uri: profilePhoto } : require('../assets/Profile.png')} style={styles.profileImage} /></Pressable></View>
-    {guestMode && (showGuestSetup || showProfile || activeTab === 'Home') && <Pressable accessibilityLabel="Exit guest mode" onPress={exitGuestMode} style={({ pressed }) => [profileStyles.guestModeBar, pressed && styles.pressed]}><View><Text style={profileStyles.guestModeLabel}>GUEST MODE</Text><Text style={profileStyles.guestModeCopy}>Your saved applicant profile is hidden.</Text></View><View style={profileStyles.exitGuestAction}><Ionicons name="log-out-outline" size={18} color="#075b31" /><Text style={profileStyles.exitGuestText}>Exit Guest Mode</Text></View></Pressable>}
-    <ScrollView style={styles.mainContent} contentContainerStyle={[styles.mainContentInner, (activeTab === 'Home' || showProfile) && homeStyles.content, showGuestSetup && guestSetupStyles.content]} keyboardShouldPersistTaps="handled">{showGuestSetup ? <GuestProfileSetup step={guestSetupStep} profile={guestProfile} track={guestTrack} program={guestProgram} onProfileChange={setGuestProfile} onTrackChange={setGuestTrack} onProgramChange={setGuestProgram} onBack={() => setGuestSetupStep((current) => Math.max(1, current - 1))} onNext={() => setGuestSetupStep((current) => Math.min(3, current + 1))} onComplete={() => { setShowGuestSetup(false); setActiveTab('Home'); }} /> : showProfile ? <ApplicantProfilePage profile={displayedProfile} track={displayedTrack} program={displayedProgram} photo={profilePhoto} nickname={nickname} isGuest={guestMode} onPhotoChange={onProfilePhotoChange} onNicknameChange={onNicknameChange} onEdit={onRestart} onEditGuest={() => { setShowProfile(false); setShowGuestSetup(true); }} onBack={() => { setShowProfile(false); setActiveTab('Home'); }} onGuest={viewAsGuest} onReset={resetJourney} /> : activeTab === 'Status' ? <StatusPage displayName={displayName} profile={displayedProfile} program={displayedProgram} track={displayedTrack} steps={steps} currentStatusIndex={displayedStatusIndex} onStatusChange={guestMode ? setGuestStatusIndex : setCurrentStatusIndex} selectedStepIndex={displayedSelectedStepIndex} onSelectStep={guestMode ? setGuestSelectedStepIndex : setSelectedStepIndex} checkedRequirements={displayedCheckedRequirements} onRequirementsChange={guestMode ? setGuestCheckedRequirements : setCheckedRequirements} examinationAttempt={displayedExaminationAttempt} onExaminationAttemptChange={guestMode ? setGuestExaminationAttempt : setExaminationAttempt} /> : activeTab === 'Journey' ? <JourneyPage displayName={displayName} program={displayedProgram} profilePhoto={guestMode ? null : profilePhoto} steps={steps} currentStatusIndex={displayedStatusIndex} examinationAttempt={displayedExaminationAttempt} onOpenStep={openStep} /> : activeTab === 'Home' ? <HomePage displayName={displayName} profile={displayedProfile} program={displayedProgram} track={displayedTrack} steps={steps} currentStatusIndex={displayedStatusIndex} examinationAttempt={displayedExaminationAttempt} onOpenStep={openStep} onRestart={() => setShowProfile(true)} onOpenTab={setActiveTab} /> : activeTab === 'Map' ? <MapPage profilePhoto={guestMode ? null : profilePhoto} /> : <FAQPage />}</ScrollView>
+    {guestMode && (showGuestSetup || showProfile || activeTab === 'Home') && <Pressable accessibilityLabel="Exit guest mode" onPress={exitGuestMode} style={({ pressed }) => [profileStyles.guestModeBar, pressed && styles.pressed]}><View><Text style={profileStyles.guestModeLabel}>GUEST MODE</Text><Text style={profileStyles.guestModeCopy}>{profile ? 'Your saved applicant profile is hidden.' : 'Exploring the app as a guest.'}</Text></View><View style={profileStyles.exitGuestAction}><Ionicons name="log-out-outline" size={18} color="#075b31" /><Text style={profileStyles.exitGuestText}>Exit Guest Mode</Text></View></Pressable>}
+    <ScrollView style={styles.mainContent} contentContainerStyle={[styles.mainContentInner, (activeTab === 'Home' || showProfile) && homeStyles.content, showGuestSetup && guestSetupStyles.content]} keyboardShouldPersistTaps="handled">{showGuestSetup ? <GuestProfileSetup step={guestSetupStep} profile={guestProfile} track={guestTrack} program={guestProgram} onProfileChange={setGuestProfile} onTrackChange={setGuestTrack} onProgramChange={setGuestProgram} onBack={() => setGuestSetupStep((current) => Math.max(1, current - 1))} onNext={() => setGuestSetupStep((current) => Math.min(3, current + 1))} onComplete={() => { setShowGuestSetup(false); setActiveTab('Home'); }} onSkip={() => { setShowGuestSetup(false); setActiveTab('Home'); }} /> : showProfile ? <ApplicantProfilePage profile={displayedProfile} track={displayedTrack} program={displayedProgram} photo={profilePhoto} nickname={nickname} isGuest={guestMode} onPhotoChange={onProfilePhotoChange} onNicknameChange={onNicknameChange} onEdit={onRestart} onEditGuest={() => { setShowProfile(false); setShowGuestSetup(true); }} onBack={() => { setShowProfile(false); setActiveTab('Home'); }} onGuest={viewAsGuest} onReset={resetJourney} /> : activeTab === 'Status' ? <StatusPage displayName={displayName} profile={displayedProfile} program={displayedProgram} track={displayedTrack} steps={steps} currentStatusIndex={displayedStatusIndex} onStatusChange={guestMode ? setGuestStatusIndex : setCurrentStatusIndex} selectedStepIndex={displayedSelectedStepIndex} onSelectStep={guestMode ? setGuestSelectedStepIndex : setSelectedStepIndex} checkedRequirements={displayedCheckedRequirements} onRequirementsChange={guestMode ? setGuestCheckedRequirements : setCheckedRequirements} examinationAttempt={displayedExaminationAttempt} onExaminationAttemptChange={guestMode ? setGuestExaminationAttempt : setExaminationAttempt} isGuest={guestMode} /> : activeTab === 'Journey' ? <JourneyPage displayName={displayName} program={displayedProgram} profilePhoto={guestMode ? null : profilePhoto} steps={steps} currentStatusIndex={displayedStatusIndex} examinationAttempt={displayedExaminationAttempt} onOpenStep={openStep} isGuest={guestMode} /> : activeTab === 'Home' ? <HomePage displayName={displayName} profile={displayedProfile} program={displayedProgram} track={displayedTrack} steps={steps} currentStatusIndex={displayedStatusIndex} examinationAttempt={displayedExaminationAttempt} onOpenStep={openStep} onRestart={() => setShowProfile(true)} onOpenTab={setActiveTab} /> : activeTab === 'Map' ? <MapPage profilePhoto={guestMode ? null : profilePhoto} /> : <FAQPage />}</ScrollView>
     {!showProfile && !showGuestSetup && <View style={styles.bottomNav}>{mainTabs.map((tab) => <Pressable key={tab} onPress={() => setActiveTab(tab)} style={({ pressed }) => [styles.navItem, activeTab === tab && styles.activeNavItem, pressed && styles.pressed]}><Ionicons name={tabIcons[tab]} size={27} color={activeTab === tab ? '#009c29' : '#698073'} /><Text style={[styles.navLabel, activeTab === tab && styles.activeNavText]}>{tab}</Text></Pressable>)}</View>}
   </View>;
 }
@@ -567,11 +646,44 @@ function ProfilePhotoEditor({ photo, onChange }) {
   };
   return <View style={profileStyles.photoEditor}><Image source={photo ? { uri: photo } : require('../assets/Profile.png')} style={profileStyles.photoPreview} /><View style={profileStyles.photoActions}><Text style={profileStyles.photoTitle}>Profile Picture</Text><Pressable accessibilityLabel={photo ? 'Change profile picture' : 'Upload profile picture'} onPress={choosePhoto} style={({ pressed }) => [profileStyles.photoButton, pressed && styles.pressed]}><Ionicons name="camera-outline" size={18} color="#075b31" /><Text style={profileStyles.photoButtonText}>{photo ? 'Change Picture' : 'Upload Picture'}</Text></Pressable>{photo && <Pressable accessibilityLabel="Remove profile picture" onPress={() => onChange(null)} style={({ pressed }) => [profileStyles.removePhotoButton, pressed && styles.pressed]}><Text style={profileStyles.removePhotoText}>Remove</Text></Pressable>}</View></View>;
 }
-function GuestProfileSetup({ step, profile, track, program, onProfileChange, onTrackChange, onProgramChange, onBack, onNext, onComplete }) {
+function GuestProfileSetup({ step, profile, track, program, onProfileChange, onTrackChange, onProgramChange }) {
   const [query, setQuery] = useState('');
   const filteredPrograms = programs.filter((item) => item.toLowerCase().includes(query.trim().toLowerCase()));
-  const selection = step === 1 ? profile : step === 2 ? track : program;
-  return <View style={guestSetupStyles.page}><Text style={guestSetupStyles.eyebrow}>TEMPORARY GUEST PROFILE · {step} / 3</Text><Text style={guestSetupStyles.title}>{step === 1 ? 'Choose your academic status.' : step === 2 ? 'Choose your track or strand.' : 'Choose a program.'}</Text><Text style={guestSetupStyles.copy}>These choices apply only to this guest session and will not change the saved applicant profile.</Text>{step === 1 && <View style={styles.list}>{profiles.map(([value, label, caption]) => <Option key={value} label={label} caption={caption} value={value} selected={profile === value} onPress={() => onProfileChange(value)} profileCard />)}</View>}{step === 2 && <View style={styles.list}>{tracks.map(([label, caption]) => <Option key={label} label={label} caption={caption} value={label} selected={track === label} onPress={() => onTrackChange(label)} profileCard />)}</View>}{step === 3 && <><View style={styles.search}><Ionicons name="search" size={20} color="#075b31" /><TextInput value={query} onChangeText={setQuery} placeholder="Search programs" placeholderTextColor="#8aa294" style={styles.input} />{query.length > 0 && <Pressable accessibilityLabel="Clear program search" onPress={() => setQuery('')} style={styles.clear}><Ionicons name="close" size={16} color="#078743" /></Pressable>}</View><View style={styles.list}>{filteredPrograms.map((item) => <Option key={item} label={item} value="→" selected={program === item} onPress={() => onProgramChange(item)} compact />)}</View></>}<View style={guestSetupStyles.actions}>{step > 1 && <Back onPress={onBack} />}<Action label={step === 3 ? 'Start as Guest' : 'Continue'} disabled={!selection} onPress={step === 3 ? onComplete : onNext} /></View></View>;
+  return (
+    <View style={guestSetupStyles.page}>
+      <View style={[styles.header, onboardingSetupStyles.header]}>
+        <View style={styles.brand}>
+          <Image source={require('../assets/CvSU_Logo.png')} style={styles.logo} />
+          <View>
+            <Text style={styles.eyebrow}>CAVITE STATE UNIVERSITY</Text>
+            <Text style={styles.brandName}>Guest Profile</Text>
+          </View>
+        </View>
+      </View>
+      <Progress currentStep={step} totalSteps={3} />
+      {step === 1 && (
+        <Page kicker="LET'S GET STARTED" title="Tell us about your journey." intro="Choose the description that best matches your current academic status.">
+          <View style={styles.list}>{profiles.map(([value, label, caption]) => <Option key={value} label={label} caption={caption} value={value} selected={profile === value} onPress={() => onProfileChange(value)} profileCard />)}</View>
+        </Page>
+      )}
+      {step === 2 && (
+        <Page kicker="STEP 2 · ACADEMIC BACKGROUND" title="What was your track or strand?" intro="This helps us recommend programs that fit what you already enjoy.">
+          <View style={styles.list}>{tracks.map(([label, caption]) => <Option key={label} label={label} caption={caption} value={label} selected={track === label} onPress={() => onTrackChange(label)} profileCard />)}</View>
+        </Page>
+      )}
+      {step === 3 && (
+        <Page kicker="STEP 3 · YOUR DIRECTION" title="Which program feels like you?" intro={`Your ${track} background is a great starting point. Search the catalog and choose a first choice.`}>
+          <View style={styles.search}>
+            <Ionicons name="search" size={20} color="#075b31" />
+            <TextInput value={query} onChangeText={setQuery} placeholder="Search programs" placeholderTextColor="#8aa294" style={styles.input} />
+            {query.length > 0 && <Pressable accessibilityLabel="Clear program search" onPress={() => setQuery('')} style={styles.clear}><Ionicons name="close" size={16} color="#078743" /></Pressable>}
+          </View>
+          {filteredPrograms.length === 0 && <Text style={styles.muted}>No matching programs found.</Text>}
+          <View style={styles.list}>{filteredPrograms.map((item) => <Option key={item} label={item} value="→" selected={program === item} onPress={() => onProgramChange(item)} compact />)}</View>
+        </Page>
+      )}
+    </View>
+  );
 }
 function ApplicantProfilePage({ profile, track, program, photo, nickname, isGuest = false, onPhotoChange, onNicknameChange, onEdit, onEditGuest, onBack, onGuest, onReset }) {
   const profileLabel = profiles.find(([value]) => value === profile)?.[1] || profile;
@@ -603,7 +715,7 @@ function HomePage({ displayName, profile, program, track, steps, currentStatusIn
     onOpenStep(currentStatusIndex);
   };
   return <HomePageReordered displayName={displayName} profile={profile} track={track} program={program} steps={steps} currentStatusIndex={currentStatusIndex} progress={progress} applicationStopped={applicationStopped} isFinished={isFinished} stage={stage} onOpenStep={openCurrentStep} onRestart={onRestart} onOpenTab={onOpenTab} />;
-  return <View style={homeStyles.page}><View style={homeStyles.welcome}><View style={homeStyles.welcomeCopy}><Text style={homeStyles.kicker}>CVSU VIRTUAL ADMISSION GUIDE</Text><Text style={homeStyles.title}>Welcome Back, {displayName}!</Text><Text style={homeStyles.subtitle}>{applicationStopped ? 'Thank you for applying to Cavite State University, ' + displayName + '.' : isFinished ? 'Your admission journey is complete, ' + displayName + '. Welcome to CvSU!' : 'Your admissions journey looks strong, ' + displayName + '. Keep moving through each step with confidence.'}</Text></View><View style={homeStyles.progressBadge}><Text style={homeStyles.progressBadgeText}>{progress}%</Text></View></View><Pressable onPress={() => Linking.openURL('http://admission.cvsu.edu.ph')} style={({ pressed }) => [homeStyles.portal, pressed && styles.pressed]}><View style={homeStyles.actionIcon}><Ionicons name="open-outline" size={22} color="#4c4a12" /></View><View style={homeStyles.actionCopy}><Text style={homeStyles.actionEyebrow}>OFFICIAL PORTAL</Text><Text style={homeStyles.portalTitle}>Open CvSU Admission</Text><Text style={homeStyles.portalSubtitle}>admission.cvsu.edu.ph</Text></View><Ionicons name="arrow-forward" size={22} color="#183225" /></Pressable><Pressable onPress={onRestart} style={({ pressed }) => [homeStyles.card, pressed && styles.pressed]}><Text style={homeStyles.cardEyebrow}>APPLICANT TYPE</Text><Text style={homeStyles.cardTitle}>{profileLabel}</Text><Text style={homeStyles.profileLine}>Track: {track}</Text><Text style={homeStyles.profileLine}>Program: {program}</Text><Text style={homeStyles.cardHint}>Tap to update your applicant profile and personalize your journey.</Text></Pressable><View style={homeStyles.card}><Text style={homeStyles.cardEyebrow}>YOUR PROGRESS</Text><View style={homeStyles.progressTrack}><View style={[homeStyles.progressFill, { width: `${progress}%` }]} /></View><Text style={homeStyles.progressLabel}>{progress}% Complete</Text><Text style={homeStyles.cardHint}>{currentStatusIndex} of {steps.length} admission steps completed</Text></View><Pressable onPress={openCurrentStep} style={({ pressed }) => [homeStyles.card, homeStyles.stageCard, pressed && styles.pressed]}><Text style={homeStyles.cardEyebrow}>{applicationStopped ? 'APPLICATION STATUS' : isFinished ? 'FINAL STAGE' : 'CURRENT STAGE'}</Text><Text style={homeStyles.cardTitle}>{stage}</Text><Text style={homeStyles.cardHint}>{applicationStopped || isFinished ? 'Tap Status to review your admission journey.' : 'Tap to see details and continue your progress.'}</Text></Pressable><Pressable onPress={openCurrentStep} style={({ pressed }) => [homeStyles.nextAction, pressed && styles.pressed]}><View style={homeStyles.actionIcon}><Ionicons name={applicationStopped ? 'information-circle-outline' : isFinished ? 'checkmark-circle-outline' : 'navigate-outline'} size={23} color="#4c4a12" /></View><View style={homeStyles.actionCopy}><Text style={homeStyles.actionEyebrow}>NEXT ACTION</Text><Text style={homeStyles.nextTitle}>{applicationStopped ? 'Review application status' : isFinished ? 'Review completed journey' : `Continue with ${stage}`}</Text><Text style={homeStyles.nextSubtitle}>Open Status to continue your progress.</Text></View><Ionicons name="chevron-forward" size={23} color="#183225" /></Pressable><View style={homeStyles.sectionTitle}><View style={homeStyles.sectionAccent} /><Text style={homeStyles.sectionTitleText}>Quick Actions</Text></View><HomeAction icon="person-outline" title="Application Profile" subtitle="Update your applicant type" onPress={onRestart} /><HomeAction icon="map-outline" title="Campus Map" subtitle="Open map tab" onPress={() => onOpenTab('Map')} /><HomeAction icon="help-circle-outline" title="FAQ & Help" subtitle="Find answers fast" onPress={() => onOpenTab('FAQ')} /><View style={homeStyles.tip}><Text style={homeStyles.tipTitle}>Did you know?</Text><Text style={homeStyles.tipText}>Your progress stays available while this app remains open, so Status, Journey, and Home always show the same stage.</Text></View></View>;
+  return <View style={homeStyles.page}><View style={homeStyles.welcome}><View style={homeStyles.welcomeCopy}><Text style={homeStyles.kicker}>CVSU VIRTUAL ADMISSION GUIDE</Text><Text style={homeStyles.title}>Welcome Back, {displayName}!</Text><Text style={homeStyles.subtitle}>{applicationStopped ? 'Thank you for applying to Cavite State University, ' + displayName + '.' : isFinished ? 'Your admission journey is complete, ' + displayName + '. Welcome to CvSU!' : 'Your admissions journey looks strong, ' + displayName + '. Keep moving through each step with confidence.'}</Text></View><View style={homeStyles.progressBadge}><Text style={homeStyles.progressBadgeText}>{progress}%</Text></View></View><Pressable onPress={() => Linking.openURL('http://admission.cvsu.edu.ph')} style={({ pressed }) => [homeStyles.portal, pressed && styles.pressed]}><View style={homeStyles.actionIcon}><Ionicons name="open-outline" size={22} color="#4c4a12" /></View><View style={homeStyles.actionCopy}><Text style={homeStyles.actionEyebrow}>OFFICIAL PORTAL</Text><Text style={homeStyles.portalTitle}>Open CvSU Admission</Text><Text style={homeStyles.portalSubtitle}>admission.cvsu.edu.ph</Text></View><Ionicons name="arrow-forward" size={22} color="#183225" /></Pressable><Pressable onPress={onRestart} style={({ pressed }) => [homeStyles.card, pressed && styles.pressed]}><Text style={homeStyles.cardEyebrow}>APPLICANT TYPE</Text><Text style={homeStyles.cardTitle}>{profileLabel}</Text><Text style={homeStyles.profileLine}>Track: {track}</Text><Text style={homeStyles.profileLine}>Program: {program}</Text><Text style={homeStyles.cardHint}>Tap to update your applicant profile and personalize your journey.</Text></Pressable><View style={homeStyles.card}><Text style={homeStyles.cardEyebrow}>YOUR PROGRESS</Text><View style={homeStyles.progressTrack}><View style={[homeStyles.progressFill, { width: `${progress}%` }]} /></View><Text style={homeStyles.progressLabel}>{progress}% Complete</Text><Text style={homeStyles.cardHint}>{currentStatusIndex} of {steps.length} admission steps completed</Text></View><Pressable onPress={openCurrentStep} style={({ pressed }) => [homeStyles.card, homeStyles.stageCard, pressed && styles.pressed]}><Text style={homeStyles.cardEyebrow}>{applicationStopped ? 'APPLICATION STATUS' : isFinished ? 'FINAL STAGE' : 'CURRENT STAGE'}</Text><Text style={homeStyles.cardTitle}>{stage}</Text><Text style={homeStyles.cardHint}>{applicationStopped || isFinished ? 'Tap Status to review your admission journey.' : 'Tap to see details and continue your progress.'}</Text></Pressable><Pressable onPress={openCurrentStep} style={({ pressed }) => [homeStyles.nextAction, pressed && styles.pressed]}><View style={homeStyles.actionIcon}><Ionicons name={applicationStopped ? 'information-circle-outline' : isFinished ? 'checkmark-circle-outline' : 'navigate-outline'} size={23} color="#4c4a12" /></View><View style={homeStyles.actionCopy}><Text style={homeStyles.actionEyebrow}>NEXT ACTION</Text><Text style={homeStyles.nextTitle}>{applicationStopped ? 'Review application status' : isFinished ? 'Review completed journey' : `Continue with ${stage}`}</Text><Text style={homeStyles.nextSubtitle}>Open Status to continue your progress.</Text></View><Ionicons name="chevron-forward" size={23} color="#183225" /></Pressable><View style={homeStyles.card}><Text style={homeStyles.cardEyebrow}>YOUR PROGRESS</Text><View style={homeStyles.progressTrack}><View style={[homeStyles.progressFill, { width: `${progress}%` }]} /></View><Text style={homeStyles.progressLabel}>{progress}% Complete</Text><Text style={homeStyles.cardHint}>{currentStatusIndex} of {steps.length} admission steps completed</Text></View><View style={homeStyles.sectionTitle}><View style={homeStyles.sectionAccent} /><Text style={homeStyles.sectionTitleText}>Quick Actions</Text></View><HomeAction icon="person-outline" title="Application Profile" subtitle="Update your applicant type" onPress={onRestart} /><HomeAction icon="map-outline" title="Campus Map" subtitle="Open map tab" onPress={() => onOpenTab('Map')} /><HomeAction icon="help-circle-outline" title="FAQ & Help" subtitle="Find answers fast" onPress={() => onOpenTab('FAQ')} /><View style={homeStyles.tip}><Text style={homeStyles.tipTitle}>Did you know?</Text><Text style={homeStyles.tipText}>Your progress stays available while this app remains open, so Status, Journey, and Home always show the same stage.</Text></View></View>;
 }
 function HomePageReordered({ displayName, profile, track, program, steps, currentStatusIndex, progress, applicationStopped, isFinished, stage, onOpenStep, onRestart, onOpenTab }) {
   const profileLabel = profiles.find(([value]) => value === profile)?.[1] || profile;
@@ -713,9 +825,9 @@ function MapPage({ profilePhoto }) {
     <View style={mapStyles.locationsCard}><View style={mapStyles.locationsHeader}><Text style={mapStyles.locationsTitle}>Admission Locations</Text><Text style={mapStyles.locationsCount}>3 stops</Text></View>{admissionLocations.map((location, index) => <Pressable key={location.number} onPress={() => selectLocation(index)} style={({ pressed }) => [mapStyles.locationRow, selectedGate === null && index === selectedLocation && mapStyles.locationRowSelected, index === admissionLocations.length - 1 && mapStyles.locationRowLast, pressed && styles.pressed]}><View style={[mapStyles.locationNumber, selectedGate === null && index === selectedLocation && mapStyles.locationNumberSelected]}><Text style={mapStyles.locationNumberText}>{location.number}</Text></View><View style={mapStyles.locationCopy}><Text style={mapStyles.locationName}>{location.name}</Text><Text style={mapStyles.locationPurpose}>{location.purpose}</Text></View><Ionicons name="chevron-forward" size={20} color="#075b31" /></Pressable>)}</View>
     <Pressable accessibilityRole="button" accessibilityLabel="Show next campus tip" onPress={() => setTipIndex((current) => (current + 1) % campusTips.length)} style={({ pressed }) => [mapStyles.tip, pressed && styles.pressed]}><View style={mapStyles.tipBadge}><Text style={mapStyles.tipBadgeText}>TIP</Text></View><View style={mapStyles.tipCopy}><Text style={mapStyles.tipTitle}>{tip[0]}</Text><Text style={mapStyles.tipText}>{tip[1]}</Text><Text style={mapStyles.tipHint}>Tap for another tip</Text></View><Ionicons name="chevron-forward-circle-outline" size={23} color="#8a7412" /></Pressable>
     <Modal visible={isFullscreen} animationType="fade" onRequestClose={() => setIsFullscreen(false)}><SafeAreaView style={mapStyles.fullscreen}><View style={mapStyles.fullscreenHeader}><View><Text style={mapStyles.fullscreenEyebrow}>CVSU MAIN CAMPUS</Text><Text style={mapStyles.fullscreenTitle}>Campus Map</Text></View><Pressable accessibilityLabel="Close full screen map" onPress={() => setIsFullscreen(false)} style={({ pressed }) => [mapStyles.closeControl, pressed && styles.pressed]}><Ionicons name="close" size={24} color="#183225" /></Pressable></View><MapLegend fullscreen /><MapCanvas fullscreen zoom={zoom} selected={selected} guideRoute={activeGuideRoute} selectedBuildingNumber={selectedGate === null && selectedLocation !== null ? selected.number : null} selectedGateNumber={selectedGate !== null ? selected.number : null} showLocationPreview={showLocationPreview} showLocationDetailsButton={showLocationDetailsButton} onCloseLocationPreview={() => { setShowLocationPreview(false); setShowLocationDetailsButton(true); }} onOpenLocationPreview={() => setShowLocationPreview(true)} onOpenLocationImage={() => setShowLocationImage(true)} onOpenGuideVideo={setGuideVideo} onSelectMarker={selectMarker} onSelectGate={selectGate} onZoomIn={zoomIn} onZoomOut={zoomOut} onReset={resetMap} onFullscreen={() => setIsFullscreen(false)} profilePhoto={profilePhoto} /></SafeAreaView></Modal>
-    <Modal visible={showLocationImage && !!selected} transparent animationType="fade" statusBarTranslucent hardwareAccelerated onRequestClose={() => setShowLocationImage(false)}><View style={mapStyles.imageModal}><Pressable accessibilityLabel="Close location image" onPress={() => setShowLocationImage(false)} style={mapStyles.imageModalBackdrop} /><View style={mapStyles.imageModalContent}>{selected && <Image source={selected.image} style={mapStyles.imageModalImage} resizeMode="contain" />}<Pressable accessibilityLabel="Close location image" onPress={() => setShowLocationImage(false)} style={({ pressed }) => [mapStyles.imageModalClose, pressed && styles.pressed]}><Ionicons name="close" size={24} color="#183225" /></Pressable></View></View></Modal>
-    <Modal visible={!!attireImage} transparent animationType="fade" statusBarTranslucent hardwareAccelerated onRequestClose={() => setAttireImage(null)}><View style={mapStyles.imageModal}><Pressable accessibilityLabel="Close attire image" onPress={() => setAttireImage(null)} style={mapStyles.imageModalBackdrop} /><View style={mapStyles.imageModalContent}>{attireImage && <Image source={attireImage.source} style={mapStyles.imageModalImage} resizeMode="contain" />}<Pressable accessibilityLabel="Close attire image" onPress={() => setAttireImage(null)} style={({ pressed }) => [mapStyles.imageModalClose, pressed && styles.pressed]}><Ionicons name="close" size={24} color="#183225" /></Pressable></View></View></Modal>
-    <Modal visible={!!guideVideo} transparent animationType="fade" statusBarTranslucent hardwareAccelerated onRequestClose={() => setGuideVideo(null)}><View style={mapStyles.videoModal}><Pressable accessibilityLabel="Close guide video" onPress={() => setGuideVideo(null)} style={mapStyles.imageModalBackdrop} /><View style={mapStyles.videoModalContent}><GuideVideo source={guideVideo} /><Pressable accessibilityLabel="Close guide video" onPress={() => setGuideVideo(null)} style={({ pressed }) => [mapStyles.imageModalClose, pressed && styles.pressed]}><Ionicons name="close" size={24} color="#183225" /></Pressable></View></View></Modal>
+    <Modal visible={showLocationImage && !!selected} transparent animationType="fade" hardwareAccelerated onRequestClose={() => setShowLocationImage(false)}><View style={mapStyles.imageModal}><Pressable accessibilityLabel="Close location image" onPress={() => setShowLocationImage(false)} style={mapStyles.imageModalBackdrop} /><View style={mapStyles.imageModalContent}>{selected && <Image source={selected.image} style={mapStyles.imageModalImage} resizeMode="contain" />}<Pressable accessibilityLabel="Close location image" onPress={() => setShowLocationImage(false)} style={({ pressed }) => [mapStyles.imageModalClose, pressed && styles.pressed]}><Ionicons name="close" size={24} color="#183225" /></Pressable></View></View></Modal>
+    <Modal visible={!!attireImage} transparent animationType="fade" hardwareAccelerated onRequestClose={() => setAttireImage(null)}><View style={mapStyles.imageModal}><Pressable accessibilityLabel="Close attire image" onPress={() => setAttireImage(null)} style={mapStyles.imageModalBackdrop} /><View style={mapStyles.imageModalContent}>{attireImage && <Image source={attireImage.source} style={mapStyles.imageModalImage} resizeMode="contain" />}<Pressable accessibilityLabel="Close attire image" onPress={() => setAttireImage(null)} style={({ pressed }) => [mapStyles.imageModalClose, pressed && styles.pressed]}><Ionicons name="close" size={24} color="#183225" /></Pressable></View></View></Modal>
+    <Modal visible={!!guideVideo} transparent animationType="fade" hardwareAccelerated onRequestClose={() => setGuideVideo(null)}><View style={mapStyles.videoModal}><Pressable accessibilityLabel="Close guide video" onPress={() => setGuideVideo(null)} style={mapStyles.imageModalBackdrop} /><View style={mapStyles.videoModalContent}><GuideVideo source={guideVideo} /><Pressable accessibilityLabel="Close guide video" onPress={() => setGuideVideo(null)} style={({ pressed }) => [mapStyles.imageModalClose, pressed && styles.pressed]}><Ionicons name="close" size={24} color="#183225" /></Pressable></View></View></Modal>
   </View>;
 }
 function AttireGuide({ expanded, onToggle, onOpenImage }) {
@@ -831,7 +943,7 @@ function LegacyMapPage() {
   const resetMap = () => setZoom(1);
   return <View style={mapStyles.page}><View style={mapStyles.hero}><Text style={mapStyles.heroEyebrow}>CAMPUS TRAIL</Text><Text style={mapStyles.heroTitle}>Campus Map</Text><Text style={mapStyles.heroCopy}>Follow the guided route from the road to your admission stop.</Text></View><Pressable onPress={() => setShowAttire((current) => !current)} style={({ pressed }) => [mapStyles.attireButton, pressed && styles.pressed]}><Text style={mapStyles.attireTitle}>Campus attire & uniform guide</Text><Ionicons name={showAttire ? 'chevron-up' : 'chevron-down'} size={20} color="#f7d521" /></Pressable>{showAttire && <View style={mapStyles.attirePanel}>{['Wear proper school or smart-casual attire.', 'Bring a valid school or government-issued ID.', 'Follow the dress requirements stated on your appointment slip.'].map((item) => <View key={item} style={mapStyles.attireRow}><Ionicons name="checkmark-circle" size={17} color="#009c29" /><Text style={mapStyles.attireText}>{item}</Text></View>)}</View>}<View style={mapStyles.mapCard}><View style={mapStyles.mapHeader}><View><Text style={mapStyles.mapTitle}>CvSU Main Campus</Text><Text style={mapStyles.mapSubtitle}>Select a location below to start the guide</Text></View><View style={mapStyles.guidedBadge}><View style={mapStyles.guidedDot} /><Text style={mapStyles.guidedText}>GUIDED</Text></View></View><View style={mapStyles.legend}>{[['#f7d521', 'Admission'], ['#c7d4c5', 'Buildings'], ['#000', 'Roads'], ['#fff', 'Walkway']].map(([color, label]) => <View key={label} style={mapStyles.legendItem}><View style={[mapStyles.legendSwatch, { backgroundColor: color }]} /><Text style={mapStyles.legendLabel}>{label}</Text></View>)}</View><View style={mapStyles.mapFrame}><Image source={require('../assets/CvSU_Map.png')} style={mapStyles.mapImage} resizeMode="contain" /><View style={mapStyles.guideBubble}><Text style={mapStyles.guideLabel}>STOP {selected.number}</Text><Text style={mapStyles.guideText}>{selected.guide}</Text></View></View></View><View style={mapStyles.locationsCard}><View style={mapStyles.locationsHeader}><Text style={mapStyles.locationsTitle}>Admission Locations</Text><Text style={mapStyles.locationsCount}>3 stops</Text></View>{admissionLocations.map((location, index) => <Pressable key={location.number} onPress={() => setSelectedLocation(index)} style={({ pressed }) => [mapStyles.locationRow, index === selectedLocation && mapStyles.locationRowSelected, index === admissionLocations.length - 1 && mapStyles.locationRowLast, pressed && styles.pressed]}><View style={[mapStyles.locationNumber, index === selectedLocation && mapStyles.locationNumberSelected]}><Text style={mapStyles.locationNumberText}>{location.number}</Text></View><View style={mapStyles.locationCopy}><Text style={mapStyles.locationName}>{location.name}</Text><Text style={mapStyles.locationPurpose}>{location.purpose}</Text></View><Ionicons name="chevron-forward" size={20} color="#075b31" /></Pressable>)}</View><Pressable onPress={() => setTipIndex((current) => (current + 1) % campusTips.length)} style={({ pressed }) => [mapStyles.tip, pressed && styles.pressed]}><View style={mapStyles.tipBadge}><Text style={mapStyles.tipBadgeText}>TIP</Text></View><View style={mapStyles.tipCopy}><Text style={mapStyles.tipTitle}>{tip[0]}</Text><Text style={mapStyles.tipText}>{tip[1]}</Text><Text style={mapStyles.tipHint}>Tap for another tip</Text></View><Ionicons name="chevron-forward" size={20} color="#735f37" /></Pressable></View>;
 }
-function StatusPage({ displayName, profile, program, track, steps, currentStatusIndex, onStatusChange, selectedStepIndex, onSelectStep, checkedRequirements, onRequirementsChange, examinationAttempt, onExaminationAttemptChange, failedProgram, reapplicationProgram, onFailedProgramChange, onReapplicationProgramChange, onProgramChange }) {
+function StatusPage({ displayName, profile, program, track, steps, currentStatusIndex, onStatusChange, selectedStepIndex, onSelectStep, checkedRequirements, onRequirementsChange, examinationAttempt, onExaminationAttemptChange, failedProgram, reapplicationProgram, onFailedProgramChange, onReapplicationProgramChange, onProgramChange, isGuest = false }) {
   const isFinished = currentStatusIndex === steps.length;
   const applicationStopped = examinationAttempt === 'stopped';
   const selectedStep = selectedStepIndex === null ? null : steps[selectedStepIndex];
@@ -841,25 +953,46 @@ function StatusPage({ displayName, profile, program, track, steps, currentStatus
   const [localReapplicationProgram, setLocalReapplicationProgram] = useState(reapplicationProgram || '');
   const failedProgramValue = failedProgram || localFailedProgram;
   const profileLabel = profiles.find(([value]) => value === profile)?.[1] || profile;
-  const toggleRequirement = (index) => onRequirementsChange((current) => {
-    const stepChecks = current[selectedStep] || [];
-    return { ...current, [selectedStep]: stepChecks.includes(index) ? stepChecks.filter((item) => item !== index) : [...stepChecks, index] };
-  });
+  const toggleRequirement = (index) => {
+    if (isGuest) return;
+    onRequirementsChange((current) => {
+      const stepChecks = current[selectedStep] || [];
+      return { ...current, [selectedStep]: stepChecks.includes(index) ? stepChecks.filter((item) => item !== index) : [...stepChecks, index] };
+    });
+  };
   const completeSelectedStep = () => {
-    if (selectedStepIndex !== currentStatusIndex) return;
+    if (isGuest || selectedStepIndex !== currentStatusIndex) return;
     onStatusChange(currentStatusIndex + 1);
     onSelectStep(null);
   };
+  const renderGuestModeMessage = () => {
+    return (
+      <View style={{ padding: 14, borderRadius: 8, backgroundColor: '#fffde8', borderWidth: 1, borderColor: '#f7d521', marginTop: 12 }}>
+        <Text style={{ color: '#183225', fontWeight: '700', textAlign: 'center' }}>Guest Mode - View Only</Text>
+        <Text style={{ color: '#52695b', fontSize: 12, textAlign: 'center', marginTop: 6 }}>Exit guest mode and use your applicant profile to accomplish the admission steps.</Text>
+      </View>
+    );
+  };
   const passExamination = () => {
-    if (selectedStep !== 'Admission Examination' || selectedStepIndex !== currentStatusIndex) return;
+    if (isGuest || selectedStep !== 'Admission Examination' || selectedStepIndex !== currentStatusIndex) return;
     onExaminationAttemptChange('passed');
     onStatusChange(currentStatusIndex + 1);
     onSelectStep(null);
   };
-  const failExamination = () => { setLocalFailedProgram(program); onFailedProgramChange?.(program); onExaminationAttemptChange((attempt) => attempt === 'reapplication' ? 'stopped' : 'failed'); };
-  const startReapplication = (selectedProgram) => { setLocalReapplicationProgram(selectedProgram); onReapplicationProgramChange?.(selectedProgram); onExaminationAttemptChange('reapplication'); };
+  const failExamination = () => {
+    if (isGuest) return;
+    setLocalFailedProgram(program);
+    onFailedProgramChange?.(program);
+    onExaminationAttemptChange((attempt) => attempt === 'reapplication' ? 'stopped' : 'failed');
+  };
+  const startReapplication = (selectedProgram) => {
+    if (isGuest) return;
+    setLocalReapplicationProgram(selectedProgram);
+    onReapplicationProgramChange?.(selectedProgram);
+    onExaminationAttemptChange('reapplication');
+  };
   const undoLatestCompletedStep = () => {
-    if (selectedStepIndex !== currentStatusIndex - 1) return;
+    if (isGuest || selectedStepIndex !== currentStatusIndex - 1) return;
     onRequirementsChange((current) => {
       const next = { ...current };
       delete next[selectedStep];
@@ -876,9 +1009,9 @@ function StatusPage({ displayName, profile, program, track, steps, currentStatus
     const requirementCount = statusStepDetails[item].requirements.length;
     const checkedCount = checkedRequirements[item]?.length || 0;
     return <Pressable key={item} onPress={() => onSelectStep(index)} style={({ pressed }) => [styles.statusStep, pressed && styles.pressed]}><View style={[styles.statusDot, isComplete && styles.currentStatusDot, isCurrent && { backgroundColor: '#fff7d6', borderColor: '#f7d521', borderWidth: 3 }]}>{isCurrent ? <Ionicons name="time" size={18} color="#8a5e12" /> : <Text style={[styles.statusNumber, isComplete && { color: '#fff' }]}>{isComplete ? '✓' : index + 1}</Text>}</View><View style={styles.statusStepCopy}><Text style={styles.statusStepTitle}>{item}</Text><Text style={[styles.statusStepState, isComplete && { color: '#009c29', fontWeight: '700' }, isCurrent && { color: '#8a5e12', fontWeight: '800' }]}>{state}</Text><Text style={styles.statusStepDescription}>{statusStepDetails[item].description}</Text><Text style={{ color: checkedCount === requirementCount ? '#009c29' : '#698073', fontSize: 11, fontWeight: '700', marginTop: 5 }}>{checkedCount} / {requirementCount} requirements ready</Text></View>{index < steps.length - 1 && <View style={[styles.statusConnector, isComplete && { backgroundColor: '#009c29' }]} />}</Pressable>;
-  })}{isFinished && <Pressable onPress={() => onStatusChange(0)} style={({ pressed }) => [styles.back, { marginTop: 8, alignItems: 'center' }, pressed && styles.pressed]}><Text style={styles.backText}>Reset progress</Text></Pressable>}</View><Modal visible={selectedStep !== null} transparent animationType="slide" onRequestClose={() => onSelectStep(null)}><View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(8, 35, 21, 0.55)' }}><View style={{ maxHeight: '88%', backgroundColor: '#fff', borderTopLeftRadius: 12, borderTopRightRadius: 12, paddingTop: 8 }}><View style={{ alignItems: 'center', paddingBottom: 4 }}><View style={{ width: 42, height: 4, borderRadius: 2, backgroundColor: '#b8d3bc' }} /></View><ScrollView contentContainerStyle={{ padding: 22, paddingBottom: 30 }}><View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}><View style={{ flex: 1, paddingRight: 14 }}><Text style={styles.cardEyebrow}>ADMISSION STEP {selectedStepIndex + 1}</Text><Text style={[styles.statusHeading, { marginTop: 8 }]}>{selectedStep}</Text></View><Pressable accessibilityLabel="Close details" onPress={() => onSelectStep(null)} style={({ pressed }) => [{ width: 38, height: 38, alignItems: 'center', justifyContent: 'center', borderRadius: 19, backgroundColor: '#e4eee4' }, pressed && styles.pressed]}><Ionicons name="close" size={22} color="#075b31" /></Pressable></View><Text style={[styles.statusCaption, { fontSize: 14, marginBottom: 20 }]}>{selectedDetails?.description}</Text><DetailSection title="Instructions" items={selectedDetails?.instructions} numbered /><RequirementChecklist items={selectedDetails?.requirements} checked={selectedChecks} onToggle={toggleRequirement} />{selectedDetails?.location && <DetailSection title="Location" items={[selectedDetails.location]} />}{selectedDetails?.details && <DetailSection title="Medical details" items={selectedDetails.details} />}{selectedStepIndex < currentStatusIndex ? selectedStepIndex === currentStatusIndex - 1 && !applicationStopped ? <Pressable onPress={undoLatestCompletedStep} style={({ pressed }) => [styles.back, { marginTop: 4, alignItems: 'center' }, pressed && styles.pressed]}><Text style={styles.backText}>Undo completion</Text></Pressable> : <View style={{ padding: 14, borderRadius: 8, backgroundColor: '#dff5df', alignItems: 'center' }}><Text style={{ color: '#075b31', fontWeight: '700' }}>Completed</Text></View> : selectedStepIndex > currentStatusIndex ? <View style={{ padding: 14, borderRadius: 8, backgroundColor: '#eef3ee', alignItems: 'center' }}><Text style={{ color: '#52695b', fontWeight: '700', textAlign: 'center' }}>{applicationStopped ? 'The application process has ended' : 'Complete the previous step first'}</Text></View> : selectedStep === 'Admission Examination' ? <ExaminationResultActions attempt={examinationAttempt} onPassed={passExamination} onFailed={failExamination} onReapply={() => onExaminationAttemptChange('reapplication')} /> : <Pressable onPress={completeSelectedStep} style={({ pressed }) => [styles.action, { flex: 0, marginTop: 4 }, pressed && styles.pressed]}><Text style={styles.actionText}>Mark as completed</Text></Pressable>}</ScrollView></View></View></Modal></>;
+  })}{isFinished && <Pressable onPress={() => onStatusChange(0)} style={({ pressed }) => [styles.back, { marginTop: 8, alignItems: 'center' }, pressed && styles.pressed]}><Text style={styles.backText}>Reset progress</Text></Pressable>}</View><Modal visible={selectedStep !== null} transparent animationType="slide" onRequestClose={() => onSelectStep(null)}><View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(8, 35, 21, 0.55)' }}><View style={{ maxHeight: '88%', backgroundColor: '#fff', borderTopLeftRadius: 12, borderTopRightRadius: 12, paddingTop: 8 }}><View style={{ alignItems: 'center', paddingBottom: 4 }}><View style={{ width: 42, height: 4, borderRadius: 2, backgroundColor: '#b8d3bc' }} /></View><ScrollView contentContainerStyle={{ padding: 22, paddingBottom: 30 }}><View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}><View style={{ flex: 1, paddingRight: 14 }}><Text style={styles.cardEyebrow}>ADMISSION STEP {selectedStepIndex + 1}</Text><Text style={[styles.statusHeading, { marginTop: 8 }]}>{selectedStep}</Text></View><Pressable accessibilityLabel="Close details" onPress={() => onSelectStep(null)} style={({ pressed }) => [{ width: 38, height: 38, alignItems: 'center', justifyContent: 'center', borderRadius: 19, backgroundColor: '#e4eee4' }, pressed && styles.pressed]}><Ionicons name="close" size={22} color="#075b31" /></Pressable></View><Text style={[styles.statusCaption, { fontSize: 14, marginBottom: 20 }]}>{selectedDetails?.description}</Text><DetailSection title="Instructions" items={selectedDetails?.instructions} numbered /><RequirementChecklist items={selectedDetails?.requirements} checked={selectedChecks} onToggle={toggleRequirement} />{selectedDetails?.location && <DetailSection title="Location" items={[selectedDetails.location]} />}{selectedDetails?.details && <DetailSection title="Medical details" items={selectedDetails.details} />}{isGuest ? selectedStepIndex === currentStatusIndex && <Pressable onPress={() => onSelectStep(null)} disabled style={{ padding: 14, borderRadius: 8, backgroundColor: '#fffde8', borderWidth: 1, borderColor: '#f7d521', marginTop: 12 }}><Text style={{ color: '#183225', fontWeight: '700', textAlign: 'center' }}>Guest Mode - View Only</Text><Text style={{ color: '#52695b', fontSize: 12, textAlign: 'center', marginTop: 6 }}>Exit guest mode and use your applicant profile to accomplish the admission steps.</Text></Pressable> : selectedStepIndex < currentStatusIndex ? selectedStepIndex === currentStatusIndex - 1 && !applicationStopped ? <Pressable onPress={undoLatestCompletedStep} style={({ pressed }) => [styles.back, { marginTop: 4, alignItems: 'center' }, pressed && styles.pressed]}><Text style={styles.backText}>Undo completion</Text></Pressable> : <View style={{ padding: 14, borderRadius: 8, backgroundColor: '#dff5df', alignItems: 'center' }}><Text style={{ color: '#075b31', fontWeight: '700' }}>Completed</Text></View> : selectedStepIndex > currentStatusIndex ? <View style={{ padding: 14, borderRadius: 8, backgroundColor: '#eef3ee', alignItems: 'center' }}><Text style={{ color: '#52695b', fontWeight: '700', textAlign: 'center' }}>{applicationStopped ? 'The application process has ended' : 'Complete the previous step first'}</Text></View> : selectedStep === 'Admission Examination' ? <ExaminationResultActions attempt={examinationAttempt} onPassed={passExamination} onFailed={failExamination} onReapply={() => onExaminationAttemptChange('reapplication')} /> : <Pressable onPress={completeSelectedStep} style={({ pressed }) => [styles.action, { flex: 0, marginTop: 4 }, pressed && styles.pressed]}><Text style={styles.actionText}>Mark as completed</Text></Pressable>}</ScrollView></View></View></Modal></>;
 }
-function JourneyPage({ displayName, program, profilePhoto, steps, currentStatusIndex, examinationAttempt, onOpenStep }) {
+function JourneyPage({ displayName, program, profilePhoto, steps, currentStatusIndex, examinationAttempt, onOpenStep, isGuest = false }) {
   const roadGlow = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     const animation = Animated.loop(Animated.sequence([
@@ -899,7 +1032,7 @@ function JourneyPage({ displayName, program, profilePhoto, steps, currentStatusI
     const locked = !completed && !current && !stopped;
     const icon = completed ? 'checkmark' : stopped ? 'close' : 'lock-closed';
     const stateLabel = completed ? 'Mission complete' : stopped ? 'Trail ended' : current ? 'Open mission' : 'Locked';
-    return <View key={step} style={journeyStyles.stationRow}>{index < steps.length - 1 && <GlowRoad glow={roadGlow} direction={index % 2 === 0 ? 'right' : 'left'} completed={completed} />}<Pressable accessibilityLabel={`${step}, ${stateLabel}`} onPress={() => onOpenStep(index)} style={({ pressed }) => [journeyStyles.station, index % 2 === 0 ? journeyStyles.stationLeft : journeyStyles.stationRight, pressed && styles.pressed]}>{current && <View style={journeyStyles.currentMarker}><Image source={profilePhoto ? { uri: profilePhoto } : require('../assets/Profile.png')} style={journeyStyles.avatarImage} /></View>}<View style={[journeyStyles.node, completed && journeyStyles.nodeComplete, current && journeyStyles.nodeCurrent, locked && journeyStyles.nodeLocked, stopped && journeyStyles.nodeStopped]}>{current ? <Text style={journeyStyles.nodeNumber}>{index + 1}</Text> : <Ionicons name={icon} size={completed ? 28 : 21} color={completed || stopped ? '#fff' : '#829489'} />}</View><Text style={[journeyStyles.nodeLabel, current && journeyStyles.nodeLabelCurrent, stopped && journeyStyles.nodeLabelStopped]} numberOfLines={2}>{step}</Text></Pressable></View>;
+    return <View key={step} style={journeyStyles.stationRow}>{index < steps.length - 1 && <GlowRoad glow={roadGlow} direction={index % 2 === 0 ? 'right' : 'left'} completed={completed} />}<Pressable accessibilityLabel={`${step}, ${stateLabel}`} onPress={() => !isGuest && onOpenStep(index)} disabled={isGuest} style={({ pressed }) => [journeyStyles.station, index % 2 === 0 ? journeyStyles.stationLeft : journeyStyles.stationRight, pressed && styles.pressed]}>{current && <View style={journeyStyles.currentMarker}><Image source={profilePhoto ? { uri: profilePhoto } : require('../assets/Profile.png')} style={journeyStyles.avatarImage} /></View>}<View style={[journeyStyles.node, completed && journeyStyles.nodeComplete, current && journeyStyles.nodeCurrent, locked && journeyStyles.nodeLocked, stopped && journeyStyles.nodeStopped]}>{current ? <Text style={journeyStyles.nodeNumber}>{index + 1}</Text> : <Ionicons name={icon} size={completed ? 28 : 21} color={completed || stopped ? '#fff' : '#829489'} />}</View><Text style={[journeyStyles.nodeLabel, current && journeyStyles.nodeLabelCurrent, stopped && journeyStyles.nodeLabelStopped]} numberOfLines={2}>{step}</Text></Pressable></View>;
   })}<View style={journeyStyles.finish}><View style={journeyStyles.finishFlag}><Ionicons name="flag" size={26} color="#f7d521" /></View><View style={journeyStyles.finishCopy}><Text style={journeyStyles.finishLabel}>FINAL DESTINATION</Text>{isFinished && <><Text style={journeyStyles.finishTitle}>WELCOME TO CvSU</Text><View style={journeyStyles.finishProgram}><View style={journeyStyles.finishProgramCopy}><Text style={journeyStyles.finishProgramLabel}>YOUR ADMISSION PATH</Text><Text style={journeyStyles.program} numberOfLines={3}>{program}</Text></View></View></>}</View><View style={journeyStyles.finishFlag}><Ionicons name="flag" size={26} color="#f7d521" /></View></View></View></View></View>;
 }
 function GlowRoad({ direction, completed, glow }) {
@@ -911,7 +1044,7 @@ function ProfileRow({ label, value, last }) { return <View style={[statusInfoSty
 function DetailSection({ title, items = [], numbered = false }) { return <View style={{ marginBottom: 22 }}><Text style={{ color: '#075b31', fontSize: 14, fontWeight: '700', marginBottom: 10 }}>{title}</Text>{items.map((item, index) => <View key={item} style={{ flexDirection: 'row', marginBottom: 9 }}><Text style={{ width: 24, color: '#078743', fontWeight: '700' }}>{numbered ? `${index + 1}.` : '•'}</Text><Text style={{ flex: 1, color: '#52695b', fontSize: 13, lineHeight: 19 }}>{item}</Text></View>)}</View>; }
 function ExaminationResultActions({ attempt, onPassed, onFailed, onReapply, failedProgram, reapplicationProgram }) {
   const availablePrograms = programs.filter((item) => item !== failedProgram);
-  if (attempt === 'stopped') return <View style={{ padding: 18, borderRadius: 8, backgroundColor: '#eef3ee' }}><Text style={{ color: '#183225', fontSize: 16, fontWeight: '700', textAlign: 'center' }}>Thank you for applying</Text><Text style={{ color: '#52695b', fontSize: 13, lineHeight: 19, marginTop: 7, textAlign: 'center' }}>The re-application was not passed, so the admission process has ended.</Text></View>;
+  if (attempt === 'stopped') return <View style={{ padding: 18, borderRadius: 8, backgroundColor: '#eef3ee' }}><Text style={{ color: '#183225', fontSize: 16, fontWeight: '700', textAlign: 'center' }}>Thank you for applying</Text><Text style={{ color: '#52695b', fontSize: 13, lineHeight: 19, textAlign: 'center', marginTop: 7, textAlign: 'center' }}>The re-application was not passed, so the admission process has ended.</Text></View>;
   if (attempt === 'failed') return <View><View style={{ padding: 14, borderRadius: 8, backgroundColor: '#fffde8', borderWidth: 1, borderColor: '#f7d521', marginBottom: 12 }}><Text style={{ color: '#183225', fontWeight: '700', textAlign: 'center' }}>Admission examination failed</Text><Text style={{ color: '#52695b', fontSize: 12, textAlign: 'center', marginTop: 6 }}>Select the program for your re-application.</Text><Text style={{ color: '#645f18', fontSize: 12, lineHeight: 18, textAlign: 'center', marginTop: 8 }}>Note: Follow the official re-application instructions in the online admission portal.</Text></View>{availablePrograms.map((item) => <Pressable key={item} onPress={() => onReapply(item)} style={({ pressed }) => [{ padding: 10, borderBottomWidth: 1, borderBottomColor: '#e5ebe5' }, pressed && styles.pressed]}><Text style={{ color: '#183225', fontSize: 12 }}>{item}</Text></Pressable>)}</View>;
   return <View><Text style={{ color: '#075b31', fontSize: 14, fontWeight: '700', textAlign: 'center', marginBottom: 12 }}>{attempt === 'reapplication' ? 'Re-application result' : 'Admission examination result'}</Text>{attempt === 'reapplication' && <Text style={{ color: '#645f18', fontSize: 12, lineHeight: 18, textAlign: 'center', marginBottom: 12 }}>Follow the official re-application instructions in the online admission portal.</Text>}{attempt === 'reapplication' && reapplicationProgram && <Text style={{ color: '#52695b', fontSize: 12, textAlign: 'center', marginBottom: 12 }}>Guide program: {reapplicationProgram}</Text>}<View style={{ flexDirection: 'row', gap: 10 }}><Pressable onPress={onFailed} style={({ pressed }) => [styles.back, { flex: 1, alignItems: 'center', borderColor: '#f7d521', backgroundColor: '#fffde8' }, pressed && styles.pressed]}><Text style={{ color: '#183225', fontWeight: '700' }}>Failed</Text></Pressable><Pressable onPress={onPassed} style={({ pressed }) => [styles.action, pressed && styles.pressed]}><Text style={styles.actionText}>Passed</Text></Pressable></View></View>;
 }
@@ -1119,12 +1252,9 @@ const profileStyles = StyleSheet.create({
   resetCopy: { color: '#698073', fontSize: 10, marginTop: 5 }
 });
 const guestSetupStyles = StyleSheet.create({
-  content: { backgroundColor: '#f2fbf0', paddingTop: 24 },
-  page: { paddingBottom: 24 },
-  eyebrow: { color: '#078743', fontSize: 10, fontWeight: '800', letterSpacing: 1, marginBottom: 10 },
-  title: { color: '#075b31', fontSize: 28, lineHeight: 34, fontWeight: '800' },
-  copy: { color: '#698073', fontSize: 13, lineHeight: 19, marginTop: 9, marginBottom: 22 },
-  actions: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 22 }
+  content: { backgroundColor: '#009c29', paddingTop: 24, paddingBottom: 18 },
+  page: { paddingBottom: 12 },
+  actions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, paddingHorizontal: 18, paddingVertical: 14, backgroundColor: '#f2fbf0', borderTopWidth: 1, borderTopColor: '#d8e2d9' }
 });
 const homeStyles = StyleSheet.create({
   content: { backgroundColor: '#009c29', paddingTop: 24 },
