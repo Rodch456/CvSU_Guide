@@ -8,6 +8,25 @@ This project uses [Semantic Versioning](https://semver.org/):
 - **Minor** (`1.1.0`): new backward-compatible features or pages
 - **Major** (`2.0.0`): large redesigns or incompatible changes
 
+## [1.5.0] - 2026-10-13
+
+### Added
+
+- Animated campus walking guide with dust effects, destination messages, and adjustable walking speed.
+- Clickable Journey completion stamps and applicant progress summary.
+- Background music and expanded playback speeds for muted video guides.
+
+### Fixed
+
+- Android map marker alignment, responsive arrival messages, and fullscreen zoom reset.
+- Responsive centered app header, FAQ avatar tap appearance, and solid location selection stripes.
+- Journey step dialogs stay on Journey when dismissed.
+- Re-application excludes the failed program and updates the saved profile and journey after a pass.
+
+### Changed
+
+- Updated campus photos and guide videos, with Git LFS storage for MOV media.
+
 ## [1.2.0] - 2026-09-03
 
 ### Added
