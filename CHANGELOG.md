@@ -8,6 +8,13 @@ This project uses [Semantic Versioning](https://semver.org/):
 - **Minor** (`1.1.0`): new backward-compatible features or pages
 - **Major** (`2.0.0`): large redesigns or incompatible changes
 
+## [1.6.0] - 2026-10-19
+
+### Added
+
+- Swipe down or tap the Journey step details handle to close the panel.
+- LGBTQ+ uniform options note in the Map page's During classes guide.
+
 ## [1.5.0] - 2026-10-13
 
 ### Added
