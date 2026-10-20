@@ -13,6 +13,7 @@ This project uses [Semantic Versioning](https://semver.org/):
 ### Fixed
 
 - Configure the native startup splash with the CvSU logo and keep it visible until the welcome logo loads.
+- Declare the splash-screen dependency so clean Expo cloud builds can resolve its plugin.
 - Start the welcome-screen timer after its logo loads.
 - Automatically check all requirements when a step is marked completed or the admission examination is passed.
 
