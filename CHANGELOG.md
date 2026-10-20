@@ -8,6 +8,15 @@ This project uses [Semantic Versioning](https://semver.org/):
 - **Minor** (`1.1.0`): new backward-compatible features or pages
 - **Major** (`2.0.0`): large redesigns or incompatible changes
 
+## [1.8.1] - 2026-10-20
+
+### Fixed
+
+- Enable zoom in, zoom out, and reset controls in the full-screen campus map.
+- Use native one-finger dragging in both map views, with movement limited to the map edges.
+- Apply zoom changes immediately without requiring a drag, and keep the map visible in Expo Go.
+- Prevent page scrolling while dragging inside the zoomed regular map, restoring page scrolling after release or cancellation.
+
 ## [1.8.0] - 2026-10-20
 
 ### Added
