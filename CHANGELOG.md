@@ -8,6 +8,14 @@ This project uses [Semantic Versioning](https://semver.org/):
 - **Minor** (`1.1.0`): new backward-compatible features or pages
 - **Major** (`2.0.0`): large redesigns or incompatible changes
 
+## [1.7.0] - 2026-10-19
+
+### Fixed
+
+- Configure the native startup splash with the CvSU logo and keep it visible until the welcome logo loads.
+- Start the welcome-screen timer after its logo loads.
+- Automatically check all requirements when a step is marked completed or the admission examination is passed.
+
 ## [1.6.0] - 2026-10-19
 
 ### Added

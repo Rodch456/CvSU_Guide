@@ -2,23 +2,31 @@
   "expo": {
     "name": "CvSU VAG",
     "slug": "cvsu-admission-guide",
-    "version": "1.6.0",
+    "version": "1.7.0",
     "orientation": "portrait",
     "icon": "./assets/AppIcon.png",
     "android": {
       "package": "ph.cvsu.admissionguide",
-      "versionCode": 7
+      "versionCode": 8
     },
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/AppIcon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#f2fbf0"
-    },
     "assetBundlePatterns": [
       "**/*"
     ],
     "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/CvSU_Logo.png",
+          "imageWidth": 150,
+          "resizeMode": "contain",
+          "backgroundColor": "#009c29",
+          "dark": {
+            "image": "./assets/CvSU_Logo.png",
+            "backgroundColor": "#009c29"
+          }
+        }
+      ],
       "expo-asset",
       "expo-font",
       "expo-video",
