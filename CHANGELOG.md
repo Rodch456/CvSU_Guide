@@ -8,6 +8,19 @@ This project uses [Semantic Versioning](https://semver.org/):
 - **Minor** (`1.1.0`): new backward-compatible features or pages
 - **Major** (`2.0.0`): large redesigns or incompatible changes
 
+## [1.8.0] - 2026-10-20
+
+### Added
+
+- Animated map information buttons with a compact regular view and an expanded full-screen Info & guides button.
+- Warning listing unchecked requirements before completing an admission step, with options to review or confirm all requirements are done.
+- Select all and Deselect all controls for editable requirement checklists.
+
+### Changed
+
+- Require an explicit completion action after checking all requirements.
+- Lock completed-step checklists until completion is undone.
+
 ## [1.7.0] - 2026-10-19
 
 ### Fixed
