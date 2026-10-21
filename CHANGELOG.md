@@ -8,6 +8,17 @@ This project uses [Semantic Versioning](https://semver.org/):
 - **Minor** (`1.1.0`): new backward-compatible features or pages
 - **Major** (`2.0.0`): large redesigns or incompatible changes
 
+## [1.9.0] - 2026-10-20
+
+### Fixed
+
+- Prevent blank screens when leaving the campus map for FAQ, Journey, or other pages on web.
+- Show only the unchecked-requirements warning dialog on Android, hiding the step checklist until requirements are reviewed.
+
+### Added
+
+- Regression checks for map navigation cleanup, FAQ and Journey rendering, and the requirement warning review and completion flow.
+
 ## [1.8.1] - 2026-10-20
 
 ### Fixed

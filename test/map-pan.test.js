@@ -45,3 +45,18 @@ callbacks.onTouchesUp({numberOfTouches:0});assert.equal(locks.at(-1),false);
 callbacks.onTouchesDown();callbacks.onTouchesCancelled();assert.equal(locks.at(-1),false);
 callbacks.onTouchesDown();callbacks.onFinalize();assert.equal(locks.at(-1),false);
 console.log('PASS: page scrolling locks on map touch and unlocks after release or cancellation.');
+
+// Leaving Map invokes this callback during cleanup. Web scroll refs have no
+// setNativeProps method, and must still release the declarative scrolling lock.
+const interactionCallback = source.match(/const onMapInteractionChange = useCallback\(\(touching\) => \{([\s\S]*?)\n  \}, \[\]\);/)[1];
+for (const scrollRef of [null, {}, { setNativeProps() {} }]) {
+ const stateUpdates = [], nativeUpdates = [];
+ const context = { pageScroll: { current: scrollRef }, setMapTouching: value => stateUpdates.push(value), nativeUpdates };
+ // Bind the native mock here so it captures this iteration's updates.
+ if (scrollRef?.setNativeProps) scrollRef.setNativeProps = props => nativeUpdates.push(props);
+ const update = vm.runInNewContext('(touching) => {' + interactionCallback + '}', context);
+ update(true); update(false);
+ assert.deepEqual(stateUpdates, [true, false]);
+ if (scrollRef?.setNativeProps) assert.deepEqual(nativeUpdates.map(props => props.scrollEnabled), [false, true]);
+}
+console.log('PASS: leaving Map safely unlocks scrolling with native, web, and detached refs.');
