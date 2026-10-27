@@ -8,7 +8,7 @@ const { renderToStaticMarkup } = require('react-dom/server');
 
 // Render the actual page components against React Native Web, including Animated.
 const filename = path.resolve(__dirname, '../src/ExpoApp.js');
-const source = fs.readFileSync(filename, 'utf8') + '\nexport { FAQPage, JourneyPage, StatusPage };';
+const source = fs.readFileSync(filename, 'utf8') + '\nexport { FAQPage, JourneyPage, StatusPage, getStatusStepDetails };';
 const compiled = babel.transformSync(source, {
   filename,
   babelrc: false,
@@ -40,6 +40,23 @@ app.require = (id) => {
 };
 app._compile(compiled, filename);
 const { FAQPage, JourneyPage } = app.exports;
+for (const [profile, expected, count] of [
+  ['12', /Grade 11 Report Card/, 5],
+  ['SH', /Non-Issuance of Form 137\/SF-10/, 5],
+  ['A', /Certificate of Rating/, 4],
+  ['D', /date of graduation/, 4],
+]) {
+  const online = app.exports.getStatusStepDetails('Online Application', profile);
+  const validation = app.exports.getStatusStepDetails('Validation Appointment', profile);
+  assert.equal(online.requirements.length, count);
+  assert.match(online.requirements.join(' '), expected);
+  assert.match(validation.requirements.join(' '), expected);
+  assert.ok(validation.requirements.slice(2).every(item => item.startsWith('Original ')));
+  assert.match(validation.instructions.join(' '), /can no longer be edited/);
+  assert.match(validation.instructions.join(' '), /Strictly no walk-ins/);
+  assert.match(validation.location, /Office of Student Affairs and Services, Main \(Indang\) Campus/);
+}
+console.log('PASS: all four applicant categories receive matching upload and original-document checklists');
 const faq = renderToStaticMarkup(React.createElement(FAQPage));
 assert.match(faq, /Frequently Asked Questions/);
 assert.match(faq, /Find your answer/);

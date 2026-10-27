@@ -8,6 +8,17 @@ This project uses [Semantic Versioning](https://semver.org/):
 - **Minor** (`1.1.0`): new backward-compatible features or pages
 - **Major** (`2.0.0`): large redesigns or incompatible changes
 
+## [1.10.0] - 2026-10-27
+
+### Changed
+
+- Tailor application and validation checklists to Grade 12 students, SHS graduates, and ALS passers using the supplied admission instructions.
+- Clarify upload limits, appointment locking, original-document validation, and the no-walk-in policy in instructions and FAQs.
+- Set validation at the Office of Student Affairs and Services, Main (Indang) Campus, and examinations at the International Convention Center (ICON).
+- Keep the navigation bar visible on applicant profiles and close the profile when switching tabs.
+- Remove the GUIDE badge from the campus trivia avatar.
+- Preserve saved admission progress while clearing outdated application and validation checklist selections.
+
 ## [1.9.0] - 2026-10-20
 
 ### Fixed
