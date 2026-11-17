@@ -8,6 +8,17 @@ This project uses [Semantic Versioning](https://semver.org/):
 - **Minor** (`1.1.0`): new backward-compatible features or pages
 - **Major** (`2.0.0`): large redesigns or incompatible changes
 
+## [1.11.0] - 2026-11-17
+
+### Added
+
+- Add expandable example images for eight common admission documents in the relevant requirements checklists.
+- Add automated coverage for displaying documentary examples.
+
+### Changed
+
+- Replace all seven campus map guide videos with the updated routes to OSAS, ICON, and the University Clinic.
+
 ## [1.10.0] - 2026-10-27
 
 ### Changed
