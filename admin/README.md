@@ -14,11 +14,15 @@ Use **Add admission step** to add a step to both applicant journeys. Enter a tit
 
 In **Admission steps → Admission Examination**, enable **Limit reapplication to selected programs** to choose which programs to offer after a failed result. An empty selection offers no reapplication programs. Use **Tracks and strands allowed to reapply** to follow regular eligibility, open these programs to every track, or open them only to selected tracks. The all-tracks and selected-tracks modes allow programs outside the applicant’s regular track eligibility. The applicant’s original program is always excluded.
 
+In **Admission steps → Admission Examination → Examination venue**, select ICON, Rolle Hall, or the College of Criminal Justice. The selected venue appears on the applicant map and in the examination step after publishing. Route waypoints are configured in `src/ExpoApp.js`, and previously saved pins still take precedence over the destinations in that file.
+
 When the server first opens a published file from before program eligibility, it loads the supplied catalog and eligibility lists, preserves existing track descriptions where names match, and keeps any additional tracks with an empty eligible list until an admin assigns programs.
 
 **Change history** shows when each publish took place and which entries changed. It starts recording from the first publish after this feature is installed. The published content file also contains the history, so back it up to retain both.
 
-In **Campus guide**, edit the trivia facts shown in FAQs and the admission-visit and class attire information shown on the campus map. Each image can be hidden, kept as the bundled image, or replaced with a public HTTPS image URL. Publish the changes to send them to applicants.
+In **Campus trivia**, edit the facts shown in FAQs and publish the changes to send them to applicants. The campus attire and uniform guide is bundled with the applicant app.
+
+**Active app installations** counts distinct native app installations that checked in during the last 30 days. A check-in contains a randomly generated installation identifier, with no applicant profile fields. Web sessions and older app releases do not check in. A disconnected or uninstalled app stops counting after its last check-in ages out. Use **Reload** on the dashboard to refresh the count. The check-in file is stored next to `ADMISSION_DATA_FILE`, so it uses the same persistent volume.
 
 ## Run locally
 

@@ -2,6 +2,9 @@
   "build": {
     "preview": {
       "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_ADMISSION_CONTENT_URL": "https://cvsu-vag-admin.onrender.com/api/content"
+      },
       "android": {
         "buildType": "apk"
       }

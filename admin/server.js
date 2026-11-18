@@ -3,8 +3,9 @@ const { createHash, timingSafeEqual } = require('node:crypto');
 const { mkdir, readFile, rename, writeFile } = require('node:fs/promises');
 const path = require('node:path');
 const defaults = require('../src/admission-content.json');
-const { getAcademicStatuses, getAdmissionStepOrder, getAttireGuide, getCampusTrivia, getTrackOptions, validateContent } = require('../src/content-schema');
+const { examVenueNames, getAcademicStatuses, getAdmissionStepOrder, getCampusTrivia, getExamVenueSettings, getTrackOptions, validateContent } = require('../src/content-schema');
 const { summarizeChanges } = require('./change-history');
+const { activeInstallationDays, openInstallations } = require('./installations');
 
 try {
   process.loadEnvFile(path.join(__dirname, '.env.local'));
@@ -43,13 +44,13 @@ function send(res, status, detail) {
   res.end(JSON.stringify(detail));
 }
 
-async function readBody(req) {
+async function readBody(req, limit = maxBytes) {
   const chunks = [];
   let size = 0;
   for await (const chunk of req) {
     size += chunk.length;
-    if (size <= maxBytes) chunks.push(chunk);
-    else throw Object.assign(new Error('Content exceeds the 512 KB limit.'), { status: 413 });
+    if (size <= limit) chunks.push(chunk);
+    else throw Object.assign(new Error('Request body is too large.'), { status: 413 });
   }
   try {
     return JSON.parse(Buffer.concat(chunks).toString('utf8'));
@@ -82,21 +83,24 @@ async function loadState() {
     }
     const error = validateContent(content);
     if (error) throw new Error(error);
+    const { attireGuide, ...guideContent } = content;
     return { content: {
-      ...content,
+      ...guideContent,
       academicStatuses: getAcademicStatuses(content),
       admissionStepOrder: getAdmissionStepOrder(content),
       faqTrivia: getCampusTrivia(content),
-      attireGuide: getAttireGuide(content)
+      examVenue: getExamVenueSettings(content)
     }, history };
   } catch (error) {
-    if (error.code === 'ENOENT') return { content: { ...defaults, admissionStepOrder: getAdmissionStepOrder(defaults) }, history: [] };
+    if (error.code === 'ENOENT') return { content: { ...defaults, admissionStepOrder: getAdmissionStepOrder(defaults), examVenue: getExamVenueSettings(defaults) }, history: [] };
     throw error;
   }
 }
 
 async function start() {
   let { content: published, history } = await loadState();
+  const installations = await openInstallations(`${dataFile}.installations.json`);
+  const dashboard = () => ({ availableProgramCount: countAvailablePrograms(published), activeInstallationCount: installations.count(), activeInstallationDays });
   let version = digest(JSON.stringify(published)).toString('hex');
   let writing = false;
   const server = http.createServer(async (req, res) => {
@@ -109,31 +113,41 @@ async function start() {
         res.setHeader('Access-Control-Allow-Origin', '*');
         return send(res, 200, published);
       }
+      if (req.method === 'POST' && route === '/api/installations/check-in') {
+        const { installationId } = (await readBody(req, 256)) ?? {};
+        if (typeof installationId !== 'string' || !/^[a-f0-9]{32}$/.test(installationId)) {
+          return send(res, 400, { error: 'Invalid installation identifier.' });
+        }
+        await installations.record(installationId);
+        res.writeHead(204);
+        return res.end();
+      }
       if (route === '/api/admin/content' && ['GET', 'PUT'].includes(req.method)) {
         if (!timingSafeEqual(digest(req.headers.authorization || ''), credential)) {
           return send(res, 401, { error: 'Enter a valid admin username and password.' });
         }
-        if (req.method === 'GET') return send(res, 200, { content: published, version, history, availableProgramCount: countAvailablePrograms(published) });
+        if (req.method === 'GET') return send(res, 200, { content: published, version, history, examVenueNames, ...dashboard() });
         if (writing || req.headers['if-match'] !== `"${version}"`) {
           return send(res, 409, { error: 'Another publish is in progress or the content changed. Reload the latest content before publishing.' });
         }
         writing = true;
         try {
           const payload = await readBody(req);
+          const { attireGuide, ...editableContent } = payload ?? {};
           const content = {
-            ...payload,
+            ...editableContent,
             academicStatuses: payload?.academicStatuses ?? published.academicStatuses,
             admissionStepOrder: payload?.admissionStepOrder ?? published.admissionStepOrder,
             reapplicationPrograms: payload?.reapplicationPrograms === undefined ? published.reapplicationPrograms ?? null : payload.reapplicationPrograms,
             reapplicationTracks: payload?.reapplicationTracks === undefined ? published.reapplicationTracks ?? null : payload.reapplicationTracks,
             faqTrivia: payload?.faqTrivia ?? published.faqTrivia,
-            attireGuide: payload?.attireGuide ?? published.attireGuide
+            examVenue: payload?.examVenue ?? published.examVenue
           };
           const error = validateContent(content);
           if (error) return send(res, 400, { error });
           const groups = summarizeChanges(published, content);
           if (!groups.length) {
-            return send(res, 200, { version, history, changed: false, availableProgramCount: countAvailablePrograms(published) });
+            return send(res, 200, { version, history, changed: false, ...dashboard() });
           }
           const nextHistory = [{ publishedAt: new Date().toISOString(), groups }, ...history];
           await mkdir(path.dirname(dataFile), { recursive: true });
@@ -144,7 +158,7 @@ async function start() {
           published = content;
           history = nextHistory;
           version = digest(JSON.stringify(content)).toString('hex');
-          return send(res, 200, { version, history, changed: true, availableProgramCount: countAvailablePrograms(published) });
+          return send(res, 200, { version, history, changed: true, ...dashboard() });
         } finally {
           writing = false;
         }

@@ -415,138 +415,123 @@
   "faqItems": [
     [
       "Application",
-      "How do I apply for admission?",
-      "Visit the official University Admission Portal, create an account, complete the Application Form, and upload the required documents."
+      "How to apply?",
+      "The applicant must have a Google email account in order to log in and answer the online admission application form. They must read the posted announcement for guidance."
     ],
     [
       "Application",
-      "What are the basic requirements for application?",
-      "The basic requirements are Form 138 / Grade 12 Report Card, PSA Birth Certificate, and a recent 2x2 ID photo."
+      "Can I apply to more than one campus?",
+      "No. An applicant cannot apply to more than one campus at the same time because there should only be one application existing for one applicant."
+    ],
+    [
+      "Validation",
+      "Can the applicant go or visit the OSAS in advance of the scheduled appointment?",
+      "No, it is not advised. The applicant must follow the selected schedule of appointment."
+    ],
+    [
+      "Requirements",
+      "Can the requirements of the applicant be followed-up for later?",
+      "No, to-follow requirements is not allowed. The date for appointment cannot be selected until the requirements are properly and completely uploaded in the online admission system."
+    ],
+    [
+      "Requirements",
+      "What if the attached document is not really the document being required?",
+      "The application will be and can be declined due to dishonest application."
+    ],
+    [
+      "Requirements",
+      "What if the requirements are not yet complete for online submission? What if my requirements are not yet available?",
+      "The online application will not push through until the requirements are correctly and completely uploaded in the online admission system."
+    ],
+    [
+      "Validation",
+      "I lived abroad/came from a far place, how can I apply or make appointment?",
+      "Kindly follow and read the posted announcement on the procedure how to apply online. You may have an authorized person bring your complete and correct documents to represent you on the appointment date."
+    ],
+    [
+      "Programs",
+      "Can I apply for a course that is not aligned to my Track/Strand?",
+      "No. The applicant can only apply for a course/program that is aligned to the Track/Strand."
+    ],
+    [
+      "Requirements",
+      "Can I use my cellphone to scan or take a picture of my requirements?",
+      "Yes."
     ],
     [
       "Application",
-      "Can I still apply if my Form 138 is incomplete or delayed?",
-      "Yes. You may temporarily submit Form 137 or a Certificate of Enrollment/Graduation from your Senior High School while processing your official Form 138."
+      "Can I still edit my information? Can I still change my preferred course? Can I still change the campus I will be applying for?",
+      "The information details can still be edited as long as you have not yet selected and saved an appointment date."
+    ],
+    [
+      "Validation",
+      "Can the parent/ guardian/ sibling/ classmate/schoolmate or a distant relative represent the applicant at OSAS during the appointment date?",
+      "Yes, provided that they will bring an authorization letter from the applicant and a photocopy of the applicant's ID."
     ],
     [
       "Application",
-      "Is there an application fee?",
-      "No. The application and admission process is free for qualified students under the Free Higher Education Act in state universities."
+      "How if I have already used my gmail account in applying from the previous admission application (SY2026-2027), can I still use my same gmail account to apply for the current admission application (SY2027-2028)?",
+      "Yes, you can still use your existing and the same gmail account to apply for the current admission system (SY2027-2028) even if you have already used your gmail account in applying from the previous application for admission (SY2026-2027). The previous admission system is different from the current admission system."
+    ],
+    [
+      "Requirements",
+      "Where can I request the requirement - Certificate of Non-issuance of Form-137? Does it have a request form?",
+      "The applicant must request the requirement from their Senior High School. There is no request form for it."
+    ],
+    [
+      "Requirements",
+      "Is it okay to submit a scanned copy requirement without a signature of the authorized school personnel?",
+      "No. It should have a signature of an authorized school personnel."
     ],
     [
       "Application",
-      "Can I edit my application after submitting it?",
-      "If you need to correct information after submission, contact the University Admission Helpdesk or Admission Office for assistance."
-    ],
-    [
-      "Application",
-      "How can I check my application status?",
-      "Log in to the University Admission Portal and check your application status. If the status is unclear, contact the Admission Helpdesk."
-    ],
-    [
-      "Application",
-      "What should I do if I forget my admission portal password?",
-      "Use the portal's password recovery option. If you cannot recover your account, contact the Admission Helpdesk."
-    ],
-    [
-      "Examination",
-      "Are all applicants required to take the College Admission Test (CAT)?",
-      "Yes. The college entrance exam is part of the evaluation process for incoming first-year college students."
-    ],
-    [
-      "Examination",
-      "What should I bring on the day of the examination?",
-      "Bring your printed Test Permit, a valid ID or School ID, Mongol Pencil No. 2 and an eraser, and a transparent envelope or folder."
-    ],
-    [
-      "Examination",
-      "How will I know my exam schedule and venue?",
-      "Your examination schedule, room assignment, and venue will be indicated on your Test Permit, which can be downloaded from the admission portal once your application is verified."
-    ],
-    [
-      "Examination",
-      "What happens if I lose my Test Permit?",
-      "Log in to the admission portal and check if you can download or print the permit again. If you cannot access it, contact the Admission Office."
-    ],
-    [
-      "Examination",
-      "What happens if I miss my scheduled examination date?",
-      "Contact the Admission Office / Office of Student Affairs immediately. Rescheduling depends on slot availability and valid justification."
-    ],
-    [
-      "Examination",
-      "What should I do if I am late on examination day?",
-      "Proceed to the assigned examination venue as soon as possible and ask the examination personnel for instructions. Admission may depend on the examination rules."
-    ],
-    [
-      "Medical",
-      "When do I need to undergo the medical examination?",
-      "The medical examination is conducted after you pass the admission test and are qualified for enrollment. It is a prerequisite before official registration."
-    ],
-    [
-      "Medical",
-      "What medical document do I need for enrollment?",
-      "You need medical clearance issued or approved by the University Clinic. Follow the clinic's current instructions for any laboratory or diagnostic requirements."
-    ],
-    [
-      "Medical",
-      "Can I get medical tests done at an external clinic or hospital?",
-      "External testing may be accepted if allowed by the University Clinic. All outside results must be submitted for evaluation and clearance."
+      "If I am currently enrolled for 2nd semester in another school, and I wish to transfer to your University, how can I apply?",
+      "The applicant can try to apply; given that he/she can be able to provide all the Certificate of Grades (COG) of all semester/s he/she enrolled in."
     ],
     [
       "Enrollment",
-      "What documents must I bring during official enrollment?",
-      "Bring the Admission / Notice of Acceptance Slip, Original Form 138, Original PSA Birth Certificate, Certificate of Good Moral Character, and Medical Clearance from the University Clinic."
+      "I am a former CvSU student. I wanted to study again. How can I be enrolled?",
+      "The returnee student of CvSU must coordinate first with their College Registrar."
     ],
     [
-      "Enrollment",
-      "Can a representative process my enrollment for me?",
-      "Personal enrollment is highly recommended. If you cannot attend due to an emergency, your representative must present an Authorization Letter, a copy of your valid ID, and their own valid ID."
+      "Using the App",
+      "How do I reset my progress in the app?",
+      "Open Profile, tap Reset Admission Journey, and confirm Reset progress. This clears your completed steps, checked requirements, and recorded exam result in the guide. Your applicant profile stays saved."
     ],
     [
-      "Enrollment",
-      "How will I get my assigned section and class schedule?",
-      "After enrollment is processed, you will receive your Certificate of Registration (COR) or access the information through the Student Portal."
+      "Using the App",
+      "How do I edit my applicant profile?",
+      "Open Profile and tap Edit Profile. Follow the setup screens, then tap Continue on the last screen to save your choices."
     ],
     [
-      "Enrollment",
-      "What if I have incomplete requirements during enrollment?",
-      "You do not need to restart the entire application process. Return once the missing requirements have been completed, subject to the university's enrollment schedule and instructions."
+      "Using the App",
+      "How do I get the latest guide content?",
+      "Connect to the internet, open Profile, and tap Check for content updates. The app will download the latest published guide when available."
     ],
     [
-      "Enrollment",
-      "Can I change my information after enrollment?",
-      "Contact the Registrar's Office or the appropriate university office if you need to correct or update your student information."
+      "Using the App",
+      "Can I use the app without internet?",
+      "Yes. You can read the saved or bundled guide and use the campus map offline. You need internet access to download updates or open the official admission portal."
     ],
     [
-      "General",
-      "Is college tuition free?",
-      "Under Republic Act 10931, eligible Filipino undergraduate students in state universities may receive free tuition and other benefits covered by the law."
+      "Using the App",
+      "Can I use the guide without creating a profile?",
+      "Yes. Choose Continue as Guest on the start screen. You can browse the guide, map, and FAQs without saving applicant progress."
     ],
     [
-      "General",
-      "How do I know if I have been accepted?",
-      "Check your admission portal for your application or admission status and follow the instructions provided by the university."
+      "Using the App",
+      "Can I submit my official application in the app?",
+      "Use Open CvSU Admission on Home or Profile to visit the official admission portal. Submit documents, book appointments, and check official results there."
     ],
     [
-      "General",
-      "What should I do after receiving an admission notice?",
-      "Review the instructions, prepare the enrollment documents, complete the required medical clearance, and follow the university's enrollment schedule."
+      "Using the App",
+      "How do I use the campus walking guide?",
+      "Open Map, tap an admission location marker, and choose a gate or Start walking guide. The character will show the route to the location."
     ],
     [
-      "General",
-      "Where can I ask for help with my application?",
-      "Contact the official University Admission Helpdesk or visit the Admission and Registrar's Office at the main campus."
-    ],
-    [
-      "General",
-      "What should I do if the admission portal is not working?",
-      "Check your internet connection and try accessing the portal again. If the problem continues, contact the official Admission Helpdesk and provide details about the issue."
-    ],
-    [
-      "General",
-      "Where can I get the latest admission announcements?",
-      "Check the university's official admission portal and official university announcements for updated schedules, requirements, and procedures."
+      "Using the App",
+      "Will my progress appear on another device?",
+      "The guide saves your profile and progress on the device you use. Switching phones or clearing the app’s storage may require you to set up your profile and track your progress again."
     ]
   ],
   "academicStatuses": [
@@ -588,62 +573,102 @@
     "Did you know CvSU Indang serves as the main campus and headquarters of the university system, which now has more than 11 campuses across Cavite?",
     "Did you know the Laya at Diwa monument's torch flame has CvSU written on it, and the sculpture represents the university's vision of Truth, Excellence, and Service?"
   ],
-  "attireGuide": {
-    "title": "Dress for your next stop",
-    "visit": {
-      "label": "Admission visit",
-      "intro": "No school uniform is needed for admission visits. Neat, decent casual attire is acceptable any day, including regular office days.",
-      "caption": "Student policy reference. Uniform rules apply after enrollment and class start.",
-      "notes": [
-        [
-          "Keep it neat and presentable",
-          [
-            "No shorts, sandals or sleeveless tops, slippers, bare midriff, spaghetti straps, tube or backless tops, tight-fit blouses, jerseys, leggings, or ripped jeans that expose skin.",
-            "Clean clothing and a neat hairstyle make campus transactions more comfortable."
-          ]
-        ]
-      ]
-    },
-    "classes": {
-      "label": "During classes",
-      "intro": "Prescribed school uniforms for male and female students apply during classes. Confirm program-specific details with your college or department.",
-      "caption": "Source: Office Memorandum No. PHDR-129-19 and Office Memorandum No. 32, s. 2023.",
-      "notes": [
-        [
-          "Uniform options",
-          [
-            "LGBTQ+ students may wear their preferred official uniform option (male or female), as long as it remains complete, proper, and compliant with university rules."
-          ]
-        ],
-        [
-          "Wash Day: Wednesday and Saturday",
-          [
-            "Students may wear appropriate civilian attire during Wash Days or declared field and special days.",
-            "Civilian attire must be neat, decent, and not revealing. Avoid slippers or sandals, shorts or skirts more than three inches above the knee, sleeveless tops, bare midriff, spaghetti straps, tube or backless tops, tight-fit blouses, jerseys, leggings, and ripped jeans that expose skin.",
-            "Long hair should be tied in a ponytail. Bright hair colors are prohibited."
-          ]
-        ],
-        [
-          "Daily reminder",
-          [
-            "Always wear your student ID or bring your registration form when entering campus or attending classes."
-          ]
-        ]
-      ]
-    },
-    "images": {
-      "dressCode": {
-        "label": "Dress code",
-        "url": ""
-      },
-      "femaleUniform": {
-        "label": "Female uniform",
-        "url": ""
-      },
-      "maleUniform": {
-        "label": "Male uniform",
-        "url": ""
-      }
-    }
-  }
+  "faqTranslations": [
+    [
+      "Paano mag-apply?",
+      "Kailangan mayroong Google email account ang aplikante upang makapag-log-in at makapagsagot ng online application form. Kailangan ay nabasa rin ng aplikante ang nakapaskil na anunsyo patungkol sa admission application ng CvSU Main campus (Indang)"
+    ],
+    [
+      "Maaari ba akong mag-apply ng higit sa isang Campus na magkasabay?",
+      "Hindi. Ang isang aplikante ay hindi pinapagayag magkaroon ng higit sa isang campus na aapplyan na magkasabay dahil kailangang isang application lamang ang dapat umiral sa iisang aplikante."
+    ],
+    [
+      "Maaari bang magpunta ang aplikante sa mas maaga sa scheduled appointment para sa validation?",
+      "Hindi. Ito ay hindi pinahihintulutan. Ang aplikante ay kailangang sumunod sa nakatakda o napili nyang schedule of appointment."
+    ],
+    [
+      "Maaari kayang to-follow ang mga requirements?",
+      "Hindi. Hindi makakapili ng date for appointment kapag ang mga requirements ay hindi nakumpletong mai-upload sa online admission system. Kailangang mai-upload muna ang lahat ng kumpletong requirements upang magkaroon ng appointment date for validation."
+    ],
+    [
+      "Paano kung ang mga dokumentong nai-upload sa online admission system ay hindi talaga ang totoong dokumentong hinihingi?",
+      "Ang aplikasyon ay maaaring hindi matanggap dahil sa hindi naging matapat (dishonest) ng nag-a-apply."
+    ],
+    [
+      "Paano kung ang aking mga requirements ay hindi pa kumpleto o hindi pa available para maipasa online?",
+      "Ang aplikasyon ay pansamantala munang matitigil. Uusad lamang ang aplikasyon kapag nai-upload na ang mga requirements at doon ay makakapili na ng date for appointment."
+    ],
+    [
+      "Ako ay nakatira sa ibang bansa o nakatira sa malayong lugar sa Pilipinas. Papaano ako makakapag-apply at makakapili ng appointment date?",
+      "Sundin ang mga hakbang upang makapag-apply online sa pamamagitan ng pagbabasa ng anunsyo. Magkaroon ng isang authorized person na pwedeng magdala sa OSAS ng kumpleto at tamang mga requirements sa nakatakdang appointment date."
+    ],
+    [
+      "Maaari ba akong mag-apply sa isang kurso na hindi katugma sa aking track/strand?",
+      "Hindi. Ito ay hindi pinahihintulutan. Ang tanging makakapag-apply lamang sa nasabing kurso ay ang mga aplikante na nakahanay sa kanilang track/strand."
+    ],
+    [
+      "Maaari ko bang gamitin ang aking cellphone para mag-picture/screenshot ng aking mga requirements?",
+      "Oo, pwedeng gamitin ang cellphone kung walang scanner/printer na magagamit sa pag-scan ng mga requirements."
+    ],
+    [
+      "Pwede ko pa bang iedit ang aking mga impormasyon? Maaari pa ba akong magpalit ng kurso o Campus na gusto kong applyan?",
+      "Hangga't hindi pa nakakapili ng appointment date ay maaari pa ring mai-edit ang mga impormasyon kagaya ng sa kurso at campus na gustong applyan."
+    ],
+    [
+      "Maaari bang ang magulang o guardian o kapatid o kaklase o school mate o kamag-anak ng aplikante ang pumunta sa mismong appointment date para sa validation ng application?",
+      "Pwede ang magulang o guardian o kapatid o kaklase o schoolmate o kamag-anak ang kumatawan sa aplikante sa mismong appointment date upang ipakita ang mga requirements para sa validation; magdala lamang ng authorization letter mula sa aplikante at isang photocopy ng valid ID ng aplikante."
+    ],
+    [
+      "Paano kung nagamit ko na ang aking gmail account sa pag-apply mula sa nakaraang admission application (SY 2026-2027)? Maaari ko pa bang gamitin ang parehong gmail account para mag-apply para sa kasalukuyang admission application (SY 2027-2028)?",
+      "Oo, pwedeng gamitin ang kaparehong gmail account na nagamit ng aplikante sa nakaraang admission application (SY2026-2027). Magkaiba ang admission system ng nakaraan at ng kasalukuyang system (SY2027-2028)."
+    ],
+    [
+      "Saan makakakuha ng Certificate of Non-issuance of Form-137? Mayroon po bang request form para dito?",
+      "Makakakuha ng ganitong requirement sa inyong Senior High School. Walang request form para dito."
+    ],
+    [
+      "Maaari bang magpasa ng isang requirement na walang pirma ng Principal o Registrar o authorized school personnel?",
+      "Hindi. Kailangan ay mayroong pirma."
+    ],
+    [
+      "Kung ako ay kasalukuyang naka-enrolled sa ibang school/university, pwede kaya ako lumipat at mag-apply?",
+      "Maaaring subukan ng aplikante na mag-apply basta't maibigay niya ang lahat ng Certificate of Grades (COG) ng lahat ng semestre na kanyang pinag-enrol."
+    ],
+    [
+      "Ako ay dati nang estudyante ng CvSU. Gusto kong mag-aral muli. Paano ako makakapag-enroll?",
+      "Ang nagbabalik na estudyante ng CvSU ay dapat makipag-ugnayan muna sa kanilang College Registrar."
+    ],
+    [
+      "Paano ko ire-reset ang aking progress sa app?",
+      "Buksan ang Profile, pindutin ang Reset Admission Journey, at kumpirmahin ang Reset progress. Mabubura sa guide ang mga natapos na hakbang, mga naka-check na requirement, at naitalang resulta ng exam. Mananatiling naka-save ang iyong applicant profile."
+    ],
+    [
+      "Paano ko ie-edit ang aking applicant profile?",
+      "Buksan ang Profile at pindutin ang Edit Profile. Sundin ang mga hakbang sa setup at pindutin ang Continue sa huling screen upang ma-save ang iyong mga pinili."
+    ],
+    [
+      "Paano ko makukuha ang pinakabagong impormasyon sa guide?",
+      "Kumonekta sa internet, buksan ang Profile, at pindutin ang Check for content updates. Ida-download ng app ang pinakabagong na-publish na guide kapag available ito."
+    ],
+    [
+      "Magagamit ko ba ang app kahit walang internet?",
+      "Oo. Maaari mong basahin ang naka-save o kasamang guide sa app at gamitin ang campus map kahit offline. Kailangan ng internet para mag-download ng updates o buksan ang opisyal na admission portal."
+    ],
+    [
+      "Magagamit ko ba ang guide nang hindi gumagawa ng profile?",
+      "Oo. Piliin ang Continue as Guest sa unang screen. Maaari mong tingnan ang guide, mapa, at mga FAQ nang hindi sine-save ang iyong progress bilang aplikante."
+    ],
+    [
+      "Maaari ko bang isumite ang opisyal kong application sa app?",
+      "Pindutin ang Open CvSU Admission sa Home o Profile upang buksan ang opisyal na admission portal. Doon magsumite ng mga dokumento, pumili ng appointment, at tingnan ang opisyal na resulta."
+    ],
+    [
+      "Paano ko gagamitin ang walking guide sa campus map?",
+      "Buksan ang Map, pindutin ang marker ng pupuntahang lokasyon, at pumili ng gate o pindutin ang Start walking guide. Ipapakita ng karakter ang ruta patungo sa lokasyon."
+    ],
+    [
+      "Makikita ba ang aking progress sa ibang device?",
+      "Naka-save ang iyong profile at progress sa device na ginagamit mo. Kapag nagpalit ka ng cellphone o binura mo ang storage ng app, maaaring kailanganin mong i-set up muli ang profile at itala ulit ang iyong progress."
+    ]
+  ]
 }

@@ -8,6 +8,23 @@ This project uses [Semantic Versioning](https://semver.org/):
 - **Minor** (`1.1.0`): new backward-compatible features or pages
 - **Major** (`2.0.0`): large redesigns or incompatible changes
 
+## [2.1.0] - 2026-11-18
+
+### Added
+
+- Add an active-installation count to the admin dashboard based on anonymous native app check-ins within 30 days.
+- Let admins select ICON, Rolle Hall, or CCJ as the published examination venue.
+- Add venue-specific maps and photos, with walking routes from all three gates to Rolle Hall and an Infirmary-based route to CCJ.
+- Add a Tagalog switch for admission FAQs and a bilingual Using the App category.
+- Add optional nickname and sex fields to applicant setup, with a female walking avatar on the campus map.
+
+### Changed
+
+- Keep the bottom navigation visible on applicant and guest profiles, and ask for confirmation before resetting journey progress.
+- Use compact map pop-ups with selectable walking routes. Remove map guide videos and background music from the app bundle.
+- Keep campus attire and uniform guidance bundled in the app while retaining editable campus trivia.
+- Connect the Android preview build to the deployed Render content endpoint.
+
 ## [2.0.0] - 2026-11-18
 
 ### Added

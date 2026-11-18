@@ -1,0 +1,55 @@
+{
+  "title": "Dress for your next stop",
+  "visit": {
+    "label": "Admission visit",
+    "intro": "No school uniform is needed for admission visits. Neat, decent casual attire is acceptable any day, including regular office days.",
+    "caption": "Student policy reference. Uniform rules apply after enrollment and class start.",
+    "notes": [
+      [
+        "Keep it neat and presentable",
+        [
+          "No shorts, sandals or sleeveless tops, slippers, bare midriff, spaghetti straps, tube or backless tops, tight-fit blouses, jerseys, leggings, or ripped jeans that expose skin.",
+          "Clean clothing and a neat hairstyle make campus transactions more comfortable."
+        ]
+      ]
+    ]
+  },
+  "classes": {
+    "label": "During classes",
+    "intro": "Prescribed school uniforms for male and female students apply during classes. Confirm program-specific details with your college or department.",
+    "caption": "Source: Office Memorandum No. PHDR-129-19 and Office Memorandum No. 32, s. 2023.",
+    "notes": [
+      [
+        "Uniform options",
+        [
+          "LGBTQ+ students may wear their preferred official uniform option (male or female), as long as it remains complete, proper, and compliant with university rules."
+        ]
+      ],
+      [
+        "Wash Day: Wednesday and Saturday",
+        [
+          "Students may wear appropriate civilian attire during Wash Days or declared field and special days.",
+          "Civilian attire must be neat, decent, and not revealing. Avoid slippers or sandals, shorts or skirts more than three inches above the knee, sleeveless tops, bare midriff, spaghetti straps, tube or backless tops, tight-fit blouses, jerseys, leggings, and ripped jeans that expose skin.",
+          "Long hair should be tied in a ponytail. Bright hair colors are prohibited."
+        ]
+      ],
+      [
+        "Daily reminder",
+        [
+          "Always wear your student ID or bring your registration form when entering campus or attending classes."
+        ]
+      ]
+    ]
+  },
+  "images": {
+    "dressCode": {
+      "label": "Dress code"
+    },
+    "femaleUniform": {
+      "label": "Female uniform"
+    },
+    "maleUniform": {
+      "label": "Male uniform"
+    }
+  }
+}

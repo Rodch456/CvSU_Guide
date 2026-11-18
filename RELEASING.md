@@ -44,7 +44,7 @@ Replace `1.1.0` with the version being released. GitHub will show each snapshot 
 
 ## Build an offline Android APK
 
-The app stores its guide images and videos as local Expo assets. Build the `preview` profile to create an installable APK with those assets bundled into the app:
+The app stores its guide images as local Expo assets. Build the `preview` profile to create an installable APK with those assets bundled into the app:
 
 ```powershell
 npx eas-cli login

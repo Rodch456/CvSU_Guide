@@ -14,7 +14,7 @@ const nav = [...document.querySelectorAll('[data-section]')];
 const sections = {
   dashboard: ['Dashboard', 'Overview of the published admission guide.'],
   history: ['Change history', 'Review what was published and when. Newest changes appear first.'],
-  campusGuide: ['Campus guide', 'Edit the trivia in FAQs and the attire and uniform guidance on the campus map.'],
+  campusGuide: ['Campus trivia', 'Edit the campus trivia shown in the applicant guide.'],
   faqItems: ['FAQs', 'Manage the questions, answers and categories in the guide.'],
   statusStepDetails: ['Admission steps', 'Add steps and arrange where they appear in the applicant journey.'],
   programs: ['Programs', 'Manage the program choices shown to applicants.'],
@@ -28,6 +28,9 @@ let authorization = '';
 let content;
 let version;
 let availableProgramCount;
+let examVenueNames;
+let activeInstallationCount;
+let activeInstallationDays;
 let history = [];
 let historySection = '';
 let historyFrom = '';
@@ -170,18 +173,31 @@ function editRows(key, labels, titleIndex, noun, openIndex = -1) {
     const editable = document.createElement('div');
     editable.className = 'stack';
     const isTrack = key === 'tracks';
+    const isFaq = key === 'faqItems';
     const isAls = isTrack && values[0] === alsTrack;
     labels.forEach((label, column) => {
       if (isAls && column === 0) return;
       editable.append(field(label, values[column], (value) => {
         values[column] = value.trim();
         updateTitle();
-      }, label === 'Answer' || label === 'Description' ? 3 : 0));
+      }, label.endsWith('answer') || label === 'Description' ? 3 : 0));
     });
     if (isTrack) editable.append(assignmentChoices('Eligible programs', content.programs, values[2]));
+    if (isFaq) {
+      const translation = [...(content.faqTranslations[index] || ['', ''])];
+      const updateTranslation = (column, value) => {
+        translation[column] = value.trim();
+        content.faqTranslations[index] = translation.some(Boolean) ? translation : null;
+      };
+      editable.append(
+        field('Tagalog question (optional)', translation[0], (value) => updateTranslation(0, value)),
+        field('Tagalog answer (optional)', translation[1], (value) => updateTranslation(1, value), 3)
+      );
+    }
     if (!isAls) {
       editable.append(button('Remove ' + noun, () => {
         rows.splice(index, 1);
+        if (isFaq) content.faqTranslations.splice(index, 1);
         markDirty();
         render();
       }, 'danger'));
@@ -191,6 +207,7 @@ function editRows(key, labels, titleIndex, noun, openIndex = -1) {
   });
   fields.append(button('Add ' + noun, () => {
     rows.push(key === 'tracks' ? ['', '', []] : labels.map(() => ''));
+    if (key === 'faqItems') content.faqTranslations.push(null);
     markDirty();
     render(rows.length - 1);
     fields.querySelector('details[open] input')?.focus();
@@ -353,6 +370,26 @@ function editAcademicStatuses() {
   fields.append(settings);
 }
 
+function editExamVenue() {
+  const settings = content.examVenue;
+  const panel = document.createElement('section');
+  panel.className = 'panel stack';
+  const title = document.createElement('h2');
+  title.textContent = 'Examination venue';
+  const label = document.createElement('label');
+  label.textContent = 'Venue shown to applicants';
+  const select = document.createElement('select');
+  select.replaceChildren(...Object.entries(examVenueNames).map(([id, name]) => new Option(name, id)));
+  select.value = settings.selected;
+  label.append(select);
+  select.addEventListener('change', () => {
+    settings.selected = select.value;
+    markDirty();
+  });
+  panel.append(title, label);
+  return panel;
+}
+
 function editSteps() {
   const order = content.admissionStepOrder;
   if (!order.includes(selectedStep)) selectedStep = order[0];
@@ -385,10 +422,13 @@ function editSteps() {
       field('Summary', step.description, (value) => { step.description = value.trim(); }, 3),
       listField('Instructions', step.instructions, (value) => { step.instructions = value; }),
       requirementEditor('Requirements and documents', step.requirements),
-      field('Location (optional)', step.location || '', (value) => { step.location = value.trim(); }),
+      ...(selectedStep === 'Admission Examination' ? [] : [
+        field('Location (optional)', step.location || '', (value) => { step.location = value.trim(); })
+      ]),
       listField('Additional details', step.details || [], (value) => { step.details = value; }, 3)
     );
     if (selectedStep === 'Admission Examination') {
+      panel.prepend(editExamVenue());
       const settings = document.createElement('div');
       settings.className = 'stack';
       const title = document.createElement('h2');
@@ -465,6 +505,19 @@ function renderDashboard() {
   const detail = document.createElement('p');
   detail.textContent = 'Each program is counted once across all published academic statuses, tracks and strands.';
   card.append(title, count, detail);
+  const activeCard = document.createElement('section');
+  activeCard.className = 'dashboard-installations';
+  const activeTitle = document.createElement('h2');
+  activeTitle.textContent = 'Active app installations';
+  const activeCount = document.createElement('p');
+  activeCount.className = 'dashboard-count';
+  activeCount.textContent = activeInstallationCount.toLocaleString();
+  const activeDetail = document.createElement('p');
+  activeDetail.textContent = `Distinct app installations that checked in within the last ${activeInstallationDays} days.`;
+  activeCard.append(activeTitle, activeCount, activeDetail);
+  const metrics = document.createElement('div');
+  metrics.className = 'dashboard-metrics';
+  metrics.append(card, activeCard);
 
   const shortcuts = document.createElement('div');
   shortcuts.className = 'dashboard-shortcuts';
@@ -476,7 +529,7 @@ function renderDashboard() {
     button('Manage programs', () => openSection('programs'), 'secondary'),
     button('View change history', () => openSection('history'), 'secondary')
   );
-  fields.append(card, shortcutTitle, shortcuts);
+  fields.append(metrics, shortcutTitle, shortcuts);
 }
 
 function renderHistory() {
@@ -583,94 +636,11 @@ function renderHistoryEntries(container, matchingHistory, formatDate) {
   });
 }
 
-function editAttireNotes(notes) {
-  const editor = document.createElement('div');
-  editor.className = 'stack';
-  const list = document.createElement('div');
-  list.className = 'stack';
-  function draw() {
-    list.replaceChildren();
-    notes.forEach((note, index) => {
-      const card = document.createElement('div');
-      card.className = 'panel stack';
-      card.append(
-        field('Note heading', note[0], (value) => { note[0] = value.trim(); }),
-        listField('Note paragraphs', note[1], (value) => { note[1] = value; }, 4),
-        button('Remove note', () => {
-          notes.splice(index, 1);
-          markDirty();
-          draw();
-        }, 'danger')
-      );
-      list.append(card);
-    });
-  }
-  const add = button('Add note', () => {
-    notes.push(['', []]);
-    markDirty();
-    draw();
-    list.lastElementChild.querySelector('input').focus();
-  }, 'secondary');
-  draw();
-  editor.append(list, add);
-  return editor;
-}
-
-function editAttireImage(title, image) {
-  const group = document.createElement('fieldset');
-  group.className = 'panel stack';
-  const heading = document.createElement('legend');
-  heading.textContent = title;
-  let visibleUrl = image.url ?? '';
-  const url = field('Replacement image URL (HTTPS, optional)', visibleUrl, (value) => {
-    visibleUrl = value.trim();
-    image.url = visibleUrl;
-  });
-  url.hidden = image.url === null;
-  group.append(
-    heading,
-    field('Image label', image.label, (value) => { image.label = value.trim(); }),
-    toggleField('Show image in the guide', image.url !== null, (checked) => {
-      image.url = checked ? visibleUrl : null;
-      url.hidden = !checked;
-    }),
-    url
-  );
-  return group;
-}
-
 function editCampusGuide() {
   const trivia = document.createElement('section');
   trivia.className = 'panel stack';
   trivia.append(listField('Campus trivia facts', content.faqTrivia, (value) => { content.faqTrivia = value; }, 8));
-  const guide = content.attireGuide;
-  const attire = document.createElement('section');
-  attire.className = 'panel stack';
-  const title = document.createElement('h2');
-  title.textContent = 'Campus attire and uniform guide';
-  attire.append(title, field('Guide title', guide.title, (value) => { guide.title = value.trim(); }));
-  for (const [key, label] of [['visit', 'Admission visit'], ['classes', 'During classes']]) {
-    const tab = guide[key];
-    const details = document.createElement('details');
-    const summary = document.createElement('summary');
-    summary.textContent = label;
-    const settings = document.createElement('div');
-    settings.className = 'stack';
-    settings.append(
-      field('Tab label', tab.label, (value) => { tab.label = value.trim(); }),
-      field('Introduction', tab.intro, (value) => { tab.intro = value.trim(); }, 3),
-      field('Caption or policy reference (optional)', tab.caption, (value) => { tab.caption = value.trim(); }, 2),
-      editAttireNotes(tab.notes)
-    );
-    const imageHint = document.createElement('p');
-    imageHint.textContent = 'Leave the replacement URL blank to use the image bundled with the app.';
-    settings.append(imageHint);
-    if (key === 'visit') settings.append(editAttireImage('Dress code image', guide.images.dressCode));
-    else settings.append(editAttireImage('Female uniform image', guide.images.femaleUniform), editAttireImage('Male uniform image', guide.images.maleUniform));
-    details.append(summary, settings);
-    attire.append(details);
-  }
-  fields.append(trivia, attire);
+  fields.append(trivia);
 }
 
 function render(openIndex) {
@@ -682,7 +652,7 @@ function render(openIndex) {
   if (section === 'dashboard') renderDashboard();
   if (section === 'history') renderHistory();
   if (section === 'campusGuide') editCampusGuide();
-  if (section === 'faqItems') editRows(section, ['Category', 'Question', 'Answer'], 1, 'FAQ', openIndex);
+  if (section === 'faqItems') editRows(section, ['Category', 'English question', 'English answer'], 1, 'FAQ', openIndex);
   if (section === 'tracks') editRows(section, ['Name', 'Description'], 0, 'track or strand', openIndex);
   if (section === 'academicStatuses') editAcademicStatuses();
   if (section === 'statusStepDetails') editSteps();
@@ -703,7 +673,8 @@ function render(openIndex) {
 }
 
 async function load(secret) {
-  ({ content, version, availableProgramCount, history } = await request('GET', secret));
+  ({ content, version, availableProgramCount, activeInstallationCount, activeInstallationDays, history, examVenueNames } = await request('GET', secret));
+  content.faqTranslations ??= content.faqItems.map(() => null);
   markDirty(false);
   render();
 }
@@ -761,7 +732,7 @@ publish.addEventListener('click', async () => {
       reapplicationPrograms: content.reapplicationPrograms?.filter((program) => catalog.has(program)) ?? null
     };
     const result = await request('PUT', authorization, JSON.stringify(publication));
-    ({ version, availableProgramCount, history } = result);
+    ({ version, availableProgramCount, activeInstallationCount, activeInstallationDays, history } = result);
     content = publication;
     render();
     markDirty(false);
@@ -792,6 +763,8 @@ signOut.addEventListener('click', () => {
   content = undefined;
   version = undefined;
   availableProgramCount = undefined;
+  activeInstallationCount = undefined;
+  activeInstallationDays = undefined;
   history = [];
   historySection = '';
   historyFrom = '';

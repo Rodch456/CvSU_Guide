@@ -1,5 +1,5 @@
 const { isDeepStrictEqual } = require('node:util');
-const { getAdmissionStepOrder, getAttireGuide, getCampusTrivia } = require('../src/content-schema');
+const { examVenueNames, getAdmissionStepOrder, getCampusTrivia, getExamVenueSettings } = require('../src/content-schema');
 
 function summarizeChanges(previous, next) {
   const groups = [];
@@ -51,17 +51,17 @@ function summarizeChanges(previous, next) {
   }
   const orderedSteps = (content) => getAdmissionStepOrder(content).map((key) => [key, content.statusStepDetails[key]]);
   compare('Admission steps', orderedSteps(previous), orderedSteps(next), name, ([, step]) => step.title);
-  compare('FAQs', previous.faqItems, next.faqItems, ([category, question]) => JSON.stringify([category, question]), ([category, question]) => `${question} (${category})`);
+  const translatedFaqs = (content) => content.faqItems.map((entry, index) => [...entry, content.faqTranslations?.[index] ?? null]);
+  compare('FAQs', translatedFaqs(previous), translatedFaqs(next), ([category, question]) => JSON.stringify([category, question]), ([category, question]) => `${question} (${category})`);
   compare('Campus trivia', getCampusTrivia(previous), getCampusTrivia(next), value, value);
-  const beforeGuide = getAttireGuide(previous);
-  const afterGuide = getAttireGuide(next);
-  const attireChanges = [
-    ['Guide title', beforeGuide.title, afterGuide.title],
-    ['Admission visit', beforeGuide.visit, afterGuide.visit],
-    ['During classes', beforeGuide.classes, afterGuide.classes],
-    ...Object.keys(beforeGuide.images).map((key) => [afterGuide.images[key]?.label || beforeGuide.images[key].label, beforeGuide.images[key], afterGuide.images[key]])
-  ].filter(([, before, after]) => !isDeepStrictEqual(before, after)).map(([label]) => `Updated ${label}`);
-  if (attireChanges.length) groups.push({ section: 'Campus attire and uniform guide', changes: attireChanges });
+  const beforeVenue = getExamVenueSettings(previous);
+  const afterVenue = getExamVenueSettings(next);
+  const venueChanges = [];
+  if (beforeVenue.selected !== afterVenue.selected) venueChanges.push(`Set the examination venue to ${examVenueNames[afterVenue.selected]}`);
+  for (const id of ['rolle', 'ccj']) {
+    if (!isDeepStrictEqual(beforeVenue.locations[id], afterVenue.locations[id])) venueChanges.push(`Updated map details for ${examVenueNames[id]}`);
+  }
+  if (venueChanges.length) groups.push({ section: 'Examination venue', changes: venueChanges });
   return groups;
 }
 

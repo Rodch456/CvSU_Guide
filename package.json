@@ -1,6 +1,6 @@
 {
   "name": "cvsu-admission-guide",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "main": "index.js",
   "scripts": {
@@ -22,7 +22,6 @@
     "expo-image-picker": "~57.0.21",
     "expo-splash-screen": "~57.0.11",
     "expo-status-bar": "~57.0.1",
-    "expo-video": "~57.0.5",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.3",

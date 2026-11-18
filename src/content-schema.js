@@ -1,6 +1,25 @@
 const defaults = require('./admission-content.json');
 const alsTrack = 'ALS Passer';
 const coreAdmissionSteps = Object.keys(defaults.statusStepDetails);
+const examVenueNames = {
+  icon: 'International Convention Center (ICON)',
+  rolle: 'Rolle Hall',
+  ccj: 'College of Criminal Justice (CCJ)'
+};
+const defaultExamVenue = {
+  selected: 'icon',
+  locations: { rolle: { directions: '', pin: null }, ccj: { directions: '', pin: null } }
+};
+
+function getExamVenueSettings(content) {
+  return content.examVenue ?? defaultExamVenue;
+}
+
+function getExamVenue(content) {
+  const { selected, locations } = getExamVenueSettings(content);
+  const location = selected === 'icon' ? null : locations[selected];
+  return { id: selected, name: examVenueNames[selected], directions: location?.directions || '', pin: location?.pin ?? null };
+}
 
 function getAdmissionStepOrder(content) {
   return content.admissionStepOrder ?? coreAdmissionSteps;
@@ -8,10 +27,6 @@ function getAdmissionStepOrder(content) {
 
 function getCampusTrivia(content) {
   return content.faqTrivia ?? defaults.faqTrivia;
-}
-
-function getAttireGuide(content) {
-  return content.attireGuide ?? defaults.attireGuide;
 }
 
 function getAcademicStatuses(content) {
@@ -64,19 +79,6 @@ const unique = (values) => new Set(values.map((value) => value.toLowerCase())).s
 const textList = (value, min = 0) => isList(value, isText, min) && unique(value);
 const row = (value, width) => Array.isArray(value) && value.length === width && value.every(isText);
 
-function validGuideImage(image) {
-  if (!image || !isText(image.label)) return false;
-  if (image.url === null || image.url === '') return true;
-  if (!isText(image.url)) return false;
-  const authority = /^https:\/\/([^/?#]+)/.exec(image.url)?.[1];
-  if (!authority || /[@\s\\]/.test(authority)) return false;
-  try {
-    return Boolean(new URL(image.url).hostname);
-  } catch {
-    return false;
-  }
-}
-
 function validateContent(content) {
   if (!content || typeof content !== 'object') return 'Admission content is missing.';
   if (!textList(content.programs, 1)) return 'Enter at least one program. Program names must be unique.';
@@ -94,6 +96,11 @@ function validateContent(content) {
   if (!isList(content.faqItems, (entry) => row(entry, 3) && entry[0].toLowerCase() !== 'all') ||
       !unique(content.faqItems.map(([category, question]) => JSON.stringify([category, question])))) {
     return 'Each FAQ needs a category, question and answer. Questions must be unique within a category. “All” is reserved.';
+  }
+  if (content.faqTranslations !== undefined &&
+      (!isList(content.faqTranslations, (translation) => translation === null || row(translation, 2)) ||
+       content.faqTranslations.length !== content.faqItems.length)) {
+    return 'Enter both the Tagalog question and answer for each translated FAQ, or leave both blank.';
   }
   const steps = getAdmissionStepOrder(content);
   const detailsByStep = content.statusStepDetails || {};
@@ -126,19 +133,15 @@ function validateContent(content) {
     return 'Each academic status needs a unique name, a description, and at least one available track. Remove duplicate requirements.';
   }
   if (!textList(getCampusTrivia(content))) return 'Campus trivia must contain unique, non-empty facts.';
-  const guide = getAttireGuide(content);
-  const validNote = (note) => Array.isArray(note) && note.length === 2 && isText(note[0]) && textList(note[1], 1);
-  for (const tab of ['visit', 'classes']) {
-    const section = guide[tab];
-    if (!section || !isText(section.label) || !isText(section.intro) ||
-        (section.caption !== '' && !isText(section.caption)) || !isList(section.notes, validNote)) {
-      return 'Each attire section needs a tab label and introduction. Give each note a heading and at least one paragraph.';
-    }
-  }
-  if (!isText(guide.title) || !Object.keys(defaults.attireGuide.images).every((key) => validGuideImage(guide.images?.[key]))) {
-    return 'Enter an attire guide title and image labels. Use HTTPS URLs for replacement images.';
+  const venue = getExamVenueSettings(content);
+  const validPinCoordinate = (value) => Number.isFinite(value) && value >= 0 && value <= 100;
+  const validVenue = (location) => location &&
+    (location.directions === '' || isText(location.directions)) &&
+    (location.pin === null || (location.pin && validPinCoordinate(location.pin.x) && validPinCoordinate(location.pin.y)));
+  if (!Object.hasOwn(examVenueNames, venue.selected) || !['rolle', 'ccj'].every((id) => validVenue(venue.locations?.[id]))) {
+    return 'Select a known examination venue and place map pins within the campus map.';
   }
   return null;
 }
 
-module.exports = { alsTrack, getAcademicStatuses, getAcademicStatus, getAdmissionStepOrder, getAttireGuide, getCampusTrivia, getEligiblePrograms, getReapplicationPrograms, getStepRequirements, getTrackOptions, validateContent };
+module.exports = { alsTrack, examVenueNames, getAcademicStatuses, getAcademicStatus, getAdmissionStepOrder, getCampusTrivia, getEligiblePrograms, getExamVenue, getExamVenueSettings, getReapplicationPrograms, getStepRequirements, getTrackOptions, validateContent };
