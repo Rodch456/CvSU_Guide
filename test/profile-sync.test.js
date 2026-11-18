@@ -5,7 +5,9 @@ const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'ExpoApp.js'), 
   .replace(/\r\n/g, '\n');
 
 const hasProgramSync = /useEffect\(\(\) => \{\s*setActiveProgram\(program\);\s*\}, \[program\]\);/.test(source);
-const hasGuestInterviewStepSelection = /const selectedProgramForSteps = guestMode \? guestProgram : activeProgram;\s*const hasInterview = exceptionProgramKeywords\.some\(\(keyword\) => String\(selectedProgramForSteps \|\| ''\)\.toLowerCase\(\)\.includes\(keyword\.toLowerCase\(\)\)\);\s*const steps = hasInterview \? exceptionStatusSteps : defaultStatusSteps;/.test(source);
+const hasGuestInterviewStepSelection = source.includes('getSteps(activeProgram, exceptionProgramKeywords, stepOrder)')
+  && source.includes('getSteps(guestProgram, exceptionProgramKeywords, stepOrder)')
+  && source.includes('const steps = guestMode ? guestSteps : applicantSteps;');
 const hasGuestSetupFixedActionRow = source.includes('<View style={guestSetupStyles.actions}>')
   && source.includes("borderTopWidth: 1, borderTopColor: '#d8e2d9'");
 const hasGuestProfileEditRestart = /setGuestSetupStep\(1\);\s*setGuestSetupIsEditing\(true\);/.test(source);

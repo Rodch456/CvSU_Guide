@@ -1,0 +1,649 @@
+{
+  "exceptionProgramKeywords": [
+    "Nursing",
+    "Medical Technology",
+    "Midwifery",
+    "Tourism Management",
+    "Hospitality Management",
+    "Accountancy",
+    "International Studies"
+  ],
+  "statusStepDetails": {
+    "Online Application": {
+      "description": "Complete and submit your application through the CvSU Online Admission Portal.",
+      "instructions": [
+        "Go to admission.cvsu.edu.ph using a Gmail account.",
+        "Fill out the online application form completely and accurately.",
+        "Choose the correct entry type or applicant category.",
+        "Ensure the declared track or strand matches your documentary requirements.",
+        "Review all information before saving and submitting.",
+        "Save or update the application every time a change is made.",
+        "Upload documentary requirements as individual JPEG, PNG, or BMP pages up to 1MB each.",
+        "Use a white-background 2x2 ID photo with a file size of at most 10KB."
+      ],
+      "requirements": [
+        "Completed online application form",
+        "2x2 ID photo with white background, up to 10KB",
+        "Documentary requirements signed by authorized school personnel",
+        "Separate scanned pages in JPEG, PNG, or BMP format, up to 1MB each"
+      ],
+      "title": "Online Application"
+    },
+    "Validation Appointment": {
+      "description": "Schedule an appointment to have your application documents verified by an admission processor.",
+      "instructions": [
+        "Log in to the CvSU Online Admission Portal using your registered account.",
+        "Select an available schedule for document validation.",
+        "Download and print the generated Validation or Appointment Slip.",
+        "Report to the designated campus office on your scheduled date and time.",
+        "Present the original documents and complete photocopies for verification."
+      ],
+      "requirements": [
+        "Printed Validation or Appointment Slip",
+        "Original and photocopy of Form 138, Report Card, or Transcript of Records",
+        "Original and photocopy of PSA Birth Certificate",
+        "Certificate of Good Moral Character signed by authorized school personnel",
+        "2x2 ID photo with white background",
+        "Long brown envelope and long plastic envelope"
+      ],
+      "title": "Validation Appointment"
+    },
+    "Admission Examination": {
+      "description": "Take the admission examination at the assigned venue and schedule.",
+      "instructions": [
+        "After document validation, download and print your Test Permit from the admission portal.",
+        "Arrive at the designated venue 30 to 45 minutes before the examination.",
+        "Bring your Test Permit and valid ID into the examination room.",
+        "Follow all examination guidelines; cellphones and unauthorized electronic devices are prohibited.",
+        "Monitor the portal or official announcements for examination results."
+      ],
+      "requirements": [
+        "Printed Test Permit or Examination Permit",
+        "Valid school ID or government-issued ID",
+        "No. 2 pencils"
+      ],
+      "title": "Admission Examination"
+    },
+    "Interview": {
+      "description": "Attend the required program interview and discuss your academic background and course choice.",
+      "instructions": [
+        "Check eligibility and program requirements, especially for quota or board courses.",
+        "Check the portal or department notification for your interview schedule and session.",
+        "Attend on time in smart casual or official school attire.",
+        "Prepare to answer questions about your academic background and course choice."
+      ],
+      "requirements": [
+        "Printed Interview Slip or Exam Result Slip",
+        "Valid photo ID",
+        "Copy of Form 138, Report Card, or Summary of Grades"
+      ],
+      "location": "Designated College or Department Building, such as CEIT, CON, or CED, or the official video conference link for online interviews.",
+      "title": "Interview"
+    },
+    "Medical Examination": {
+      "description": "Complete the required tests and secure an official medical clearance from the university.",
+      "instructions": [
+        "Secure the official Medical Examination Form from the portal or University Health Services Unit.",
+        "Undergo the required laboratory tests at a licensed diagnostic facility or hospital.",
+        "Report to the University Clinic for a physical examination and submit your test results.",
+        "Secure the official Medical Clearance issued by university medical staff."
+      ],
+      "requirements": [
+        "Chest X-ray result taken within the last 3 to 6 months",
+        "Complete Blood Count result",
+        "Urinalysis result",
+        "Blood typing result",
+        "Completed Medical History Form",
+        "2x2 ID photo"
+      ],
+      "details": [
+        "In-school: Physical examination, dental check-up, and height and weight checks are conducted on campus.",
+        "Outside medical: Laboratory tests are taken at external diagnostic centers and presented to the University Clinic for validation."
+      ],
+      "title": "Medical Examination"
+    },
+    "Enrollment": {
+      "description": "Submit your original documents, register for subjects, and receive your Certificate of Registration.",
+      "instructions": [
+        "Verify in the portal that Validation, Examination or Interview, and Medical Clearance are completed.",
+        "Submit all required original hard-copy documents to the Office of the University Registrar.",
+        "Secure your official Certificate of Registration with your subjects and section schedule.",
+        "Attend the mandatory student orientation."
+      ],
+      "requirements": [
+        "Original Form 138 or Senior High School Report Card",
+        "Original Certificate of Good Moral Character",
+        "Original PSA Birth Certificate",
+        "Official Medical Clearance issued by CvSU Health Services Unit",
+        "Printed Admission or Eligibility Slip",
+        "2x2 ID photos with white background",
+        "Completed Student Personal Data Sheet or Enrollment Form"
+      ],
+      "title": "Enrollment"
+    }
+  },
+  "tracks": [
+    [
+      "ABM",
+      "Accountancy, Business, and Management",
+      [
+        "BACHELOR OF AGRICULTURAL ENTREPRENEURSHIP",
+        "BACHELOR OF EXERCISE AND SPORTS SCIENCE",
+        "BACHELOR OF PHYSICAL EDUCATION",
+        "BS ACCOUNTANCY",
+        "BS BUSINESS ADMINISTRATION MAJOR IN FINANCIAL MANAGEMENT",
+        "BS BUSINESS ADMINISTRATION MAJOR IN HUMAN RESOURCE MANAGEMENT",
+        "BS BUSINESS ADMINISTRATION MAJOR IN MARKETING MANAGEMENT",
+        "BS BUSINESS ADMINISTRATION MAJOR IN OPERATIONS MANAGEMENT",
+        "BS DEVELOPMENT MANAGEMENT",
+        "BS ECONOMICS",
+        "BS ENVIRONMENTAL SCIENCE",
+        "BS HOSPITALITY MANAGEMENT",
+        "BS INDUSTRIAL SECURITY MANAGEMENT",
+        "BS OFFICE ADMINISTRATION",
+        "BS TOURISM MANAGEMENT"
+      ]
+    ],
+    [
+      "STEM",
+      "Science, Technology, Engineering, and Mathematics",
+      [
+        "BACHELOR OF AGRICULTURAL ENTREPRENEURSHIP",
+        "BACHELOR OF EARLY CHILDHOOD EDUCATION",
+        "BACHELOR OF ELEMENTARY EDUCATION",
+        "BACHELOR OF EXERCISE AND SPORTS SCIENCE",
+        "BACHELOR OF PHYSICAL EDUCATION",
+        "BACHELOR OF SECONDARY EDUCATION MAJOR IN ENGLISH",
+        "BACHELOR OF SECONDARY EDUCATION MAJOR IN FILIPINO",
+        "BACHELOR OF SECONDARY EDUCATION MAJOR IN MATH",
+        "BACHELOR OF SECONDARY EDUCATION MAJOR IN SCIENCE",
+        "BACHELOR OF SECONDARY EDUCATION MAJOR IN SOCIAL STUDIES",
+        "BACHELOR OF SPECIAL NEEDS EDUCATION",
+        "BACHELOR OF TECHNOLOGY AND LIVELIHOOD EDUCATION",
+        "BS AGRICULTURAL AND BIOSYSTEMS ENGINEERING",
+        "BS AGRICULTURE",
+        "BS APPLIED MATHEMATICS",
+        "BS ARCHITECTURE",
+        "BS BIOLOGY",
+        "BS BUSINESS ADMINISTRATION MAJOR IN FINANCIAL MANAGEMENT",
+        "BS BUSINESS ADMINISTRATION MAJOR IN HUMAN RESOURCE MANAGEMENT",
+        "BS BUSINESS ADMINISTRATION MAJOR IN MARKETING MANAGEMENT",
+        "BS BUSINESS ADMINISTRATION MAJOR IN OPERATIONS MANAGEMENT",
+        "BS CIVIL ENGINEERING",
+        "BS COMPUTER ENGINEERING",
+        "BS COMPUTER SCIENCE",
+        "BS CRIMINOLOGY",
+        "BS ELECTRICAL ENGINEERING",
+        "BS ELECTRONICS ENGINEERING",
+        "BS ENVIRONMENTAL SCIENCE",
+        "BS FOOD TECHNOLOGY",
+        "BS HOSPITALITY MANAGEMENT",
+        "BS INDUSTRIAL ENGINEERING",
+        "BS INDUSTRIAL SECURITY MANAGEMENT",
+        "BS INDUSTRIAL TECHNOLOGY MAJOR IN AUTOMOTIVE TECHNOLOGY",
+        "BS INDUSTRIAL TECHNOLOGY MAJOR IN ELECTRICAL TECHNOLOGY",
+        "BS INDUSTRIAL TECHNOLOGY MAJOR IN ELECTRONICS TECHNOLOGY",
+        "BS INFORMATION TECHNOLOGY",
+        "BS MEDICAL TECHNOLOGY",
+        "BS MIDWIFERY",
+        "BS NURSING",
+        "BS PSYCHOLOGY",
+        "BS SOCIAL WORK",
+        "BS TOURISM MANAGEMENT",
+        "DOCTOR OF VETERINARY MEDICINE"
+      ]
+    ],
+    [
+      "HUMSS",
+      "Humanities and Social Sciences",
+      [
+        "BA COMMUNICATION",
+        "BA ENGLISH LANGUAGE STUDIES",
+        "BA JOURNALISM",
+        "BA POLITICAL SCIENCE",
+        "BACHELOR OF EARLY CHILDHOOD EDUCATION",
+        "BACHELOR OF ELEMENTARY EDUCATION",
+        "BACHELOR OF EXERCISE AND SPORTS SCIENCE",
+        "BACHELOR OF PHYSICAL EDUCATION",
+        "BACHELOR OF SECONDARY EDUCATION MAJOR IN ENGLISH",
+        "BACHELOR OF SECONDARY EDUCATION MAJOR IN FILIPINO",
+        "BACHELOR OF SECONDARY EDUCATION MAJOR IN MATH",
+        "BACHELOR OF SECONDARY EDUCATION MAJOR IN SCIENCE",
+        "BACHELOR OF SECONDARY EDUCATION MAJOR IN SOCIAL STUDIES",
+        "BACHELOR OF SPECIAL NEEDS EDUCATION",
+        "BACHELOR OF TECHNOLOGY AND LIVELIHOOD EDUCATION",
+        "BS CRIMINOLOGY",
+        "BS DEVELOPMENT COMMUNICATION",
+        "BS DEVELOPMENT MANAGEMENT",
+        "BS ECONOMICS",
+        "BS ENVIRONMENTAL SCIENCE",
+        "BS HOSPITALITY MANAGEMENT",
+        "BS INDUSTRIAL SECURITY MANAGEMENT",
+        "BS INTERNATIONAL STUDIES",
+        "BS PSYCHOLOGY",
+        "BS SOCIAL WORK",
+        "BS TOURISM MANAGEMENT"
+      ]
+    ],
+    [
+      "TVL - HE",
+      "Technical-Vocational-Livelihood – Home Economics",
+      [
+        "BACHELOR OF EXERCISE AND SPORTS SCIENCE",
+        "BACHELOR OF PHYSICAL EDUCATION",
+        "BACHELOR OF TECHNOLOGY AND LIVELIHOOD EDUCATION",
+        "BS ENVIRONMENTAL SCIENCE",
+        "BS HOSPITALITY MANAGEMENT",
+        "BS INDUSTRIAL TECHNOLOGY MAJOR IN AUTOMOTIVE TECHNOLOGY",
+        "BS INDUSTRIAL TECHNOLOGY MAJOR IN ELECTRICAL TECHNOLOGY",
+        "BS INDUSTRIAL TECHNOLOGY MAJOR IN ELECTRONICS TECHNOLOGY",
+        "BS TOURISM MANAGEMENT"
+      ]
+    ],
+    [
+      "TVL - ICT",
+      "Technical-Vocational-Livelihood – Information and Communications Technology",
+      [
+        "BACHELOR OF EXERCISE AND SPORTS SCIENCE",
+        "BACHELOR OF PHYSICAL EDUCATION",
+        "BACHELOR OF TECHNOLOGY AND LIVELIHOOD EDUCATION",
+        "BS COMPUTER SCIENCE",
+        "BS CRIMINOLOGY",
+        "BS ENVIRONMENTAL SCIENCE",
+        "BS HOSPITALITY MANAGEMENT",
+        "BS INDUSTRIAL SECURITY MANAGEMENT",
+        "BS INDUSTRIAL TECHNOLOGY MAJOR IN AUTOMOTIVE TECHNOLOGY",
+        "BS INDUSTRIAL TECHNOLOGY MAJOR IN ELECTRICAL TECHNOLOGY",
+        "BS INDUSTRIAL TECHNOLOGY MAJOR IN ELECTRONICS TECHNOLOGY",
+        "BS INFORMATION TECHNOLOGY",
+        "BS TOURISM MANAGEMENT"
+      ]
+    ],
+    [
+      "GAS",
+      "General Academic Strand",
+      [
+        "BA COMMUNICATION",
+        "BA ENGLISH LANGUAGE STUDIES",
+        "BA JOURNALISM",
+        "BA POLITICAL SCIENCE",
+        "BACHELOR OF AGRICULTURAL ENTREPRENEURSHIP",
+        "BACHELOR OF EARLY CHILDHOOD EDUCATION",
+        "BACHELOR OF ELEMENTARY EDUCATION",
+        "BACHELOR OF EXERCISE AND SPORTS SCIENCE",
+        "BACHELOR OF PHYSICAL EDUCATION",
+        "BACHELOR OF SECONDARY EDUCATION MAJOR IN ENGLISH",
+        "BACHELOR OF SECONDARY EDUCATION MAJOR IN FILIPINO",
+        "BACHELOR OF SECONDARY EDUCATION MAJOR IN MATH",
+        "BACHELOR OF SECONDARY EDUCATION MAJOR IN SCIENCE",
+        "BACHELOR OF SECONDARY EDUCATION MAJOR IN SOCIAL STUDIES",
+        "BACHELOR OF SPECIAL NEEDS EDUCATION",
+        "BACHELOR OF TECHNOLOGY AND LIVELIHOOD EDUCATION",
+        "BS AGRICULTURE",
+        "BS APPLIED MATHEMATICS",
+        "BS BUSINESS ADMINISTRATION MAJOR IN FINANCIAL MANAGEMENT",
+        "BS BUSINESS ADMINISTRATION MAJOR IN HUMAN RESOURCE MANAGEMENT",
+        "BS BUSINESS ADMINISTRATION MAJOR IN MARKETING MANAGEMENT",
+        "BS BUSINESS ADMINISTRATION MAJOR IN OPERATIONS MANAGEMENT",
+        "BS CRIMINOLOGY",
+        "BS DEVELOPMENT COMMUNICATION",
+        "BS ENVIRONMENTAL SCIENCE",
+        "BS FOOD TECHNOLOGY",
+        "BS HOSPITALITY MANAGEMENT",
+        "BS INDUSTRIAL SECURITY MANAGEMENT",
+        "BS INDUSTRIAL TECHNOLOGY MAJOR IN AUTOMOTIVE TECHNOLOGY",
+        "BS INDUSTRIAL TECHNOLOGY MAJOR IN ELECTRICAL TECHNOLOGY",
+        "BS INDUSTRIAL TECHNOLOGY MAJOR IN ELECTRONICS TECHNOLOGY",
+        "BS OFFICE ADMINISTRATION",
+        "BS PSYCHOLOGY",
+        "BS SOCIAL WORK",
+        "BS TOURISM MANAGEMENT"
+      ]
+    ],
+    [
+      "Arts and Design",
+      "Arts and Design Track",
+      [
+        "BACHELOR OF EXERCISE AND SPORTS SCIENCE",
+        "BACHELOR OF PHYSICAL EDUCATION",
+        "BS ENVIRONMENTAL SCIENCE",
+        "BS HOSPITALITY MANAGEMENT",
+        "BS TOURISM MANAGEMENT"
+      ]
+    ],
+    [
+      "Sports",
+      "Sports Track",
+      [
+        "BACHELOR OF EXERCISE AND SPORTS SCIENCE",
+        "BACHELOR OF PHYSICAL EDUCATION",
+        "BS ENVIRONMENTAL SCIENCE",
+        "BS HOSPITALITY MANAGEMENT",
+        "BS TOURISM MANAGEMENT"
+      ]
+    ],
+    [
+      "ALS Passer",
+      "Alternative Learning System passer",
+      [
+        "BA COMMUNICATION",
+        "BA ENGLISH LANGUAGE STUDIES",
+        "BA JOURNALISM",
+        "BA POLITICAL SCIENCE",
+        "BACHELOR OF AGRICULTURAL ENTREPRENEURSHIP",
+        "BACHELOR OF EXERCISE AND SPORTS SCIENCE",
+        "BS APPLIED MATHEMATICS",
+        "BS BIOLOGY",
+        "BS BUSINESS ADMINISTRATION MAJOR IN FINANCIAL MANAGEMENT",
+        "BS BUSINESS ADMINISTRATION MAJOR IN HUMAN RESOURCE MANAGEMENT",
+        "BS BUSINESS ADMINISTRATION MAJOR IN MARKETING MANAGEMENT",
+        "BS BUSINESS ADMINISTRATION MAJOR IN OPERATIONS MANAGEMENT",
+        "BS COMPUTER ENGINEERING",
+        "BS COMPUTER SCIENCE",
+        "BS DEVELOPMENT COMMUNICATION",
+        "BS DEVELOPMENT MANAGEMENT",
+        "BS ECONOMICS",
+        "BS ENVIRONMENTAL SCIENCE",
+        "BS HOSPITALITY MANAGEMENT",
+        "BS INDUSTRIAL ENGINEERING",
+        "BS INDUSTRIAL SECURITY MANAGEMENT",
+        "BS INDUSTRIAL TECHNOLOGY MAJOR IN AUTOMOTIVE TECHNOLOGY",
+        "BS INDUSTRIAL TECHNOLOGY MAJOR IN ELECTRICAL TECHNOLOGY",
+        "BS INDUSTRIAL TECHNOLOGY MAJOR IN ELECTRONICS TECHNOLOGY",
+        "BS INFORMATION TECHNOLOGY",
+        "BS INTERNATIONAL STUDIES",
+        "BS OFFICE ADMINISTRATION",
+        "BS TOURISM MANAGEMENT"
+      ]
+    ]
+  ],
+  "programs": [
+    "BA COMMUNICATION",
+    "BA ENGLISH LANGUAGE STUDIES",
+    "BA JOURNALISM",
+    "BA POLITICAL SCIENCE",
+    "BACHELOR OF AGRICULTURAL ENTREPRENEURSHIP",
+    "BACHELOR OF EARLY CHILDHOOD EDUCATION",
+    "BACHELOR OF ELEMENTARY EDUCATION",
+    "BACHELOR OF EXERCISE AND SPORTS SCIENCE",
+    "BACHELOR OF PHYSICAL EDUCATION",
+    "BACHELOR OF SECONDARY EDUCATION MAJOR IN ENGLISH",
+    "BACHELOR OF SECONDARY EDUCATION MAJOR IN FILIPINO",
+    "BACHELOR OF SECONDARY EDUCATION MAJOR IN MATH",
+    "BACHELOR OF SECONDARY EDUCATION MAJOR IN SCIENCE",
+    "BACHELOR OF SECONDARY EDUCATION MAJOR IN SOCIAL STUDIES",
+    "BACHELOR OF SPECIAL NEEDS EDUCATION",
+    "BACHELOR OF TECHNOLOGY AND LIVELIHOOD EDUCATION",
+    "BS ACCOUNTANCY",
+    "BS AGRICULTURAL AND BIOSYSTEMS ENGINEERING",
+    "BS AGRICULTURE",
+    "BS APPLIED MATHEMATICS",
+    "BS ARCHITECTURE",
+    "BS BIOLOGY",
+    "BS BUSINESS ADMINISTRATION MAJOR IN FINANCIAL MANAGEMENT",
+    "BS BUSINESS ADMINISTRATION MAJOR IN HUMAN RESOURCE MANAGEMENT",
+    "BS BUSINESS ADMINISTRATION MAJOR IN MARKETING MANAGEMENT",
+    "BS BUSINESS ADMINISTRATION MAJOR IN OPERATIONS MANAGEMENT",
+    "BS CIVIL ENGINEERING",
+    "BS COMPUTER ENGINEERING",
+    "BS COMPUTER SCIENCE",
+    "BS CRIMINOLOGY",
+    "BS DEVELOPMENT COMMUNICATION",
+    "BS DEVELOPMENT MANAGEMENT",
+    "BS ECONOMICS",
+    "BS ELECTRICAL ENGINEERING",
+    "BS ELECTRONICS ENGINEERING",
+    "BS ENVIRONMENTAL SCIENCE",
+    "BS FOOD TECHNOLOGY",
+    "BS HOSPITALITY MANAGEMENT",
+    "BS INDUSTRIAL ENGINEERING",
+    "BS INDUSTRIAL SECURITY MANAGEMENT",
+    "BS INDUSTRIAL TECHNOLOGY MAJOR IN AUTOMOTIVE TECHNOLOGY",
+    "BS INDUSTRIAL TECHNOLOGY MAJOR IN ELECTRICAL TECHNOLOGY",
+    "BS INDUSTRIAL TECHNOLOGY MAJOR IN ELECTRONICS TECHNOLOGY",
+    "BS INFORMATION TECHNOLOGY",
+    "BS INTERNATIONAL STUDIES",
+    "BS MEDICAL TECHNOLOGY",
+    "BS MIDWIFERY",
+    "BS NURSING",
+    "BS OFFICE ADMINISTRATION",
+    "BS PSYCHOLOGY",
+    "BS SOCIAL WORK",
+    "BS TOURISM MANAGEMENT",
+    "DOCTOR OF VETERINARY MEDICINE"
+  ],
+  "faqItems": [
+    [
+      "Application",
+      "How do I apply for admission?",
+      "Visit the official University Admission Portal, create an account, complete the Application Form, and upload the required documents."
+    ],
+    [
+      "Application",
+      "What are the basic requirements for application?",
+      "The basic requirements are Form 138 / Grade 12 Report Card, PSA Birth Certificate, and a recent 2x2 ID photo."
+    ],
+    [
+      "Application",
+      "Can I still apply if my Form 138 is incomplete or delayed?",
+      "Yes. You may temporarily submit Form 137 or a Certificate of Enrollment/Graduation from your Senior High School while processing your official Form 138."
+    ],
+    [
+      "Application",
+      "Is there an application fee?",
+      "No. The application and admission process is free for qualified students under the Free Higher Education Act in state universities."
+    ],
+    [
+      "Application",
+      "Can I edit my application after submitting it?",
+      "If you need to correct information after submission, contact the University Admission Helpdesk or Admission Office for assistance."
+    ],
+    [
+      "Application",
+      "How can I check my application status?",
+      "Log in to the University Admission Portal and check your application status. If the status is unclear, contact the Admission Helpdesk."
+    ],
+    [
+      "Application",
+      "What should I do if I forget my admission portal password?",
+      "Use the portal's password recovery option. If you cannot recover your account, contact the Admission Helpdesk."
+    ],
+    [
+      "Examination",
+      "Are all applicants required to take the College Admission Test (CAT)?",
+      "Yes. The college entrance exam is part of the evaluation process for incoming first-year college students."
+    ],
+    [
+      "Examination",
+      "What should I bring on the day of the examination?",
+      "Bring your printed Test Permit, a valid ID or School ID, Mongol Pencil No. 2 and an eraser, and a transparent envelope or folder."
+    ],
+    [
+      "Examination",
+      "How will I know my exam schedule and venue?",
+      "Your examination schedule, room assignment, and venue will be indicated on your Test Permit, which can be downloaded from the admission portal once your application is verified."
+    ],
+    [
+      "Examination",
+      "What happens if I lose my Test Permit?",
+      "Log in to the admission portal and check if you can download or print the permit again. If you cannot access it, contact the Admission Office."
+    ],
+    [
+      "Examination",
+      "What happens if I miss my scheduled examination date?",
+      "Contact the Admission Office / Office of Student Affairs immediately. Rescheduling depends on slot availability and valid justification."
+    ],
+    [
+      "Examination",
+      "What should I do if I am late on examination day?",
+      "Proceed to the assigned examination venue as soon as possible and ask the examination personnel for instructions. Admission may depend on the examination rules."
+    ],
+    [
+      "Medical",
+      "When do I need to undergo the medical examination?",
+      "The medical examination is conducted after you pass the admission test and are qualified for enrollment. It is a prerequisite before official registration."
+    ],
+    [
+      "Medical",
+      "What medical document do I need for enrollment?",
+      "You need medical clearance issued or approved by the University Clinic. Follow the clinic's current instructions for any laboratory or diagnostic requirements."
+    ],
+    [
+      "Medical",
+      "Can I get medical tests done at an external clinic or hospital?",
+      "External testing may be accepted if allowed by the University Clinic. All outside results must be submitted for evaluation and clearance."
+    ],
+    [
+      "Enrollment",
+      "What documents must I bring during official enrollment?",
+      "Bring the Admission / Notice of Acceptance Slip, Original Form 138, Original PSA Birth Certificate, Certificate of Good Moral Character, and Medical Clearance from the University Clinic."
+    ],
+    [
+      "Enrollment",
+      "Can a representative process my enrollment for me?",
+      "Personal enrollment is highly recommended. If you cannot attend due to an emergency, your representative must present an Authorization Letter, a copy of your valid ID, and their own valid ID."
+    ],
+    [
+      "Enrollment",
+      "How will I get my assigned section and class schedule?",
+      "After enrollment is processed, you will receive your Certificate of Registration (COR) or access the information through the Student Portal."
+    ],
+    [
+      "Enrollment",
+      "What if I have incomplete requirements during enrollment?",
+      "You do not need to restart the entire application process. Return once the missing requirements have been completed, subject to the university's enrollment schedule and instructions."
+    ],
+    [
+      "Enrollment",
+      "Can I change my information after enrollment?",
+      "Contact the Registrar's Office or the appropriate university office if you need to correct or update your student information."
+    ],
+    [
+      "General",
+      "Is college tuition free?",
+      "Under Republic Act 10931, eligible Filipino undergraduate students in state universities may receive free tuition and other benefits covered by the law."
+    ],
+    [
+      "General",
+      "How do I know if I have been accepted?",
+      "Check your admission portal for your application or admission status and follow the instructions provided by the university."
+    ],
+    [
+      "General",
+      "What should I do after receiving an admission notice?",
+      "Review the instructions, prepare the enrollment documents, complete the required medical clearance, and follow the university's enrollment schedule."
+    ],
+    [
+      "General",
+      "Where can I ask for help with my application?",
+      "Contact the official University Admission Helpdesk or visit the Admission and Registrar's Office at the main campus."
+    ],
+    [
+      "General",
+      "What should I do if the admission portal is not working?",
+      "Check your internet connection and try accessing the portal again. If the problem continues, contact the official Admission Helpdesk and provide details about the issue."
+    ],
+    [
+      "General",
+      "Where can I get the latest admission announcements?",
+      "Check the university's official admission portal and official university announcements for updated schedules, requirements, and procedures."
+    ]
+  ],
+  "academicStatuses": [
+    {
+      "id": "12",
+      "label": "Current Grade 12 Student",
+      "description": "Expecting to finish Senior High School at the end of the current school year.",
+      "tracks": null,
+      "requirements": {}
+    },
+    {
+      "id": "SH",
+      "label": "SHS Graduate",
+      "description": "A Senior High School graduate who has never been enrolled in any college or university.",
+      "tracks": null,
+      "requirements": {}
+    },
+    {
+      "id": "A",
+      "label": "ALS Completer",
+      "description": "Completed the Alternative Learning System and is eligible to enroll in college.",
+      "tracks": [
+        "ALS Passer"
+      ],
+      "requirements": {}
+    }
+  ],
+  "faqTrivia": [
+    "Did you know Don Severino de las Alas, whom the campus is named after, was the Secretary of the Interior in President Emilio Aguinaldo's cabinet?",
+    "Did you know the campus was named after Don Severino de las Alas, who donated much of the land where the main campus stands today?",
+    "Did you know the school changed its name five times before becoming Cavite State University: Indang Farm School, Indang Rural High School, Don Severino National Agriculture School, Don Severino Agricultural College, and CvSU in 1998?",
+    "Did you know the university also conducts research on kaong, or sugar palm, which is Indang's One Town One Product?",
+    "Did you know the famous Laya at Diwa monument at the campus entrance was created by artist Jonnel P. Castrillo and inaugurated in 2006 during CvSU's centennial celebration?",
+    "Did you know CvSU Indang hosts the National Coffee Research Center and produces its own coffee brand, the Don Severino Aguinaldo Blend?",
+    "Did you know the main campus sits on about 70 hectares of land in Bancod, Indang, roughly 60 kilometers southwest of Manila?",
+    "Did you know CvSU became a state university on January 22, 1998, through Republic Act No. 8468, after being Don Severino Agricultural College since 1964?",
+    "Did you know CvSU has been accredited by AACCUP and recognized by TESDA as an assessment center?",
+    "Did you know the first Filipino principal, Dr. Mariano Mondonedo, took over in 1915 after the school had previously been led by American principals?",
+    "Did you know CvSU Indang serves as the main campus and headquarters of the university system, which now has more than 11 campuses across Cavite?",
+    "Did you know the Laya at Diwa monument's torch flame has CvSU written on it, and the sculpture represents the university's vision of Truth, Excellence, and Service?"
+  ],
+  "attireGuide": {
+    "title": "Dress for your next stop",
+    "visit": {
+      "label": "Admission visit",
+      "intro": "No school uniform is needed for admission visits. Neat, decent casual attire is acceptable any day, including regular office days.",
+      "caption": "Student policy reference. Uniform rules apply after enrollment and class start.",
+      "notes": [
+        [
+          "Keep it neat and presentable",
+          [
+            "No shorts, sandals or sleeveless tops, slippers, bare midriff, spaghetti straps, tube or backless tops, tight-fit blouses, jerseys, leggings, or ripped jeans that expose skin.",
+            "Clean clothing and a neat hairstyle make campus transactions more comfortable."
+          ]
+        ]
+      ]
+    },
+    "classes": {
+      "label": "During classes",
+      "intro": "Prescribed school uniforms for male and female students apply during classes. Confirm program-specific details with your college or department.",
+      "caption": "Source: Office Memorandum No. PHDR-129-19 and Office Memorandum No. 32, s. 2023.",
+      "notes": [
+        [
+          "Uniform options",
+          [
+            "LGBTQ+ students may wear their preferred official uniform option (male or female), as long as it remains complete, proper, and compliant with university rules."
+          ]
+        ],
+        [
+          "Wash Day: Wednesday and Saturday",
+          [
+            "Students may wear appropriate civilian attire during Wash Days or declared field and special days.",
+            "Civilian attire must be neat, decent, and not revealing. Avoid slippers or sandals, shorts or skirts more than three inches above the knee, sleeveless tops, bare midriff, spaghetti straps, tube or backless tops, tight-fit blouses, jerseys, leggings, and ripped jeans that expose skin.",
+            "Long hair should be tied in a ponytail. Bright hair colors are prohibited."
+          ]
+        ],
+        [
+          "Daily reminder",
+          [
+            "Always wear your student ID or bring your registration form when entering campus or attending classes."
+          ]
+        ]
+      ]
+    },
+    "images": {
+      "dressCode": {
+        "label": "Dress code",
+        "url": ""
+      },
+      "femaleUniform": {
+        "label": "Female uniform",
+        "url": ""
+      },
+      "maleUniform": {
+        "label": "Male uniform",
+        "url": ""
+      }
+    }
+  }
+}

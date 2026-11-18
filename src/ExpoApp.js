@@ -1,204 +1,45 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing, Image, Linking, Modal, PanResponder, Platform, Pressable, SafeAreaView, ScrollView, StatusBar as NativeStatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Easing, Image, Linking, Modal, PanResponder, Platform, Pressable, SafeAreaView, ScrollView, StatusBar as NativeStatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
-import * as NativeSplashScreen from 'expo-splash-screen';
-
-// Keep the native logo visible until the first in-app logo has loaded.
-if (Platform.OS !== 'web') NativeSplashScreen.preventAutoHideAsync().catch(() => {});
 import Ionicons from '@expo/vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { useVideoPlayer, VideoView } from 'expo-video';
+import bundledContent from './admission-content.json';
+import { getAcademicStatus, getAcademicStatuses, getAdmissionStepOrder, getAttireGuide, getCampusTrivia, getEligiblePrograms, getReapplicationPrograms, getStepRequirements, getTrackOptions, validateContent } from './content-schema';
 
-const exceptionProgramKeywords = ['Nursing', 'Medical Technology', 'Midwifery', 'Tourism Management', 'Hospitality Management', 'Accountancy', 'International Studies'];
-const defaultStatusSteps = ['Online Application', 'Validation Appointment', 'Admission Examination', 'Medical Examination', 'Enrollment'];
-const exceptionStatusSteps = ['Online Application', 'Validation Appointment', 'Admission Examination', 'Interview', 'Medical Examination', 'Enrollment'];
-const statusStepDetails = {
-  'Online Application': {
-    description: 'Complete and submit your application through the CvSU Online Admission Portal.',
-    instructions: ['Go to admission.cvsu.edu.ph using a Gmail account.', 'Fill out the online application form completely and accurately.', 'Choose the correct entry type or applicant category.', 'Ensure the declared track or strand matches your documentary requirements.', 'Review all information before saving and submitting.', 'Save or update the application every time a change is made, before saving your validation appointment.', 'Scan your documents or take clear screenshots using a mobile phone; both are accepted.', 'Upload each scanned page individually in JPEG, PNG, or BMP format, at most 1MB (1024KB) per page.', 'Use a white-background 2x2 ID photo with a file size of at most 10KB.'],
-    requirements: ['Completed online application form', '2x2 ID photo with white background, up to 10KB', 'Separate clear scanned pages or screenshots in JPEG, PNG, or BMP format, at most 1MB (1024KB) each']
-  },
-  'Validation Appointment': {
-    description: 'Save a validation appointment in the online admission system, then present your original documentary requirements at CvSU Main Campus on the confirmed date and time.',
-    instructions: ['Log in to the CvSU Online Admission Portal using your registered account.', 'Select the next available date and time for application validation.', 'Review your information and schedule carefully before saving: once the appointment is saved, your applicant information and appointment details can no longer be edited.', 'Save the appointment schedule and keep a copy of the confirmation.', 'On your confirmed date and time, present the original documentary requirements at the Office of Student Affairs and Services, Main (Indang) Campus.', 'Only applicants with confirmed appointments for the specified date and time will be accommodated. Strictly no walk-ins.'],
-    requirements: ['Confirmed validation appointment saved in the online admission system', 'Copy of the confirmed appointment schedule'],
-    location: 'Office of Student Affairs and Services, Main (Indang) Campus.'
-  },
-  'Admission Examination': {
-    description: 'Take the admission examination at the International Convention Center (ICON) on your assigned schedule.',
-    instructions: ['After document validation, download and print your Test Permit from the admission portal.', 'Arrive at the International Convention Center (ICON) 30 to 45 minutes before the examination.', 'Bring your Test Permit and valid ID into the examination room.', 'Follow all examination guidelines; cellphones and unauthorized electronic devices are prohibited.', 'Monitor the portal or official announcements for examination results.'],
-    requirements: ['Printed Test Permit or Examination Permit', 'Valid school ID or government-issued ID', 'No. 2 pencils'],
-    location: 'International Convention Center (ICON)'
-  },
-  Interview: {
-    description: 'Attend the required program interview and discuss your academic background and course choice.',
-    instructions: ['Check eligibility and program requirements, especially for quota or board courses.', 'Check the portal or department notification for your interview schedule and session.', 'Attend on time in smart casual or official school attire.', 'Prepare to answer questions about your academic background and course choice.'],
-    requirements: ['Printed Interview Slip or Exam Result Slip', 'Valid photo ID', 'Copy of Form 138, Report Card, or Summary of Grades'],
-    location: 'Designated College or Department Building, such as CEIT, CON, or CED, or the official video conference link for online interviews.'
-  },
-  'Medical Examination': {
-    description: 'Complete the required tests and secure an official medical clearance from the university.',
-    instructions: ['Secure the official Medical Examination Form from the portal or University Health Services Unit.', 'Undergo the required laboratory tests at a licensed diagnostic facility or hospital.', 'Report to the University Clinic for a physical examination and submit your test results.', 'Secure the official Medical Clearance issued by university medical staff.'],
-    requirements: ['Chest X-ray result taken within the last 3 to 6 months', 'Complete Blood Count result', 'Urinalysis result', 'Blood typing result', 'Completed Medical History Form', '2x2 ID photo'],
-    details: ['In-school: Physical examination, dental check-up, and height and weight checks are conducted on campus.', 'Outside medical: Laboratory tests are taken at external diagnostic centers and presented to the University Clinic for validation.']
-  },
-  Enrollment: {
-    description: 'Submit your original documents, register for subjects, and receive your Certificate of Registration.',
-    instructions: ['Verify in the portal that Validation, Examination or Interview, and Medical Clearance are completed.', 'Submit all required original hard-copy documents to the Office of the University Registrar.', 'Secure your official Certificate of Registration with your subjects and section schedule.', 'Attend the mandatory student orientation.'],
-    requirements: ['Original Form 138 or Senior High School Report Card', 'Original Certificate of Good Moral Character', 'Original PSA Birth Certificate', 'Official Medical Clearance issued by CvSU Health Services Unit', 'Printed Admission or Eligibility Slip', '2x2 ID photos with white background', 'Completed Student Personal Data Sheet or Enrollment Form']
-  }
-};
+const coreStepOrder = getAdmissionStepOrder(bundledContent);
+const defaultStatusSteps = coreStepOrder.filter((step) => step !== 'Interview');
+function getSteps(program, keywords, order = coreStepOrder) {
+  const programName = (program || '').toLowerCase();
+  if (keywords.some((keyword) => programName.includes(keyword.toLowerCase()))) return order;
+  return order === coreStepOrder ? defaultStatusSteps : order.filter((step) => step !== 'Interview');
+}
+
+function sameSteps(first, second) {
+  return first.length === second.length && first.every((step, index) => step === second[index]);
+}
+
+function restoreStatusIndex(savedProgress, previousSteps, currentSteps) {
+  const completedCount = savedProgress.currentStatusIndex || 0;
+  if (completedCount >= previousSteps.length) return currentSteps.length;
+  const completed = previousSteps.slice(0, completedCount);
+  return Math.max(-1, ...completed.map((step) => currentSteps.indexOf(step))) + 1;
+}
+
 const mainTabs = ['Home', 'Status', 'Journey', 'Map', 'FAQ'];
-// Documentary requirements transcribed from the supplied first-year admission instructions.
-const applicantDocuments = {
-  '12': ['Completed Grade 11 Report Card, 1st and 2nd semesters, front and back if applicable', 'Certificate from the Principal or Adviser confirming current Grade 12 enrollment, indicating track/strand and school year'],
-  SH: ['Completed Grade 12 Report Card, 1st and 2nd semesters, front and back if applicable', 'Certificate of Non-Issuance of Form 137/SF-10 for College Admission, certifying no previous enrollment in another college or university'],
-  A: ['Certificate of Rating (COR) indicating eligibility for college admission'],
-  D: ['Transcript of Records (TOR) indicating the date of graduation']
-};
-const documentaryExamples = [
-  { title: 'Roentgenological Report', matches: /chest x-ray/i, image: require('../assets/Roentgenological Report.jpg') },
-  { title: 'Medical Clearance', matches: /medical clearance/i, image: require('../assets/Medical Clearance.jpg') },
-  { title: 'Hematology Report', matches: /complete blood count/i, image: require('../assets/Hematology Report.jpg') },
-  { title: 'Exam Permit', matches: /test permit|examination permit/i, image: require('../assets/Exam Permit.jpg') },
-  { title: 'Good Moral', matches: /good moral character/i, image: require('../assets/Good Moral.jpg') },
-  { title: 'Report Card', matches: /report card|certificate of grades/i, image: require('../assets/Report Card or Certificate of Grades (COG).jpg') },
-  { title: 'Certificate of Enrollment', matches: /certificate from the principal or adviser confirming current grade 12 enrollment/i, image: require('../assets/Certificate of Enrollment (COE).jpg') },
-  { title: 'Birth Certificate', matches: /birth certificate/i, image: require('../assets/Birth Certificate.jpg') }
-];
-function getDocumentaryExample(item) {
-  return documentaryExamples.find((example) => example.matches.test(item));
-}
-function getStatusStepDetails(step, profile) {
-  const details = statusStepDetails[step];
-  if (!['Online Application', 'Validation Appointment'].includes(step)) return details;
-  const documents = applicantDocuments[profile];
-  const requirements = documents
-    ? documents.map((document) => `${step === 'Online Application' ? 'Clear scan or screenshot of' : 'Original'} ${document}`)
-    : ['Select your applicant type to see the documentary requirements for your category'];
-  return { ...details, requirements: [...details.requirements, ...requirements] };
-}
 const tabIcons = { Status: 'list-outline', Journey: 'footsteps-outline', Home: 'home-outline', Map: 'map-outline', FAQ: 'help-circle-outline' };
 const androidTopInset = Platform.OS === 'android' ? NativeStatusBar.currentHeight || 0 : 0;
 const savedApplicantKey = 'cvsu-admission-guide-state';
 const savedProgressKey = 'cvsu-admission-guide-progress';
 
-const profiles = [
-  ['12', 'Current Grade 12 Student', 'Expecting to finish Senior High School at the end of the current school year.'],
-  ['SH', 'SHS Graduate', 'A Senior High School graduate who has never been enrolled in any college or university.'],
-  ['A', 'ALS Passer', 'Passed the Alternative Learning System and has a Certificate of Rating indicating eligibility for college admission.']
-];
-const tracks = [
-  ['STEM', 'Science, Technology, Engineering, and Mathematics'],
-  ['ABM', 'Accountancy, Business, and Management'],
-  ['HUMSS', 'Humanities and Social Sciences'],
-  ['GAS', 'General Academic Strand'],
-  ['TVL', 'Technical-Vocational-Livelihood Track'],
-  ['Arts and Design', 'Arts and Design Track'],
-  ['Sports', 'Sports Track']
-];
-const programs = [
-  'Bachelor of Science in Agriculture',
-  'Bachelor of Science in Agricultural Entrepreneurship',
-  'Bachelor of Science in Environmental Science',
-  'Bachelor of Science in Food Technology',
-  'Bachelor of Science in Biology',
-  'Bachelor of Arts in Communication',
-  'Bachelor of Science in Development Communication',
-  'Bachelor of Arts in English Language Studies',
-  'Bachelor of Arts in Journalism',
-  'Bachelor of Science in Applied Mathematics',
-  'Bachelor of Arts in Political Science',
-  'Bachelor of Science in Psychology',
-  'Bachelor of Science in Social Work',
-  'Bachelor of Science in Criminology',
-  'Bachelor of Science in Industrial Security Management',
-  'Bachelor of Science in Accountancy',
-  'Bachelor of Science in Economics',
-  'Bachelor of Science in Business Management',
-  'Bachelor of Science in Development Management',
-  'Bachelor of Science in International Studies',
-  'Bachelor of Arts in International Studies',
-  'Bachelor of Science in Office Administration',
-  'Bachelor of Early Childhood Education',
-  'Bachelor of Elementary Education',
-  'Bachelor of Secondary Education',
-  'Bachelor of Special Needs Education',
-  'Bachelor of Technology and Livelihood Education',
-  'Teacher Certificate Program',
-  'Bachelor of Science in Agricultural and Biosystems Engineering',
-  'Bachelor of Science in Civil Engineering',
-  'Bachelor of Science in Computer Engineering',
-  'Bachelor of Science in Electrical Engineering',
-  'Bachelor of Science in Electronics Engineering',
-  'Bachelor of Science in Industrial Engineering',
-  'Bachelor of Science in Industrial Technology',
-  'Bachelor of Science in Computer Science',
-  'Bachelor of Science in Information Technology',
-  'Bachelor of Science in Architecture',
-  'Bachelor of Science in Nursing',
-  'Bachelor of Science in Medical Technology',
-  'Bachelor of Science in Midwifery',
-  'Diploma in Midwifery',
-  'Doctor of Medicine',
-  'Bachelor of Physical Education',
-  'Bachelor of Exercise and Sports Sciences',
-  'Doctor of Veterinary Medicine',
-  'Bachelor of Science in Animal Health and Management',
-  'Bachelor of Science in Veterinary Technology',
-  'Master in Veterinary Studies',
-  'Master in Veterinary Science',
-  'Bachelor of Science in Biomedical Science',
-  'Bachelor of Science in Hospitality Management',
-  'Bachelor of Science in Tourism Management'
-];
-const faqItems = [
-  ['Application', 'How do I apply for admission?', 'Visit the official University Admission Portal, create an account, complete the Application Form, and upload the required documents.'],
-  ['Application', 'What are the basic requirements for application?', 'Prepare a white-background 2x2 ID photo of at most 10KB. Current Grade 12 students need a completed Grade 11 Report Card (both semesters, front and back if applicable) and a Principal or Adviser certificate confirming Grade 12 enrollment, track/strand, and school year. SHS graduates need a completed Grade 12 Report Card (both semesters, front and back if applicable) and a Certificate of Non-Issuance of Form 137/SF-10 for College Admission certifying no previous college or university enrollment. ALS passers need a Certificate of Rating indicating college eligibility. Associate, certificate, vocational, or diploma holders need a TOR indicating the date of graduation.'],
-  ['Application', 'Can I still apply if my report card is incomplete or delayed?', 'Current Grade 12 students must provide their completed Grade 11 Report Card and the required Grade 12 enrollment certificate. SHS graduates must provide their completed Grade 12 Report Card and Certificate of Non-Issuance of Form 137/SF-10. If a required document is unavailable, ask the Admission Office for instructions before submitting.'],
-  ['Application', 'Is there an application fee?', 'No. The application and admission process is free for qualified students under the Free Higher Education Act in state universities.'],
-  ['Application', 'Can I edit my application after submitting it?', 'Review and save corrections before saving your validation appointment. Once the appointment is saved, applicant information and appointment details can no longer be edited. Contact the Admission Office if you need assistance.'],
-  ['Application', 'What file formats and sizes are accepted?', 'Clear scans or mobile-phone screenshots are accepted. Upload each page individually as JPEG, PNG, or BMP, at most 1MB (1024KB) per documentary page. The white-background 2x2 ID photo must be at most 10KB.'],
-  ['Application', 'Where do I go for validation, and are walk-ins allowed?', 'Save the next available validation date and time in the online admission system and keep a copy of the confirmation. Bring the original documentary requirements to the Office of Student Affairs and Services, Main (Indang) Campus. Only applicants with confirmed appointments for that date and time are accommodated. Strictly no walk-ins.'],
-  ['Application', 'How can I check my application status?', 'Log in to the University Admission Portal and check your application status. If the status is unclear, contact the Admission Helpdesk.'],
-  ['Application', 'What should I do if I forget my admission portal password?', "Use the portal's password recovery option. If you cannot recover your account, contact the Admission Helpdesk."],
-  ['Examination', 'Are all applicants required to take the College Admission Test (CAT)?', 'Yes. The college entrance exam is part of the evaluation process for incoming first-year college students.'],
-  ['Examination', 'What should I bring on the day of the examination?', 'Bring your printed Test Permit, a valid ID or School ID, Mongol Pencil No. 2 and an eraser, and a transparent envelope or folder.'],
-  ['Examination', 'How will I know my exam schedule and venue?', 'The admission examination is held at the International Convention Center (ICON). Check your Test Permit for your assigned examination schedule and room. Download it from the admission portal once your application is verified.'],
-  ['Examination', 'What happens if I lose my Test Permit?', 'Log in to the admission portal and check if you can download or print the permit again. If you cannot access it, contact the Admission Office.'],
-  ['Examination', 'What happens if I miss my scheduled examination date?', 'Contact the Admission Office / Office of Student Affairs immediately. Rescheduling depends on slot availability and valid justification.'],
-  ['Examination', 'What should I do if I am late on examination day?', 'Proceed to the assigned examination venue as soon as possible and ask the examination personnel for instructions. Admission may depend on the examination rules.'],
-  ['Medical', 'When do I need to undergo the medical examination?', 'The medical examination is conducted after you pass the admission test and are qualified for enrollment. It is a prerequisite before official registration.'],
-  ['Medical', 'What medical document do I need for enrollment?', "You need medical clearance issued or approved by the University Clinic. Follow the clinic's current instructions for any laboratory or diagnostic requirements."],
-  ['Medical', 'Can I get medical tests done at an external clinic or hospital?', 'External testing may be accepted if allowed by the University Clinic. All outside results must be submitted for evaluation and clearance.'],
-  ['Enrollment', 'What documents must I bring during official enrollment?', 'Bring the Admission / Notice of Acceptance Slip, Original Form 138, Original PSA Birth Certificate, Certificate of Good Moral Character, and Medical Clearance from the University Clinic.'],
-  ['Enrollment', 'Can a representative process my enrollment for me?', 'Personal enrollment is highly recommended. If you cannot attend due to an emergency, your representative must present an Authorization Letter, a copy of your valid ID, and their own valid ID.'],
-  ['Enrollment', 'How will I get my assigned section and class schedule?', 'After enrollment is processed, you will receive your Certificate of Registration (COR) or access the information through the Student Portal.'],
-  ['Enrollment', 'What if I have incomplete requirements during enrollment?', "You do not need to restart the entire application process. Return once the missing requirements have been completed, subject to the university's enrollment schedule and instructions."],
-  ['Enrollment', 'Can I change my information after enrollment?', "Contact the Registrar's Office or the appropriate university office if you need to correct or update your student information."],
-  ['General', 'Is college tuition free?', 'Under Republic Act 10931, eligible Filipino undergraduate students in state universities may receive free tuition and other benefits covered by the law.'],
-  ['General', 'How do I know if I have been accepted?', 'Check your admission portal for your application or admission status and follow the instructions provided by the university.'],
-  ['General', 'What should I do after receiving an admission notice?', "Review the instructions, prepare the enrollment documents, complete the required medical clearance, and follow the university's enrollment schedule."],
-  ['General', 'Where can I ask for help with my application?', "Contact the official University Admission Helpdesk or visit the Admission and Registrar's Office at the main campus."],
-  ['General', 'What should I do if the admission portal is not working?', 'Check your internet connection and try accessing the portal again. If the problem continues, contact the official Admission Helpdesk and provide details about the issue.'],
-  ['General', 'Where can I get the latest admission announcements?', "Check the university's official admission portal and official university announcements for updated schedules, requirements, and procedures."]
-];
-const faqTrivia = [
-  'Did you know Don Severino de las Alas, whom the campus is named after, was the Secretary of the Interior in President Emilio Aguinaldo\'s cabinet?',
-  'Did you know the campus was named after Don Severino de las Alas, who donated much of the land where the main campus stands today?',
-  'Did you know the school changed its name five times before becoming Cavite State University: Indang Farm School, Indang Rural High School, Don Severino National Agriculture School, Don Severino Agricultural College, and CvSU in 1998?',
-  'Did you know the university also conducts research on kaong, or sugar palm, which is Indang\'s One Town One Product?',
-  'Did you know the famous Laya at Diwa monument at the campus entrance was created by artist Jonnel P. Castrillo and inaugurated in 2006 during CvSU\'s centennial celebration?',
-  'Did you know CvSU Indang hosts the National Coffee Research Center and produces its own coffee brand, the Don Severino Aguinaldo Blend?',
-  'Did you know the main campus sits on about 70 hectares of land in Bancod, Indang, roughly 60 kilometers southwest of Manila?',
-  'Did you know CvSU became a state university on January 22, 1998, through Republic Act No. 8468, after being Don Severino Agricultural College since 1964?',
-  'Did you know CvSU has been accredited by AACCUP and recognized by TESDA as an assessment center?',
-  'Did you know the first Filipino principal, Dr. Mariano Mondonedo, took over in 1915 after the school had previously been led by American principals?',
-  'Did you know CvSU Indang serves as the main campus and headquarters of the university system, which now has more than 11 campuses across Cavite?',
-  'Did you know the Laya at Diwa monument\'s torch flame has CvSU written on it, and the sculpture represents the university\'s vision of Truth, Excellence, and Service?'
-];
+function getAcademicStatusLabel(content, profile) {
+  if (!profile || profile === 'Guest') return profile;
+  return getAcademicStatus(content, profile)?.label
+    || getAcademicStatus(bundledContent, profile)?.label
+    || 'Previously selected academic status';
+}
+
 const faqGuideImage = require('../assets/Avatar.png');
 const onboardingProgressStyles = { lastSegment: { flex: 0 } };
 const onboardingHelpStyles = StyleSheet.create({
@@ -282,21 +123,104 @@ const startStyles = StyleSheet.create({
   splashCaption: { marginTop: 16, color: '#f2fff4', fontSize: 13, textAlign: 'center' }
 });
 
+const contentCacheKey = 'cvsu-published-content-v1';
+const contentServer = process.env.EXPO_PUBLIC_ADMISSION_CONTENT_URL;
+
+async function fetchAdmissionContent(controller) {
+  const timer = setTimeout(() => controller.abort(), 3500);
+  try {
+    const response = await fetch(contentServer, { signal: controller.signal });
+    if (!response.ok) throw new Error('Content unavailable');
+    const data = await response.json();
+    if (validateContent(data)) throw new Error('Invalid admission content');
+    return data;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function useAdmissionContent() {
+  const [content, setContent] = useState(bundledContent);
+  const [ready, setReady] = useState(!contentServer);
+  const [refreshing, setRefreshing] = useState(false);
+  const [updateMessage, setUpdateMessage] = useState('');
+  const refreshRequest = useRef(null);
+  useEffect(() => {
+    if (!contentServer) return;
+    let active = true;
+    const controller = new AbortController();
+    const cached = AsyncStorage.getItem(contentCacheKey).then((raw) => {
+      const data = raw && JSON.parse(raw);
+      return data && !validateContent(data) ? data : bundledContent;
+    }).catch(() => bundledContent);
+    async function load() {
+      try {
+        const data = await fetchAdmissionContent(controller);
+        if (!active) return;
+        setContent(data);
+        AsyncStorage.setItem(contentCacheKey, JSON.stringify(data)).catch(() => {});
+      } catch {
+        const data = await cached;
+        if (active) setContent(data);
+      } finally {
+        if (active) setReady(true);
+      }
+    }
+    load();
+    return () => {
+      active = false;
+      controller.abort();
+      const request = refreshRequest.current;
+      refreshRequest.current = null;
+      request?.abort();
+    };
+  }, []);
+
+  async function refreshContent() {
+    if (!contentServer || !ready || refreshRequest.current) return;
+    const controller = new AbortController();
+    refreshRequest.current = controller;
+    setRefreshing(true);
+    setUpdateMessage('Checking for updates…');
+    try {
+      const data = await fetchAdmissionContent(controller);
+      if (refreshRequest.current !== controller) return;
+      const serialized = JSON.stringify(data);
+      const changed = serialized !== JSON.stringify(content);
+      if (changed) setContent(data);
+      AsyncStorage.setItem(contentCacheKey, serialized).catch(() => {});
+      setUpdateMessage(changed ? 'Guide content updated.' : 'Your guide is up to date.');
+    } catch {
+      if (refreshRequest.current === controller) {
+        setUpdateMessage('Could not check for updates. Your current guide is still available. Try again when connected.');
+      }
+    } finally {
+      if (refreshRequest.current === controller) {
+        refreshRequest.current = null;
+        setRefreshing(false);
+      }
+    }
+  }
+
+  return {
+    content, ready,
+    contentUpdate: { onRefresh: contentServer ? refreshContent : undefined, refreshing, message: updateMessage }
+  };
+}
+
 export default function ExpoApp() {
+  const { content, ready: contentReady, contentUpdate } = useAdmissionContent();
   const [step, setStep] = useState(1), [profile, setProfile] = useState(''), [track, setTrack] = useState(''), [program, setProgram] = useState(''), [query, setQuery] = useState('');
   const [profilePhoto, setProfilePhoto] = useState(null);
   const [nickname, setNickname] = useState('');
   const [showSetupHelp, setShowSetupHelp] = useState(false);
   const [startMode, setStartMode] = useState('start');
   const [showSplash, setShowSplash] = useState(true);
-  const [splashLogoReady, setSplashLogoReady] = useState(false);
   const [storageLoaded, setStorageLoaded] = useState(false);
   useEffect(() => {
-    if (!splashLogoReady) return;
-    if (Platform.OS !== 'web') NativeSplashScreen.hideAsync().catch(() => {});
     const splashTimer = setTimeout(() => setShowSplash(false), 2200);
     return () => clearTimeout(splashTimer);
-  }, [splashLogoReady]);
+  }, []);
   useEffect(() => {
     AsyncStorage.getItem(savedApplicantKey).then((storedState) => {
       if (storedState) {
@@ -314,21 +238,31 @@ export default function ExpoApp() {
     }).catch(() => {}).finally(() => setStorageLoaded(true));
   }, []);
   useEffect(() => {
-    if (!storageLoaded || !profile) return;
+    if (!storageLoaded || step !== 4 || !profile || !program) return;
     AsyncStorage.setItem(savedApplicantKey, JSON.stringify({ profile, track, program, profilePhoto, nickname })).catch(() => {});
-  }, [storageLoaded, profile, track, program, profilePhoto, nickname]);
-  const results = programs.filter((item) => item.toLowerCase().includes(query.toLowerCase().trim()));
+  }, [storageLoaded, step, profile, track, program, profilePhoto, nickname]);
+  const tracks = getTrackOptions(content, profile);
+  const eligiblePrograms = getEligiblePrograms(content, profile, track);
+  const results = eligiblePrograms.filter((item) => item.toLowerCase().includes(query.toLowerCase().trim()));
+  const chooseProfile = (value) => {
+    if (value !== profile) { setTrack(''); setProgram(''); }
+    setProfile(value);
+  };
+  const chooseTrack = (value) => {
+    if (value !== track) { setProgram(''); setQuery(''); }
+    setTrack(value);
+  };
   const next = (value, setter, number) => <Action disabled={!value} onPress={() => { setter(value); setStep(number); }} />;
-  if (showSplash || !storageLoaded) return <SplashScreen onLogoReady={() => setSplashLogoReady(true)} />;
+  if (showSplash || !storageLoaded || !contentReady) return <SplashScreen />;
   if (startMode === 'start') return <StartScreen onSetup={() => { setStartMode('setup'); setStep(1); }} onGuest={() => { setStartMode('guest'); setStep(4); }} />;
   return <SafeAreaView style={[styles.safe, { paddingTop: androidTopInset }]}><StatusBar style={step === 4 ? 'dark' : 'light'} />
     <View style={styles.greenWash} />{step < 4 ? <><ScrollView contentContainerStyle={[styles.screen, onboardingSetupStyles.screen]} keyboardShouldPersistTaps="handled"><View style={[styles.header, onboardingSetupStyles.header]}><View style={styles.brand}><Image source={require('../assets/CvSU_Logo.png')} style={styles.logo} /><View><Text style={styles.eyebrow}>CAVITE STATE UNIVERSITY</Text><Text style={styles.brandName}>Admission Guide</Text></View></View><Pressable accessibilityLabel="How your profile personalizes your journey" onPress={() => setShowSetupHelp(true)} style={({ pressed }) => [styles.help, pressed && styles.pressed]}><Text style={onboardingHelpStyles.helpText}>?</Text></Pressable></View><Progress currentStep={step} totalSteps={3} />
-    {step === 1 && <Page kicker="LET'S GET STARTED" title="Tell us about your journey." intro="Choose the description that best matches your current academic status."><View style={styles.list}>{profiles.map(([value, label, caption]) => <Option key={value} label={label} caption={caption} value={value} selected={profile === value} onPress={() => setProfile(value)} profileCard />)}</View></Page>}
-    {step === 2 && <Page kicker="STEP 2 · ACADEMIC BACKGROUND" title="What was your track or strand?" intro="This helps us recommend programs that fit what you already enjoy."><View style={styles.list}>{tracks.map(([label, caption]) => <Option key={label} label={label} caption={caption} value={label} selected={track === label} onPress={() => setTrack(label)} profileCard />)}</View></Page>}
-    {step === 3 && <Page kicker="STEP 3 · YOUR DIRECTION" title="Which program feels like you?" intro={`Your ${track} background is a great starting point. Search the catalog and choose a first choice.`}><View style={styles.search}><Text style={styles.searchIcon}>⌕</Text><TextInput value={query} onChangeText={setQuery} placeholder="Search programs" placeholderTextColor="#8aa294" style={styles.input} /><Pressable onPress={() => setQuery('')} style={styles.clear}><Text style={styles.clearText}>×</Text></Pressable></View>{results.length === 0 && <Text style={styles.muted}>No matching programs found.</Text>}<View style={styles.list}>{results.map((item) => <Option key={item} label={item} value="→" selected={program === item} onPress={() => setProgram(item)} compact />)}</View></Page>}
-  </ScrollView><View style={[styles.fixedActions, onboardingSetupStyles.fixedActions]}><Pressable accessibilityRole="button" accessibilityLabel="Return to start page" onPress={() => { setStartMode('start'); setStep(1); }} style={({ pressed }) => [styles.back, onboardingSetupStyles.back, pressed && styles.pressed]}><Text style={[styles.backText, onboardingSetupStyles.backText]}>Start page</Text></Pressable>{step > 1 && <Back onPress={() => setStep(step - 1)} />}{next(step === 1 ? profile : step === 2 ? track : program, step === 1 ? setProfile : step === 2 ? setTrack : setProgram, step + 1)}</View><Modal visible={showSetupHelp} transparent animationType="fade" onRequestClose={() => setShowSetupHelp(false)}><Pressable style={onboardingHelpStyles.backdrop} onPress={() => setShowSetupHelp(false)}><Pressable accessibilityRole="none" style={onboardingHelpStyles.card} onPress={() => {}}><View style={onboardingHelpStyles.header}><Text style={onboardingHelpStyles.title}>Your personalized journey</Text><Pressable accessibilityLabel="Close personalization help" onPress={() => setShowSetupHelp(false)} style={({ pressed }) => [onboardingHelpStyles.close, pressed && styles.pressed]}><Ionicons name="close" size={20} color="#183225" /></Pressable></View><Text style={onboardingHelpStyles.copy}>Your applicant type, track or strand, and preferred program help tailor the admission guidance shown in this app.</Text><Text style={onboardingHelpStyles.copy}>We use these choices to highlight relevant requirements, recommended next steps, campus locations, and progress through your admission journey.</Text></Pressable></Pressable></Modal></> : <MainApp onProgramChange={setProgram} profile={profile} program={program} track={track} profilePhoto={profilePhoto} nickname={nickname} onProfilePhotoChange={setProfilePhoto} onNicknameChange={setNickname} onRestart={() => { setStartMode('setup'); setStep(1); }} onBackToStart={() => { setStartMode('start'); setStep(1); }} startAsGuest={startMode === 'guest'} />}</SafeAreaView>;
+    {step === 1 && <Page kicker="LET'S GET STARTED" title="Tell us about your journey." intro="Choose the description that best matches your current academic status."><View style={styles.list}>{getAcademicStatuses(content).map(({ id: value, label, description: caption }) => <Option key={value} label={label} caption={caption} value={value} selected={profile === value} onPress={() => chooseProfile(value)} profileCard />)}</View></Page>}
+    {step === 2 && <Page kicker="STEP 2 · ACADEMIC BACKGROUND" title="What was your track or strand?" intro="Your academic background determines which programs you can select."><View style={styles.list}>{tracks.map(([label, caption]) => <Option key={label} label={label} caption={caption} value={label} selected={track === label} onPress={() => chooseTrack(label)} profileCard />)}</View></Page>}
+    {step === 3 && <Page kicker="STEP 3 · YOUR DIRECTION" title="Which program feels like you?" intro={`Choose from the programs available to applicants in ${track}.`}><View style={styles.search}><Text style={styles.searchIcon}>⌕</Text><TextInput value={query} onChangeText={setQuery} placeholder="Search programs" placeholderTextColor="#8aa294" style={styles.input} /><Pressable onPress={() => setQuery('')} style={styles.clear}><Text style={styles.clearText}>×</Text></Pressable></View>{results.length === 0 && <Text style={styles.muted}>{eligiblePrograms.length ? 'No matching programs found.' : 'No programs are currently available for this background.'}</Text>}<View style={styles.list}>{results.map((item) => <Option key={item} label={item} value="→" selected={program === item} onPress={() => setProgram(item)} compact />)}</View></Page>}
+  </ScrollView><View style={[styles.fixedActions, onboardingSetupStyles.fixedActions]}><Pressable accessibilityRole="button" accessibilityLabel="Return to start page" onPress={() => { setStartMode('start'); setStep(1); }} style={({ pressed }) => [styles.back, onboardingSetupStyles.back, pressed && styles.pressed]}><Text style={[styles.backText, onboardingSetupStyles.backText]}>Start page</Text></Pressable>{step > 1 && <Back onPress={() => setStep(step - 1)} />}{next(step === 1 ? profile : step === 2 ? tracks.some(([name]) => name === track) && track : eligiblePrograms.includes(program) && program, step === 1 ? setProfile : step === 2 ? setTrack : setProgram, step + 1)}</View><Modal visible={showSetupHelp} transparent animationType="fade" onRequestClose={() => setShowSetupHelp(false)}><Pressable style={onboardingHelpStyles.backdrop} onPress={() => setShowSetupHelp(false)}><Pressable accessibilityRole="none" style={onboardingHelpStyles.card} onPress={() => {}}><View style={onboardingHelpStyles.header}><Text style={onboardingHelpStyles.title}>Your personalized journey</Text><Pressable accessibilityLabel="Close personalization help" onPress={() => setShowSetupHelp(false)} style={({ pressed }) => [onboardingHelpStyles.close, pressed && styles.pressed]}><Ionicons name="close" size={20} color="#183225" /></Pressable></View><Text style={onboardingHelpStyles.copy}>Your applicant type, track or strand, and preferred program help tailor the admission guidance shown in this app.</Text><Text style={onboardingHelpStyles.copy}>We use these choices to highlight relevant requirements, recommended next steps, campus locations, and progress through your admission journey.</Text></Pressable></Pressable></Modal></> : <MainApp content={content} contentUpdate={contentUpdate} onProgramChange={setProgram} profile={profile} program={program} track={track} profilePhoto={profilePhoto} nickname={nickname} onProfilePhotoChange={setProfilePhoto} onNicknameChange={setNickname} onRestart={() => { setStartMode('setup'); setStep(1); }} onBackToStart={() => { setStartMode('start'); setStep(1); }} startAsGuest={startMode === 'guest'} />}</SafeAreaView>;
 }
-function SplashScreen({ onLogoReady }) { return <SafeAreaView style={startStyles.splashSafe}><StatusBar style="light" /><View style={startStyles.splashContent}><Image source={require('../assets/CvSU_Logo.png')} style={startStyles.splashLogo} resizeMode="contain" onLoad={onLogoReady} onError={onLogoReady} /><Text style={startStyles.splashKicker}>CAVITE STATE UNIVERSITY</Text><Text style={startStyles.splashTitle}>CvSU Virtual Admission Guide</Text><Text style={startStyles.splashCaption}>Preparing your admission guide</Text></View></SafeAreaView>; }
+function SplashScreen() { return <SafeAreaView style={startStyles.splashSafe}><StatusBar style="light" /><View style={startStyles.splashContent}><Image source={require('../assets/CvSU_Logo.png')} style={startStyles.splashLogo} /><Text style={startStyles.splashKicker}>CAVITE STATE UNIVERSITY</Text><Text style={startStyles.splashTitle}>CvSU Virtual Admission Guide</Text><Text style={startStyles.splashCaption}>Preparing your admission guide</Text></View></SafeAreaView>; }
 function StartScreen({ onSetup, onGuest }) { const [showNotice, setShowNotice] = useState(true); const [showOptionInfo, setShowOptionInfo] = useState(null); return <SafeAreaView style={startStyles.safe}><StatusBar style="light" /><Pressable accessibilityRole="button" accessibilityLabel="Show important notice" onPress={() => setShowNotice(true)} style={({ pressed }) => [startStyles.noticeTrigger, pressed && styles.pressed]}><Ionicons name="information-circle-outline" size={18} color="#075b31" /><Text style={startStyles.noticeTriggerText}>Important notice</Text></Pressable><View style={startStyles.content}><View style={startStyles.heroCard}><Image source={require('../assets/CvSU_Logo.png')} style={startStyles.logo} /><Text style={startStyles.kicker}>CAVITE STATE UNIVERSITY</Text><Text style={startStyles.title}>CvSU Virtual Admission Guide</Text><Text style={startStyles.copy}>Your clear starting point for application requirements, admission steps, and campus guidance.</Text></View><View style={startStyles.secondaryAction}><Pressable onPress={onGuest} style={({ pressed }) => [startStyles.optionMain, pressed && styles.pressed]}><Text style={startStyles.secondaryTitle}>Continue as Guest</Text></Pressable><Pressable accessibilityRole="button" accessibilityLabel="About Continue as Guest" onPress={() => setShowOptionInfo('guest')} style={({ pressed }) => [startStyles.optionQuestion, pressed && styles.pressed]}><Text style={startStyles.optionQuestionText}>?</Text></Pressable></View><View style={startStyles.primaryAction}><Pressable onPress={onSetup} style={({ pressed }) => [startStyles.optionMain, pressed && styles.pressed]}><Text style={startStyles.primaryTitle}>Complete Applicant Profile</Text></Pressable><Pressable accessibilityRole="button" accessibilityLabel="About Complete Applicant Profile" onPress={() => setShowOptionInfo('profile')} style={({ pressed }) => [startStyles.optionQuestion, pressed && styles.pressed]}><Text style={startStyles.optionQuestionText}>?</Text></Pressable></View></View><Modal visible={showNotice} transparent animationType="fade" onRequestClose={() => {}}><View style={onboardingHelpStyles.backdrop}><View style={startStyles.noticeCard}><View style={startStyles.noticeHeader}><View style={startStyles.noticeIcon}><Ionicons name="information" size={24} color="#183225" /></View><View style={startStyles.noticeHeading}><Text style={startStyles.noticeKicker}>BEFORE YOU BEGIN</Text><Text style={startStyles.noticeTitle}>Important Notice</Text></View></View><Text style={startStyles.noticeCopy}>CvSU Virtual Admission Guide is designed to help prospective students understand the Cavite State University admission process. It provides application requirements, admission steps, examination and medical guidance, campus locations, FAQs, and progress tracking.</Text><View style={startStyles.noticeDisclaimer}><Ionicons name="shield-checkmark" size={19} color="#9a7c00" style={startStyles.noticeDisclaimerIcon} /><Text style={startStyles.noticeEmphasis}>This app is not the official CvSU admission portal and cannot process applications. It is intended only to guide applicants and help them prepare for the official admission process.</Text></View><Pressable accessibilityRole="button" onPress={() => setShowNotice(false)} style={({ pressed }) => [startStyles.noticeAction, pressed && styles.pressed]}><Text style={startStyles.noticeActionText}>Proceed to Guide</Text><Ionicons name="arrow-forward" size={19} color="#fff" style={startStyles.noticeActionIcon} /></Pressable></View></View></Modal><Modal visible={Boolean(showOptionInfo)} transparent animationType="fade" onRequestClose={() => setShowOptionInfo(null)}><View style={onboardingHelpStyles.backdrop}><View style={startStyles.noticeCard}><View style={startStyles.noticeHeader}><View style={startStyles.noticeIcon}><Ionicons name="help" size={24} color="#183225" /></View><View style={startStyles.noticeHeading}><Text style={startStyles.noticeKicker}>OPTION DETAILS</Text><Text style={startStyles.noticeTitle}>{showOptionInfo === 'guest' ? 'Continue as Guest' : 'Complete Applicant Profile'}</Text></View></View><Text style={startStyles.noticeCopy}>{showOptionInfo === 'guest' ? 'Choose this option if you are still exploring CvSU admission, helping another applicant, or only need to review general requirements, procedures, FAQs, and campus guidance. You can use the guide without entering applicant details, but your progress will not be personalized or saved as an applicant profile.' : 'Choose this option if you are a prospective applicant who wants guidance tailored to your academic background and preferred program. You will provide your applicant type, track or strand, and program choice so the guide can highlight relevant requirements, admission steps, and progress tracking for your journey.'}</Text><Pressable accessibilityRole="button" onPress={() => setShowOptionInfo(null)} style={({ pressed }) => [startStyles.noticeAction, pressed && styles.pressed]}><Text style={startStyles.noticeActionText}>Close</Text></Pressable></View></View></Modal></SafeAreaView>; }
 function Page({ kicker, title, intro, children }) { return <><Text style={[styles.kicker, onboardingSetupStyles.kicker]}>{kicker}</Text><Text style={[styles.title, onboardingSetupStyles.title]}>{title}</Text><Text style={[styles.intro, onboardingSetupStyles.intro]}>{intro}</Text>{children}</>; }
 function Progress({ currentStep, totalSteps = 4 }) { const progress = totalSteps > 1 ? Math.max(0, (currentStep - 1) / (totalSteps - 1)) * 100 : 0; return <View style={[styles.progress, onboardingSetupStyles.progress]}><View style={onboardingSetupStyles.progressTrack}><View style={onboardingSetupStyles.progressRail} /><View style={[onboardingSetupStyles.progressFill, { width: `${progress}%` }]} /><View style={onboardingSetupStyles.progressDots}>{Array.from({ length: totalSteps }, (_, index) => index + 1).map((item) => <View key={item} style={[styles.progressDot, onboardingSetupStyles.progressDot, item === currentStep && onboardingSetupStyles.activeProgressDot, item < currentStep && onboardingSetupStyles.completeProgressDot]}><Text style={[onboardingSetupStyles.progressDotText, item === currentStep && onboardingSetupStyles.activeProgressDotText, item < currentStep && onboardingSetupStyles.completeProgressDotText]}>{item}</Text></View>)}</View></View><Text style={[styles.progressText, onboardingSetupStyles.progressText]}>Step {currentStep} of {totalSteps}</Text></View>; }
@@ -336,15 +270,10 @@ function Option({ label, caption, value, selected, onPress, compact, profileCard
 function Action({ label = 'Continue', disabled, onPress }) { return <Pressable disabled={disabled} onPress={onPress} style={[styles.action, onboardingSetupStyles.action, disabled && styles.disabled]}><Text style={[styles.actionText, onboardingSetupStyles.actionText]}>{label}</Text></Pressable>; }
 function Back({ onPress }) { return <Pressable onPress={onPress} style={[styles.back, onboardingSetupStyles.back]}><Text style={[styles.backText, onboardingSetupStyles.backText]}>Back</Text></Pressable>; }
 function Tile({ label }) { return <View style={styles.tile}><Text style={styles.tileLabel}>{label}</Text><Text style={styles.muted}>See what to prepare next</Text></View>; }
-function MainApp({ onProgramChange, profile, program, track, profilePhoto, nickname, onProfilePhotoChange, onNicknameChange, onRestart, onBackToStart, startAsGuest = false }) {
+function MainApp({ content = bundledContent, contentUpdate, onProgramChange, profile, program, track, profilePhoto, nickname, onProfilePhotoChange, onNicknameChange, onRestart, onBackToStart, startAsGuest = false }) {
+  const { exceptionProgramKeywords } = content;
+  const stepOrder = getAdmissionStepOrder(content);
   const [activeProgram, setActiveProgram] = useState(program);
-  const pageScroll = useRef(null);
-  const [mapTouching, setMapTouching] = useState(false);
-  const onMapInteractionChange = useCallback((touching) => {
-    // Native scroll views support this immediate update; web uses scrollEnabled below.
-    pageScroll.current?.setNativeProps?.({ scrollEnabled: !touching });
-    setMapTouching(touching);
-  }, []);
   const [failedProgram, setFailedProgram] = useState('');
   const [reapplicationProgram, setReapplicationProgram] = useState('');
   const [guestFailedProgram, setGuestFailedProgram] = useState('');
@@ -359,6 +288,18 @@ function MainApp({ onProgramChange, profile, program, track, profilePhoto, nickn
   const [guestProfile, setGuestProfile] = useState('');
   const [guestTrack, setGuestTrack] = useState('');
   const [guestProgram, setGuestProgram] = useState('');
+  const guestTrackOptions = getTrackOptions(content, guestProfile);
+  const guestEligiblePrograms = getEligiblePrograms(content, guestProfile, guestTrack);
+  const guestCanContinue = guestSetupStep === 1 ? Boolean(guestProfile) : guestSetupStep === 2
+    ? guestTrackOptions.some(([name]) => name === guestTrack) : guestEligiblePrograms.includes(guestProgram);
+  const chooseGuestProfile = (value) => {
+    if (value !== guestProfile) { setGuestTrack(''); setGuestProgram(''); }
+    setGuestProfile(value);
+  };
+  const chooseGuestTrack = (value) => {
+    if (value !== guestTrack) setGuestProgram('');
+    setGuestTrack(value);
+  };
   const [currentStatusIndex, setCurrentStatusIndex] = useState(0);
   const [selectedStepIndex, setSelectedStepIndex] = useState(null);
   const [checkedRequirements, setCheckedRequirements] = useState({});
@@ -372,14 +313,11 @@ function MainApp({ onProgramChange, profile, program, track, profilePhoto, nickn
     AsyncStorage.getItem(savedProgressKey).then((storedProgress) => {
       if (storedProgress) {
         const savedProgress = JSON.parse(storedProgress);
-        setCurrentStatusIndex(savedProgress.currentStatusIndex || 0);
-        const restoredChecks = { ...(savedProgress.checkedRequirements || {}) };
-        if (savedProgress.requirementsVersion !== 2) {
-          // Preserve admission progress, but clear checks whose document meanings changed.
-          delete restoredChecks['Online Application'];
-          delete restoredChecks['Validation Appointment'];
-        }
-        setCheckedRequirements(restoredChecks);
+        const previousSteps = savedProgress.admissionSteps || getSteps(program, bundledContent.exceptionProgramKeywords);
+        setCurrentStatusIndex(restoreStatusIndex(savedProgress, previousSteps, getSteps(program, exceptionProgramKeywords, stepOrder)));
+        setCheckedRequirements(Object.fromEntries(Object.entries(savedProgress.checkedRequirements || {}).map(([step, checks]) => [
+          step, checks.map((check) => typeof check === 'number' ? bundledContent.statusStepDetails[step]?.requirements[check] : check).filter(Boolean)
+        ])));
         setExaminationAttempt(savedProgress.examinationAttempt || 'initial');
         setFailedProgram(savedProgress.failedProgram || '');
         setReapplicationProgram(savedProgress.reapplicationProgram || '');
@@ -389,13 +327,28 @@ function MainApp({ onProgramChange, profile, program, track, profilePhoto, nickn
   useEffect(() => {
     setActiveProgram(program);
   }, [program]);
+  const applicantSteps = useMemo(() => getSteps(activeProgram, exceptionProgramKeywords, stepOrder), [activeProgram, exceptionProgramKeywords, stepOrder]);
+  const guestSteps = useMemo(() => getSteps(guestProgram, exceptionProgramKeywords, stepOrder), [guestProgram, exceptionProgramKeywords, stepOrder]);
+  const [previousContent, setPreviousContent] = useState(content);
+  if (previousContent !== content) {
+    setPreviousContent(content);
+    const previousOrder = getAdmissionStepOrder(previousContent);
+    const previousApplicantSteps = getSteps(activeProgram, previousContent.exceptionProgramKeywords, previousOrder);
+    const previousGuestSteps = getSteps(guestProgram, previousContent.exceptionProgramKeywords, previousOrder);
+    if (!sameSteps(previousApplicantSteps, applicantSteps)) {
+      setCurrentStatusIndex(restoreStatusIndex({ currentStatusIndex }, previousApplicantSteps, applicantSteps));
+      setSelectedStepIndex(null);
+    }
+    if (!sameSteps(previousGuestSteps, guestSteps)) {
+      setGuestStatusIndex(restoreStatusIndex({ currentStatusIndex: guestStatusIndex }, previousGuestSteps, guestSteps));
+      setGuestSelectedStepIndex(null);
+    }
+  }
   useEffect(() => {
     if (!progressLoaded || guestMode) return;
-    AsyncStorage.setItem(savedProgressKey, JSON.stringify({ requirementsVersion: 2, currentStatusIndex, checkedRequirements, examinationAttempt, failedProgram, reapplicationProgram })).catch(() => {});
-  }, [progressLoaded, guestMode, currentStatusIndex, checkedRequirements, examinationAttempt, failedProgram, reapplicationProgram]);
-  const selectedProgramForSteps = guestMode ? guestProgram : activeProgram;
-  const hasInterview = exceptionProgramKeywords.some((keyword) => String(selectedProgramForSteps || '').toLowerCase().includes(keyword.toLowerCase()));
-  const steps = hasInterview ? exceptionStatusSteps : defaultStatusSteps;
+    AsyncStorage.setItem(savedProgressKey, JSON.stringify({ currentStatusIndex, checkedRequirements, examinationAttempt, failedProgram, reapplicationProgram, admissionSteps: applicantSteps })).catch(() => {});
+  }, [progressLoaded, guestMode, currentStatusIndex, checkedRequirements, examinationAttempt, failedProgram, reapplicationProgram, applicantSteps]);
+  const steps = guestMode ? guestSteps : applicantSteps;
   const openStep = (index) => {
     if (guestMode) setGuestSelectedStepIndex(index);
     else setSelectedStepIndex(index);
@@ -488,8 +441,6 @@ function MainApp({ onProgramChange, profile, program, track, profilePhoto, nickn
         </Pressable>
       )}
       <ScrollView
-        ref={pageScroll}
-        scrollEnabled={!mapTouching}
         style={styles.mainContent}
         contentContainerStyle={[
           styles.mainContentInner,
@@ -499,17 +450,17 @@ function MainApp({ onProgramChange, profile, program, track, profilePhoto, nickn
         keyboardShouldPersistTaps="handled"
       >
         {showGuestSetup ? (
-          <GuestProfileSetup
+          <GuestProfileSetup content={content}
             step={guestSetupStep}
             profile={guestProfile}
             track={guestTrack}
             program={guestProgram}
-            onProfileChange={setGuestProfile}
-            onTrackChange={setGuestTrack}
+            onProfileChange={chooseGuestProfile}
+            onTrackChange={chooseGuestTrack}
             onProgramChange={setGuestProgram}
           />
         ) : showProfile ? (
-          <ApplicantProfilePage
+          <ApplicantProfilePage content={content} contentUpdate={contentUpdate}
             profile={displayedProfile}
             track={displayedTrack}
             program={displayedProgram}
@@ -533,7 +484,7 @@ function MainApp({ onProgramChange, profile, program, track, profilePhoto, nickn
             onReset={resetJourney}
           />
         ) : activeTab === 'Status' ? (
-          <StatusPage
+          <StatusPage content={content}
             displayName={displayName}
             profile={displayedProfile}
             program={displayedProgram}
@@ -555,7 +506,7 @@ function MainApp({ onProgramChange, profile, program, track, profilePhoto, nickn
             isGuest={guestMode}
           />
         ) : activeTab === 'Journey' ? (
-          <JourneyPage
+          <JourneyPage content={content}
             displayName={displayName}
             program={displayedProgram}
             profilePhoto={guestMode ? null : profilePhoto}
@@ -566,7 +517,7 @@ function MainApp({ onProgramChange, profile, program, track, profilePhoto, nickn
             isGuest={guestMode}
           />
         ) : activeTab === 'Home' ? (
-          <HomePage
+          <HomePage content={content}
             displayName={displayName}
             profile={displayedProfile}
             program={displayedProgram}
@@ -579,9 +530,9 @@ function MainApp({ onProgramChange, profile, program, track, profilePhoto, nickn
             onOpenTab={setActiveTab}
           />
         ) : activeTab === 'Map' ? (
-          <MapPage profilePhoto={guestMode ? null : profilePhoto} onMapInteractionChange={onMapInteractionChange} />
+          <MapPage content={content} profilePhoto={guestMode ? null : profilePhoto} />
         ) : (
-          <FAQPage />
+          <FAQPage content={content} />
         )}
       </ScrollView>
       {showGuestSetup && (
@@ -600,7 +551,7 @@ function MainApp({ onProgramChange, profile, program, track, profilePhoto, nickn
           {guestSetupStep > 1 && <Back onPress={() => setGuestSetupStep((current) => current - 1)} />}
           <Action
             label={guestSetupStep === 3 ? (guestSetupIsEditing ? 'Save Guest Profile' : 'Start as Guest') : 'Continue'}
-            disabled={!(guestSetupStep === 1 ? guestProfile : guestSetupStep === 2 ? guestTrack : guestProgram)}
+            disabled={!guestCanContinue}
             onPress={() => {
               if (guestSetupStep < 3) setGuestSetupStep((current) => current + 1);
               else {
@@ -612,12 +563,12 @@ function MainApp({ onProgramChange, profile, program, track, profilePhoto, nickn
           />
         </View>
       )}
-      {!showGuestSetup && (
+      {!showProfile && !showGuestSetup && (
         <View style={styles.bottomNav}>
           {mainTabs.map((tab) => (
             <Pressable
               key={tab}
-              onPress={() => { setShowProfile(false); setActiveTab(tab); }}
+              onPress={() => setActiveTab(tab)}
               style={({ pressed }) => [
                 styles.navItem,
                 activeTab === tab && styles.activeNavItem,
@@ -652,13 +603,13 @@ function MainApp({ onProgramChange, profile, program, track, profilePhoto, nickn
             contentContainerStyle={[styles.screen, onboardingSetupStyles.screen, guestSetupStyles.content]}
             keyboardShouldPersistTaps="handled"
           >
-            <GuestProfileSetup
+            <GuestProfileSetup content={content}
               step={guestSetupStep}
               profile={guestProfile}
               track={guestTrack}
               program={guestProgram}
-              onProfileChange={setGuestProfile}
-              onTrackChange={setGuestTrack}
+              onProfileChange={chooseGuestProfile}
+              onTrackChange={chooseGuestTrack}
               onProgramChange={setGuestProgram}
             />
           </ScrollView>
@@ -677,7 +628,7 @@ function MainApp({ onProgramChange, profile, program, track, profilePhoto, nickn
             {guestSetupStep > 1 && <Back onPress={() => setGuestSetupStep((current) => current - 1)} />}
             <Action
               label={guestSetupStep === 3 ? (guestSetupIsEditing ? 'Save Guest Profile' : 'Start as Guest') : 'Continue'}
-              disabled={!(guestSetupStep === 1 ? guestProfile : guestSetupStep === 2 ? guestTrack : guestProgram)}
+              disabled={!guestCanContinue}
               onPress={() => {
                 if (guestSetupStep < 3) setGuestSetupStep((current) => current + 1);
                 else {
@@ -694,8 +645,8 @@ function MainApp({ onProgramChange, profile, program, track, profilePhoto, nickn
   return <View style={[styles.mainApp, { backgroundColor: '#078743' }]}>
     <View style={styles.mainHeader}><Pressable accessibilityRole="button" accessibilityLabel="Go to Home" style={styles.headerSide} onPress={() => { setShowProfile(false); setShowGuestSetup(false); setActiveTab('Home'); }}><Image source={require('../assets/CvSU_Logo.png')} style={styles.mainLogo} /></Pressable><Text numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.75} style={styles.mainTitle}>CvSU Virtual Admission Guide</Text><Pressable accessibilityLabel="Open applicant profile" onPress={() => setShowProfile(true)} style={({ pressed }) => [styles.profileButton, pressed && styles.pressed]}><Image source={!guestMode && profilePhoto ? { uri: profilePhoto } : require('../assets/Profile.png')} style={styles.profileImage} /></Pressable></View>
     {guestMode && (showGuestSetup || showProfile || activeTab === 'Home') && <Pressable accessibilityLabel="Exit guest mode" onPress={exitGuestMode} style={({ pressed }) => [profileStyles.guestModeBar, pressed && styles.pressed]}><View><Text style={profileStyles.guestModeLabel}>GUEST MODE</Text><Text style={profileStyles.guestModeCopy}>{profile ? 'Your saved applicant profile is hidden.' : 'Exploring the app as a guest.'}</Text></View><View style={profileStyles.exitGuestAction}><Ionicons name="log-out-outline" size={18} color="#075b31" /><Text style={profileStyles.exitGuestText}>Exit Guest Mode</Text></View></Pressable>}
-    <ScrollView ref={pageScroll} scrollEnabled={!mapTouching} style={styles.mainContent} contentContainerStyle={[styles.mainContentInner, (activeTab === 'Home' || showProfile) && homeStyles.content, showGuestSetup && guestSetupStyles.content]} keyboardShouldPersistTaps="handled">{showGuestSetup ? <GuestProfileSetup step={guestSetupStep} profile={guestProfile} track={guestTrack} program={guestProgram} onProfileChange={setGuestProfile} onTrackChange={setGuestTrack} onProgramChange={setGuestProgram} onBack={() => setGuestSetupStep((current) => Math.max(1, current - 1))} onNext={() => setGuestSetupStep((current) => Math.min(3, current + 1))} onComplete={() => { setShowGuestSetup(false); setActiveTab('Home'); }} onSkip={() => { setShowGuestSetup(false); setActiveTab('Home'); }} /> : showProfile ? <ApplicantProfilePage profile={displayedProfile} track={displayedTrack} program={displayedProgram} photo={profilePhoto} nickname={nickname} isGuest={guestMode} onPhotoChange={onProfilePhotoChange} onNicknameChange={onNicknameChange} onEdit={onRestart} onEditGuest={() => { setShowProfile(false); setShowGuestSetup(true); }} onBack={() => { setShowProfile(false); setActiveTab('Home'); }} onGuest={viewAsGuest} onReset={resetJourney} /> : activeTab === 'Status' ? <StatusPage displayName={displayName} profile={displayedProfile} program={displayedProgram} track={displayedTrack} steps={steps} currentStatusIndex={displayedStatusIndex} onStatusChange={guestMode ? setGuestStatusIndex : setCurrentStatusIndex} selectedStepIndex={displayedSelectedStepIndex} onSelectStep={guestMode ? setGuestSelectedStepIndex : setSelectedStepIndex} checkedRequirements={displayedCheckedRequirements} onRequirementsChange={guestMode ? setGuestCheckedRequirements : setCheckedRequirements} examinationAttempt={displayedExaminationAttempt} onExaminationAttemptChange={guestMode ? setGuestExaminationAttempt : setExaminationAttempt} failedProgram={displayedFailedProgram} reapplicationProgram={displayedReapplicationProgram} onFailedProgramChange={guestMode ? setGuestFailedProgram : setFailedProgram} onReapplicationProgramChange={guestMode ? setGuestReapplicationProgram : setReapplicationProgram} onProgramChange={guestMode ? setGuestProgram : updateApplicantProgram} isGuest={guestMode} /> : activeTab === 'Journey' ? <><JourneyPage displayName={displayName} program={displayedProgram} profilePhoto={guestMode ? null : profilePhoto} steps={steps} currentStatusIndex={displayedStatusIndex} examinationAttempt={displayedExaminationAttempt} onOpenStep={openStep} isGuest={guestMode} /><StatusPage detailsOnly displayName={displayName} profile={displayedProfile} program={displayedProgram} track={displayedTrack} steps={steps} currentStatusIndex={displayedStatusIndex} onStatusChange={guestMode ? setGuestStatusIndex : setCurrentStatusIndex} selectedStepIndex={displayedSelectedStepIndex} onSelectStep={guestMode ? setGuestSelectedStepIndex : setSelectedStepIndex} checkedRequirements={displayedCheckedRequirements} onRequirementsChange={guestMode ? setGuestCheckedRequirements : setCheckedRequirements} examinationAttempt={displayedExaminationAttempt} onExaminationAttemptChange={guestMode ? setGuestExaminationAttempt : setExaminationAttempt} failedProgram={displayedFailedProgram} reapplicationProgram={displayedReapplicationProgram} onFailedProgramChange={guestMode ? setGuestFailedProgram : setFailedProgram} onReapplicationProgramChange={guestMode ? setGuestReapplicationProgram : setReapplicationProgram} onProgramChange={guestMode ? setGuestProgram : updateApplicantProgram} isGuest={guestMode} /></> : activeTab === 'Home' ? <HomePage displayName={displayName} profile={displayedProfile} program={displayedProgram} track={displayedTrack} steps={steps} currentStatusIndex={displayedStatusIndex} examinationAttempt={displayedExaminationAttempt} onOpenStep={openStep} onRestart={() => setShowProfile(true)} onOpenTab={setActiveTab} /> : activeTab === 'Map' ? <MapPage profilePhoto={guestMode ? null : profilePhoto} onMapInteractionChange={onMapInteractionChange} /> : <FAQPage />}</ScrollView>
-    {!showGuestSetup && <View style={styles.bottomNav}>{mainTabs.map((tab) => <Pressable key={tab} onPress={() => { setShowProfile(false); setActiveTab(tab); }} style={({ pressed }) => [styles.navItem, activeTab === tab && styles.activeNavItem, pressed && styles.pressed]}><Ionicons name={tabIcons[tab]} size={27} color={activeTab === tab ? '#009c29' : '#698073'} /><Text style={[styles.navLabel, activeTab === tab && styles.activeNavText]}>{tab}</Text></Pressable>)}</View>}
+    <ScrollView style={styles.mainContent} contentContainerStyle={[styles.mainContentInner, (activeTab === 'Home' || showProfile) && homeStyles.content, showGuestSetup && guestSetupStyles.content]} keyboardShouldPersistTaps="handled">{showGuestSetup ? <GuestProfileSetup content={content} step={guestSetupStep} profile={guestProfile} track={guestTrack} program={guestProgram} onProfileChange={chooseGuestProfile} onTrackChange={chooseGuestTrack} onProgramChange={setGuestProgram} onBack={() => setGuestSetupStep((current) => Math.max(1, current - 1))} onNext={() => setGuestSetupStep((current) => Math.min(3, current + 1))} onComplete={() => { setShowGuestSetup(false); setActiveTab('Home'); }} onSkip={() => { setShowGuestSetup(false); setActiveTab('Home'); }} /> : showProfile ? <ApplicantProfilePage content={content} contentUpdate={contentUpdate} profile={displayedProfile} track={displayedTrack} program={displayedProgram} photo={profilePhoto} nickname={nickname} isGuest={guestMode} onPhotoChange={onProfilePhotoChange} onNicknameChange={onNicknameChange} onEdit={onRestart} onEditGuest={() => { setShowProfile(false); setShowGuestSetup(true); }} onBack={() => { setShowProfile(false); setActiveTab('Home'); }} onGuest={viewAsGuest} onReset={resetJourney} /> : activeTab === 'Status' ? <StatusPage content={content} displayName={displayName} profile={displayedProfile} program={displayedProgram} track={displayedTrack} steps={steps} currentStatusIndex={displayedStatusIndex} onStatusChange={guestMode ? setGuestStatusIndex : setCurrentStatusIndex} selectedStepIndex={displayedSelectedStepIndex} onSelectStep={guestMode ? setGuestSelectedStepIndex : setSelectedStepIndex} checkedRequirements={displayedCheckedRequirements} onRequirementsChange={guestMode ? setGuestCheckedRequirements : setCheckedRequirements} examinationAttempt={displayedExaminationAttempt} onExaminationAttemptChange={guestMode ? setGuestExaminationAttempt : setExaminationAttempt} failedProgram={displayedFailedProgram} reapplicationProgram={displayedReapplicationProgram} onFailedProgramChange={guestMode ? setGuestFailedProgram : setFailedProgram} onReapplicationProgramChange={guestMode ? setGuestReapplicationProgram : setReapplicationProgram} onProgramChange={guestMode ? setGuestProgram : updateApplicantProgram} isGuest={guestMode} /> : activeTab === 'Journey' ? <><JourneyPage content={content} displayName={displayName} program={displayedProgram} profilePhoto={guestMode ? null : profilePhoto} steps={steps} currentStatusIndex={displayedStatusIndex} examinationAttempt={displayedExaminationAttempt} onOpenStep={openStep} isGuest={guestMode} /><StatusPage content={content} detailsOnly displayName={displayName} profile={displayedProfile} program={displayedProgram} track={displayedTrack} steps={steps} currentStatusIndex={displayedStatusIndex} onStatusChange={guestMode ? setGuestStatusIndex : setCurrentStatusIndex} selectedStepIndex={displayedSelectedStepIndex} onSelectStep={guestMode ? setGuestSelectedStepIndex : setSelectedStepIndex} checkedRequirements={displayedCheckedRequirements} onRequirementsChange={guestMode ? setGuestCheckedRequirements : setCheckedRequirements} examinationAttempt={displayedExaminationAttempt} onExaminationAttemptChange={guestMode ? setGuestExaminationAttempt : setExaminationAttempt} failedProgram={displayedFailedProgram} reapplicationProgram={displayedReapplicationProgram} onFailedProgramChange={guestMode ? setGuestFailedProgram : setFailedProgram} onReapplicationProgramChange={guestMode ? setGuestReapplicationProgram : setReapplicationProgram} onProgramChange={guestMode ? setGuestProgram : updateApplicantProgram} isGuest={guestMode} /></> : activeTab === 'Home' ? <HomePage content={content} displayName={displayName} profile={displayedProfile} program={displayedProgram} track={displayedTrack} steps={steps} currentStatusIndex={displayedStatusIndex} examinationAttempt={displayedExaminationAttempt} onOpenStep={openStep} onRestart={() => setShowProfile(true)} onOpenTab={setActiveTab} /> : activeTab === 'Map' ? <MapPage content={content} profilePhoto={guestMode ? null : profilePhoto} /> : <FAQPage content={content} />}</ScrollView>
+    {!showProfile && !showGuestSetup && <View style={styles.bottomNav}>{mainTabs.map((tab) => <Pressable key={tab} onPress={() => setActiveTab(tab)} style={({ pressed }) => [styles.navItem, activeTab === tab && styles.activeNavItem, pressed && styles.pressed]}><Ionicons name={tabIcons[tab]} size={27} color={activeTab === tab ? '#009c29' : '#698073'} /><Text style={[styles.navLabel, activeTab === tab && styles.activeNavText]}>{tab}</Text></Pressable>)}</View>}
   </View>;
 }
 function ProfilePhotoEditor({ photo, onChange }) {
@@ -705,9 +656,11 @@ function ProfilePhotoEditor({ photo, onChange }) {
   };
   return <View style={profileStyles.photoEditor}><Image source={photo ? { uri: photo } : require('../assets/Profile.png')} style={profileStyles.photoPreview} /><View style={profileStyles.photoActions}><Text style={profileStyles.photoTitle}>Profile Picture</Text><Pressable accessibilityLabel={photo ? 'Change profile picture' : 'Upload profile picture'} onPress={choosePhoto} style={({ pressed }) => [profileStyles.photoButton, pressed && styles.pressed]}><Ionicons name="camera-outline" size={18} color="#075b31" /><Text style={profileStyles.photoButtonText}>{photo ? 'Change Picture' : 'Upload Picture'}</Text></Pressable>{photo && <Pressable accessibilityLabel="Remove profile picture" onPress={() => onChange(null)} style={({ pressed }) => [profileStyles.removePhotoButton, pressed && styles.pressed]}><Text style={profileStyles.removePhotoText}>Remove</Text></Pressable>}</View></View>;
 }
-function GuestProfileSetup({ step, profile, track, program, onProfileChange, onTrackChange, onProgramChange }) {
+function GuestProfileSetup({ content = bundledContent, step, profile, track, program, onProfileChange, onTrackChange, onProgramChange }) {
   const [query, setQuery] = useState('');
-  const filteredPrograms = programs.filter((item) => item.toLowerCase().includes(query.trim().toLowerCase()));
+  const tracks = getTrackOptions(content, profile);
+  const eligiblePrograms = getEligiblePrograms(content, profile, track);
+  const filteredPrograms = eligiblePrograms.filter((item) => item.toLowerCase().includes(query.trim().toLowerCase()));
   return (
     <View style={guestSetupStyles.page}>
       <View style={[styles.header, onboardingSetupStyles.header]}>
@@ -722,50 +675,62 @@ function GuestProfileSetup({ step, profile, track, program, onProfileChange, onT
       <Progress currentStep={step} totalSteps={3} />
       {step === 1 && (
         <Page kicker="LET'S GET STARTED" title="Tell us about your journey." intro="Choose the description that best matches your current academic status.">
-          <View style={styles.list}>{profiles.map(([value, label, caption]) => <Option key={value} label={label} caption={caption} value={value} selected={profile === value} onPress={() => onProfileChange(value)} profileCard />)}</View>
+          <View style={styles.list}>{getAcademicStatuses(content).map(({ id: value, label, description: caption }) => <Option key={value} label={label} caption={caption} value={value} selected={profile === value} onPress={() => onProfileChange(value)} profileCard />)}</View>
         </Page>
       )}
       {step === 2 && (
-        <Page kicker="STEP 2 · ACADEMIC BACKGROUND" title="What was your track or strand?" intro="This helps us recommend programs that fit what you already enjoy.">
+        <Page kicker="STEP 2 · ACADEMIC BACKGROUND" title="What was your track or strand?" intro="Your academic background determines which programs you can select.">
           <View style={styles.list}>{tracks.map(([label, caption]) => <Option key={label} label={label} caption={caption} value={label} selected={track === label} onPress={() => onTrackChange(label)} profileCard />)}</View>
         </Page>
       )}
       {step === 3 && (
-        <Page kicker="STEP 3 · YOUR DIRECTION" title="Which program feels like you?" intro={`Your ${track} background is a great starting point. Search the catalog and choose a first choice.`}>
+        <Page kicker="STEP 3 · YOUR DIRECTION" title="Which program feels like you?" intro={`Choose from the programs available to applicants in ${track}.`}>
           <View style={styles.search}>
             <Ionicons name="search" size={20} color="#075b31" />
             <TextInput value={query} onChangeText={setQuery} placeholder="Search programs" placeholderTextColor="#8aa294" style={styles.input} />
             {query.length > 0 && <Pressable accessibilityLabel="Clear program search" onPress={() => setQuery('')} style={styles.clear}><Ionicons name="close" size={16} color="#078743" /></Pressable>}
           </View>
-          {filteredPrograms.length === 0 && <Text style={styles.muted}>No matching programs found.</Text>}
+          {filteredPrograms.length === 0 && <Text style={styles.muted}>{eligiblePrograms.length ? 'No matching programs found.' : 'No programs are currently available for this background.'}</Text>}
           <View style={styles.list}>{filteredPrograms.map((item) => <Option key={item} label={item} value="→" selected={program === item} onPress={() => onProgramChange(item)} compact />)}</View>
         </Page>
       )}
     </View>
   );
 }
-function ApplicantProfilePage({ profile, track, program, photo, nickname, isGuest = false, onPhotoChange, onNicknameChange, onEdit, onEditGuest, onBack, onGuest, onReset }) {
-  const profileLabel = profiles.find(([value]) => value === profile)?.[1] || profile;
+function ApplicantProfilePage({ content = bundledContent, contentUpdate = {}, profile, track, program, photo, nickname, isGuest = false, onPhotoChange, onNicknameChange, onEdit, onEditGuest, onBack, onGuest, onReset }) {
+  const profileLabel = getAcademicStatusLabel(content, profile);
+  const { onRefresh, refreshing, message } = contentUpdate;
+  const statusRemoved = profile && profile !== 'Guest' && !getAcademicStatus(content, profile);
   return <View style={profileStyles.page}>
     <Text style={profileStyles.title}>{isGuest ? 'Guest Profile' : 'Applicant Profile'}</Text>
     <Text style={profileStyles.subtitle}>{isGuest ? 'This is a temporary profile. Your saved applicant details and progress remain private.' : 'Your application profile is saved. You can update it anytime.'}</Text>
+    {statusRemoved && <Text style={profileStyles.subtitle}>This academic status is no longer offered. Edit your profile to choose a current status.</Text>}
     {!isGuest && <ProfilePhotoEditor photo={photo} onChange={onPhotoChange} />}
     {!isGuest && <View style={profileStyles.nicknameEditor}><Text style={profileStyles.nicknameLabel}>NICKNAME</Text><TextInput value={nickname} onChangeText={onNicknameChange} maxLength={30} placeholder="Enter your nickname" placeholderTextColor="#8aa294" style={profileStyles.nicknameInput} /></View>}
     <View style={profileStyles.summary}>{!isGuest && nickname.trim().length > 0 && <ProfileSummaryItem label="NICKNAME" value={nickname.trim()} />}<ProfileSummaryItem label="APPLICANT TYPE" value={profileLabel} /><ProfileSummaryItem label="TRACK / STRAND" value={track} /><ProfileSummaryItem label="PROGRAM" value={program} last /></View>
     <Pressable onPress={() => Linking.openURL('http://admission.cvsu.edu.ph')} style={({ pressed }) => [homeStyles.profilePortal, pressed && styles.pressed]}><View style={homeStyles.actionIcon}><Ionicons name="open-outline" size={22} color="#4c4a12" /></View><View style={homeStyles.actionCopy}><Text style={homeStyles.actionEyebrow}>OFFICIAL PORTAL</Text><Text style={homeStyles.portalTitle}>Open CvSU Admission</Text><Text style={homeStyles.portalSubtitle}>admission.cvsu.edu.ph</Text></View><Ionicons name="arrow-forward" size={22} color="#183225" /></Pressable>
     <View style={profileStyles.primaryActions}><Pressable onPress={isGuest ? onEditGuest : onEdit} style={({ pressed }) => [profileStyles.editButton, pressed && styles.pressed]}><Text style={profileStyles.editButtonText}>{isGuest ? 'Edit Guest Profile' : 'Edit Profile'}</Text></Pressable><Pressable accessibilityRole="button" accessibilityLabel="Back to Home" onPress={onBack} style={({ pressed }) => [profileStyles.backButton, pressed && styles.pressed]}><Ionicons name="arrow-back" size={18} color="#075b31" /><Text style={profileStyles.backButtonText}>Back to Home</Text></Pressable></View>
     {!isGuest && <Pressable onPress={onGuest} style={({ pressed }) => [profileStyles.guestButton, pressed && styles.pressed]}><Text style={profileStyles.guestTitle}>View App as Guest</Text><Text style={profileStyles.guestCopy}>View procedures without showing or saving your profile progress.</Text></Pressable>}
+    <View style={profileStyles.updateCard}>
+      <Pressable accessibilityRole="button" accessibilityState={{ disabled: !onRefresh || refreshing, busy: Boolean(refreshing) }} disabled={!onRefresh || refreshing} onPress={onRefresh} style={({ pressed }) => [profileStyles.updateButton, (!onRefresh || refreshing) && profileStyles.updateDisabled, pressed && styles.pressed]}>
+        <Ionicons name="refresh-outline" size={18} color="#075b31" />
+        <Text style={profileStyles.backButtonText}>{refreshing ? 'Checking for updates…' : 'Check for content updates'}</Text>
+      </Pressable>
+      <Text accessibilityLiveRegion="polite" style={profileStyles.updateMessage}>
+        {message || (onRefresh ? 'Download the latest published admission guide.' : 'Content updates are unavailable in this build.')}
+      </Text>
+    </View>
     <Pressable onPress={onReset} style={({ pressed }) => [profileStyles.resetButton, pressed && styles.pressed]}><Text style={profileStyles.resetTitle}>{isGuest ? 'Reset Temporary Journey' : 'Reset Admission Journey'}</Text><Text style={profileStyles.resetCopy}>{isGuest ? 'Start this guest session again' : 'Keep your profile, start progress again'}</Text></Pressable>
   </View>;
 }
 function ProfileSummaryItem({ label, value, last = false }) { return <View style={!last && profileStyles.summaryItem}><Text style={profileStyles.summaryLabel}>{label}</Text><Text style={profileStyles.summaryValue}>{value}</Text></View>; }
-function HomePage({ displayName, profile, program, track, steps, currentStatusIndex, examinationAttempt, onOpenStep, onRestart, onOpenTab }) {
-  const profileLabel = profiles.find(([value]) => value === profile)?.[1] || profile;
+function HomePage({ content = bundledContent, displayName, profile, program, track, steps, currentStatusIndex, examinationAttempt, onOpenStep, onRestart, onOpenTab }) {
+  const profileLabel = getAcademicStatusLabel(content, profile);
   const applicationStopped = examinationAttempt === 'stopped';
   const isFinished = currentStatusIndex === steps.length;
   const progress = Math.round((currentStatusIndex / steps.length) * 100);
   const currentStep = applicationStopped ? 'Application ended' : isFinished ? 'Enrollment complete' : steps[currentStatusIndex];
-  const stage = currentStep.replace('Admission ', '');
+  const stage = content.statusStepDetails[currentStep]?.title || currentStep;
   const openCurrentStep = () => {
     if (applicationStopped || isFinished) {
       onOpenTab('Status');
@@ -773,15 +738,21 @@ function HomePage({ displayName, profile, program, track, steps, currentStatusIn
     }
     onOpenStep(currentStatusIndex);
   };
-  return <HomePageReordered displayName={displayName} profile={profile} track={track} program={program} steps={steps} currentStatusIndex={currentStatusIndex} progress={progress} applicationStopped={applicationStopped} isFinished={isFinished} stage={stage} onOpenStep={openCurrentStep} onRestart={onRestart} onOpenTab={onOpenTab} />;
+  return <HomePageReordered displayName={displayName} profileLabel={profileLabel} track={track} program={program} steps={steps} currentStatusIndex={currentStatusIndex} progress={progress} applicationStopped={applicationStopped} isFinished={isFinished} stage={stage} onOpenStep={openCurrentStep} onRestart={onRestart} onOpenTab={onOpenTab} />;
   return <View style={homeStyles.page}><View style={homeStyles.welcome}><View style={homeStyles.welcomeCopy}><Text style={homeStyles.kicker}>CVSU VIRTUAL ADMISSION GUIDE</Text><Text style={homeStyles.title}>Welcome Back, {displayName}!</Text><Text style={homeStyles.subtitle}>{applicationStopped ? 'Thank you for applying to Cavite State University, ' + displayName + '.' : isFinished ? 'Your admission journey is complete, ' + displayName + '. Welcome to CvSU!' : 'Your admissions journey looks strong, ' + displayName + '. Keep moving through each step with confidence.'}</Text></View><View style={homeStyles.progressBadge}><Text style={homeStyles.progressBadgeText}>{progress}%</Text></View></View><Pressable onPress={() => Linking.openURL('http://admission.cvsu.edu.ph')} style={({ pressed }) => [homeStyles.portal, pressed && styles.pressed]}><View style={homeStyles.actionIcon}><Ionicons name="open-outline" size={22} color="#4c4a12" /></View><View style={homeStyles.actionCopy}><Text style={homeStyles.actionEyebrow}>OFFICIAL PORTAL</Text><Text style={homeStyles.portalTitle}>Open CvSU Admission</Text><Text style={homeStyles.portalSubtitle}>admission.cvsu.edu.ph</Text></View><Ionicons name="arrow-forward" size={22} color="#183225" /></Pressable><Pressable onPress={onRestart} style={({ pressed }) => [homeStyles.card, pressed && styles.pressed]}><Text style={homeStyles.cardEyebrow}>APPLICANT TYPE</Text><Text style={homeStyles.cardTitle}>{profileLabel}</Text><Text style={homeStyles.profileLine}>Track: {track}</Text><Text style={homeStyles.profileLine}>Program: {program}</Text><Text style={homeStyles.cardHint}>Tap to update your applicant profile and personalize your journey.</Text></Pressable><View style={homeStyles.card}><Text style={homeStyles.cardEyebrow}>YOUR PROGRESS</Text><View style={homeStyles.progressTrack}><View style={[homeStyles.progressFill, { width: `${progress}%` }]} /></View><Text style={homeStyles.progressLabel}>{progress}% Complete</Text><Text style={homeStyles.cardHint}>{currentStatusIndex} of {steps.length} admission steps completed</Text></View><Pressable onPress={openCurrentStep} style={({ pressed }) => [homeStyles.card, homeStyles.stageCard, pressed && styles.pressed]}><Text style={homeStyles.cardEyebrow}>{applicationStopped ? 'APPLICATION STATUS' : isFinished ? 'FINAL STAGE' : 'CURRENT STAGE'}</Text><Text style={homeStyles.cardTitle}>{stage}</Text><Text style={homeStyles.cardHint}>{applicationStopped || isFinished ? 'Tap Status to review your admission journey.' : 'Tap to see details and continue your progress.'}</Text></Pressable><Pressable onPress={openCurrentStep} style={({ pressed }) => [homeStyles.nextAction, pressed && styles.pressed]}><View style={homeStyles.actionIcon}><Ionicons name={applicationStopped ? 'information-circle-outline' : isFinished ? 'checkmark-circle-outline' : 'navigate-outline'} size={23} color="#4c4a12" /></View><View style={homeStyles.actionCopy}><Text style={homeStyles.actionEyebrow}>NEXT ACTION</Text><Text style={homeStyles.nextTitle}>{applicationStopped ? 'Review application status' : isFinished ? 'Review completed journey' : `Continue with ${stage}`}</Text><Text style={homeStyles.nextSubtitle}>Open Status to continue your progress.</Text></View><Ionicons name="chevron-forward" size={23} color="#183225" /></Pressable><View style={homeStyles.card}><Text style={homeStyles.cardEyebrow}>YOUR PROGRESS</Text><View style={homeStyles.progressTrack}><View style={[homeStyles.progressFill, { width: `${progress}%` }]} /></View><Text style={homeStyles.progressLabel}>{progress}% Complete</Text><Text style={homeStyles.cardHint}>{currentStatusIndex} of {steps.length} admission steps completed</Text></View><View style={homeStyles.sectionTitle}><View style={homeStyles.sectionAccent} /><Text style={homeStyles.sectionTitleText}>Quick Actions</Text></View><HomeAction icon="person-outline" title="Application Profile" subtitle="Update your applicant type" onPress={onRestart} /><HomeAction icon="map-outline" title="Campus Map" subtitle="Open map tab" onPress={() => onOpenTab('Map')} /><HomeAction icon="help-circle-outline" title="FAQ & Help" subtitle="Find answers fast" onPress={() => onOpenTab('FAQ')} /><View style={homeStyles.tip}><Text style={homeStyles.tipTitle}>Did you know?</Text><Text style={homeStyles.tipText}>Your progress stays available while this app remains open, so Status, Journey, and Home always show the same stage.</Text></View></View>;
 }
-function HomePageReordered({ displayName, profile, track, program, steps, currentStatusIndex, progress, applicationStopped, isFinished, stage, onOpenStep, onRestart, onOpenTab }) {
-  const profileLabel = profiles.find(([value]) => value === profile)?.[1] || profile;
-  return <View style={homeStyles.page}><View style={homeStyles.welcome}><View style={homeStyles.welcomeCopy}><Text style={homeStyles.kicker}>CVSU VIRTUAL ADMISSION GUIDE</Text><Text style={homeStyles.title}>Welcome Back, {displayName}!</Text><Text style={homeStyles.subtitle}>{applicationStopped ? 'Thank you for applying to Cavite State University, ' + displayName + '.' : isFinished ? 'Your admission journey is complete, ' + displayName + '. Welcome to CvSU!' : 'Your admissions journey looks strong, ' + displayName + '. Keep moving through each step with confidence.'}</Text></View><View style={homeStyles.progressBadge}><Text style={homeStyles.progressBadgeText}>{progress}%</Text></View></View><Pressable onPress={onRestart} style={({ pressed }) => [homeStyles.card, pressed && styles.pressed]}><Text style={homeStyles.cardEyebrow}>APPLICANT TYPE</Text><Text style={homeStyles.cardTitle}>{profileLabel}</Text><Text style={homeStyles.profileLine}>Track: {track}</Text><Text style={homeStyles.profileLine}>Program: {program}</Text><Text style={homeStyles.cardHint}>Tap to update your applicant profile and personalize your journey.</Text></Pressable><Pressable onPress={onOpenStep} style={({ pressed }) => [homeStyles.card, homeStyles.stageCard, pressed && styles.pressed]}><Text style={homeStyles.cardEyebrow}>{applicationStopped ? 'APPLICATION STATUS' : isFinished ? 'FINAL STAGE' : 'CURRENT STAGE'}</Text><Text style={homeStyles.cardTitle}>{stage}</Text><Text style={homeStyles.cardHint}>{applicationStopped || isFinished ? 'Tap Status to review your admission journey.' : 'Tap to see details and continue your progress.'}</Text></Pressable><Pressable onPress={onOpenStep} style={({ pressed }) => [homeStyles.nextAction, pressed && styles.pressed]}><View style={homeStyles.actionIcon}><Ionicons name={applicationStopped ? 'information-circle-outline' : isFinished ? 'checkmark-circle-outline' : 'navigate-outline'} size={23} color="#4c4a12" /></View><View style={homeStyles.actionCopy}><Text style={homeStyles.actionEyebrow}>NEXT ACTION</Text><Text style={homeStyles.nextTitle}>{applicationStopped ? 'Review application status' : isFinished ? 'Review completed journey' : `Continue with ${stage}`}</Text><Text style={homeStyles.nextSubtitle}>Open Status to continue your progress.</Text></View><Ionicons name="chevron-forward" size={23} color="#183225" /></Pressable><View style={homeStyles.card}><Text style={homeStyles.cardEyebrow}>YOUR PROGRESS</Text><View style={homeStyles.progressTrack}><View style={[homeStyles.progressFill, { width: `${progress}%` }]} /></View><Text style={homeStyles.progressLabel}>{progress}% Complete</Text><Text style={homeStyles.cardHint}>{currentStatusIndex} of {steps.length} admission steps completed</Text></View><View style={homeStyles.sectionTitle}><View style={homeStyles.sectionAccent} /><Text style={homeStyles.sectionTitleText}>Quick Actions</Text></View><HomeAction icon="person-outline" title="Application Profile" subtitle="Update your applicant type" onPress={onRestart} /><HomeAction icon="map-outline" title="Campus Map" subtitle="Open map tab" onPress={() => onOpenTab('Map')} /><HomeAction icon="help-circle-outline" title="FAQ & Help" subtitle="Find answers fast" onPress={() => onOpenTab('FAQ')} /><View style={homeStyles.tip}><Text style={homeStyles.tipTitle}>Did you know?</Text><Text style={homeStyles.tipText}>Your profile and progress remain available on this device after you close the app, and the guide can be reviewed offline. Internet access is still required to open the official admission portal and submit or update an application.</Text></View></View>;
+function HomePageReordered({ displayName, profileLabel, track, program, steps, currentStatusIndex, progress, applicationStopped, isFinished, stage, onOpenStep, onRestart, onOpenTab }) {
+  return <View style={homeStyles.page}><View style={homeStyles.welcome}><View style={homeStyles.welcomeCopy}><Text style={homeStyles.kicker}>CVSU VIRTUAL ADMISSION GUIDE</Text><Text style={homeStyles.title}>Welcome Back, {displayName}!</Text><Text style={homeStyles.subtitle}>{applicationStopped ? 'Thank you for applying to Cavite State University, ' + displayName + '.' : isFinished ? 'Your admission journey is complete, ' + displayName + '. Welcome to CvSU!' : 'Your admissions journey looks strong, ' + displayName + '. Keep moving through each step with confidence.'}</Text></View><View style={homeStyles.progressBadge}><Text style={homeStyles.progressBadgeText}>{progress}%</Text></View></View><Pressable onPress={onRestart} style={({ pressed }) => [homeStyles.card, pressed && styles.pressed]}><Text style={homeStyles.cardEyebrow}>APPLICANT TYPE</Text><Text style={homeStyles.cardTitle}>{profileLabel}</Text><Text style={homeStyles.profileLine}>Track: {track}</Text><Text style={homeStyles.profileLine}>Program: {program}</Text><Text style={homeStyles.cardHint}>Tap to update your applicant profile and personalize your journey.</Text></Pressable><Pressable onPress={onOpenStep} style={({ pressed }) => [homeStyles.card, homeStyles.stageCard, pressed && styles.pressed]}><Text style={homeStyles.cardEyebrow}>{applicationStopped ? 'APPLICATION STATUS' : isFinished ? 'FINAL STAGE' : 'CURRENT STAGE'}</Text><Text style={homeStyles.cardTitle}>{stage}</Text><Text style={homeStyles.cardHint}>{applicationStopped || isFinished ? 'Tap Status to review your admission journey.' : 'Tap to see details and continue your progress.'}</Text></Pressable><Pressable onPress={onOpenStep} style={({ pressed }) => [homeStyles.nextAction, pressed && styles.pressed]}><View style={homeStyles.actionIcon}><Ionicons name={applicationStopped ? 'information-circle-outline' : isFinished ? 'checkmark-circle-outline' : 'navigate-outline'} size={23} color="#4c4a12" /></View><View style={homeStyles.actionCopy}><Text style={homeStyles.actionEyebrow}>NEXT ACTION</Text><Text style={homeStyles.nextTitle}>{applicationStopped ? 'Review application status' : isFinished ? 'Review completed journey' : `Continue with ${stage}`}</Text><Text style={homeStyles.nextSubtitle}>Open Status to continue your progress.</Text></View><Ionicons name="chevron-forward" size={23} color="#183225" /></Pressable><Pressable accessibilityRole="button" accessibilityLabel={`Your progress, ${progress}% complete`} accessibilityHint={applicationStopped || isFinished ? 'Opens Status' : `Opens ${stage}`} onPress={onOpenStep} style={({ pressed }) => [homeStyles.card, pressed && styles.pressed]}>
+    <View style={homeStyles.progressCardHeader}><Text style={homeStyles.cardEyebrow}>YOUR PROGRESS</Text><Ionicons name="chevron-forward" size={18} color="#075b31" /></View>
+    <View style={homeStyles.progressTrack}><View style={[homeStyles.progressFill, { width: `${progress}%` }]} /></View>
+    <Text style={homeStyles.progressLabel}>{progress}% Complete</Text>
+    <Text style={homeStyles.cardHint}>{currentStatusIndex} of {steps.length} admission steps completed</Text>
+  </Pressable><View style={homeStyles.sectionTitle}><View style={homeStyles.sectionAccent} /><Text style={homeStyles.sectionTitleText}>Quick Actions</Text></View><HomeAction icon="person-outline" title="Application Profile" subtitle="Update your applicant type" onPress={onRestart} /><HomeAction icon="map-outline" title="Campus Map" subtitle="Open map tab" onPress={() => onOpenTab('Map')} /><HomeAction icon="help-circle-outline" title="FAQ & Help" subtitle="Find answers fast" onPress={() => onOpenTab('FAQ')} /><View style={homeStyles.tip}><Text style={homeStyles.tipTitle}>Did you know?</Text><Text style={homeStyles.tipText}>Your profile and progress remain available on this device after you close the app, and the guide can be reviewed offline. Internet access is still required to open the official admission portal and submit or update an application.</Text></View></View>;
 }
 function HomeAction({ icon, title, subtitle, onPress }) { return <Pressable onPress={onPress} style={({ pressed }) => [homeStyles.quickAction, pressed && styles.pressed]}><View style={homeStyles.quickIcon}><Ionicons name={icon} size={23} color="#52695b" /></View><View style={homeStyles.actionCopy}><Text style={homeStyles.quickTitle}>{title}</Text><Text style={homeStyles.quickSubtitle}>{subtitle}</Text></View><Ionicons name="chevron-forward" size={20} color="#698073" /></Pressable>; }
-function FAQPage() {
+function FAQPage({ content = bundledContent } = {}) {
+  const faqTrivia = getCampusTrivia(content);
+  const categories = ['All', ...new Set(content.faqItems.map(([category]) => category))];
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('All');
   const [openQuestion, setOpenQuestion] = useState(null);
@@ -796,9 +767,9 @@ function FAQPage() {
     return () => animation.stop();
   }, [guideMotion]);
   const normalizedQuery = query.trim().toLowerCase();
-  const filteredItems = faqItems.filter(([itemCategory, question, answer]) => (category === 'All' || itemCategory === category) && (!normalizedQuery || question.toLowerCase().includes(normalizedQuery) || answer.toLowerCase().includes(normalizedQuery)));
+  const filteredItems = content.faqItems.filter(([itemCategory, question, answer]) => (category === 'All' || itemCategory === category) && (!normalizedQuery || question.toLowerCase().includes(normalizedQuery) || answer.toLowerCase().includes(normalizedQuery)));
   const guideStyle = { transform: [{ translateY: guideMotion.interpolate({ inputRange: [0, 1], outputRange: [3, -8] }) }, { rotate: guideMotion.interpolate({ inputRange: [0, 1], outputRange: ['-2deg', '2deg'] }) }] };
-  return <View style={faqStyles.page}><View style={[journeyStyles.hero, faqStyles.hero]}><View style={journeyStyles.heroTop}><Text style={journeyStyles.heroTag}>ADMISSION GUIDE</Text></View><Text style={journeyStyles.heroTitle}>Frequently Asked Questions</Text><Text style={journeyStyles.heroCopy}>Ask, explore, and find your next answer.</Text></View><Pressable accessibilityLabel="Show another campus fact" onPress={() => setTriviaIndex((current) => (current + 1) % faqTrivia.length)} style={({ pressed }) => [faqStyles.guideCard, pressed && faqStyles.guideCardPressed]}><View style={faqStyles.triviaBubble}><Text style={faqStyles.triviaEyebrow}>CAMPUS TRIVIA</Text><Text style={faqStyles.triviaText}>{faqTrivia[triviaIndex]}</Text><Text style={faqStyles.triviaHint}>Tap the avatar for another fact.</Text></View><View style={faqStyles.guideStage}><Animated.Image source={faqGuideImage} style={[faqStyles.guideImage, guideStyle]} resizeMode="contain" /></View></Pressable><View style={faqStyles.findHeader}><View><Text style={faqStyles.findTitle}>Find your answer</Text><Text style={faqStyles.findCopy}>Search by topic or browse a category.</Text></View><Text style={faqStyles.resultCount}>{filteredItems.length} {filteredItems.length === 1 ? 'answer' : 'answers'}</Text></View><View style={faqStyles.search}><Ionicons name="search" size={20} color="#075b31" /><TextInput value={query} onChangeText={(value) => { setQuery(value); setOpenQuestion(null); }} placeholder="Search questions or answers" placeholderTextColor="#819187" style={faqStyles.searchInput} />{query.length > 0 && <Pressable accessibilityLabel="Clear FAQ search" onPress={() => setQuery('')} style={faqStyles.clearSearch}><Ionicons name="close" size={17} color="#52695b" /></Pressable>}</View><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={faqStyles.categories}>{['All', 'Application', 'Enrollment', 'Examination', 'Medical', 'General'].map((item) => <Pressable key={item} onPress={() => { setCategory(item); setOpenQuestion(null); }} style={({ pressed }) => [faqStyles.category, category === item && faqStyles.categoryActive, pressed && styles.pressed]}><Text style={[faqStyles.categoryText, category === item && faqStyles.categoryTextActive]}>{item}</Text></Pressable>)}</ScrollView><View style={faqStyles.answers}>{filteredItems.map(([itemCategory, question, answer]) => { const itemKey = `${itemCategory}:${question}`; const isOpen = openQuestion === itemKey; return <Pressable key={itemKey} accessibilityRole="button" accessibilityState={{ expanded: isOpen }} onPress={() => setOpenQuestion(isOpen ? null : itemKey)} style={({ pressed }) => [faqStyles.answerCard, isOpen && faqStyles.answerCardOpen, pressed && styles.pressed]}><View style={faqStyles.questionRow}><View style={faqStyles.questionCopy}><Text style={faqStyles.question}>{question}</Text>{isOpen && <Text style={faqStyles.answer}>{answer}</Text>}</View><Ionicons name={isOpen ? 'chevron-up' : 'chevron-forward'} size={18} color="#009c29" /></View>{isOpen && <View style={faqStyles.answerMeta}><View style={faqStyles.answerDot} /><Text style={faqStyles.answerCategory}>{itemCategory}</Text></View>}</Pressable>; })}{filteredItems.length === 0 && <View style={faqStyles.empty}><Ionicons name="search-outline" size={30} color="#698073" /><Text style={faqStyles.emptyTitle}>No answers found</Text><Text style={faqStyles.emptyCopy}>Try another phrase or choose a different category.</Text></View>}</View></View>;
+  return <View style={faqStyles.page}><View style={[journeyStyles.hero, faqStyles.hero]}><View style={journeyStyles.heroTop}><Text style={journeyStyles.heroTag}>ADMISSION GUIDE</Text></View><Text style={journeyStyles.heroTitle}>Frequently Asked Questions</Text><Text style={journeyStyles.heroCopy}>Ask, explore, and find your next answer.</Text></View>{faqTrivia.length > 0 && <Pressable disabled={faqTrivia.length < 2} accessibilityLabel={faqTrivia.length > 1 ? 'Show another campus fact' : undefined} onPress={() => setTriviaIndex((current) => (current + 1) % faqTrivia.length)} style={({ pressed }) => [faqStyles.guideCard, pressed && faqStyles.guideCardPressed]}><View style={faqStyles.triviaBubble}><Text style={faqStyles.triviaEyebrow}>CAMPUS TRIVIA</Text><Text style={faqStyles.triviaText}>{faqTrivia[triviaIndex % faqTrivia.length]}</Text>{faqTrivia.length > 1 && <Text style={faqStyles.triviaHint}>Tap the avatar for another fact.</Text>}</View><View style={faqStyles.guideStage}><Animated.Image source={faqGuideImage} style={[faqStyles.guideImage, guideStyle]} resizeMode="contain" /><View style={faqStyles.guideBadge}><Text style={faqStyles.guideBadgeText}>GUIDE</Text></View></View></Pressable>}<View style={faqStyles.findHeader}><View><Text style={faqStyles.findTitle}>Find your answer</Text><Text style={faqStyles.findCopy}>Search by topic or browse a category.</Text></View><Text style={faqStyles.resultCount}>{filteredItems.length} {filteredItems.length === 1 ? 'answer' : 'answers'}</Text></View><View style={faqStyles.search}><Ionicons name="search" size={20} color="#075b31" /><TextInput value={query} onChangeText={(value) => { setQuery(value); setOpenQuestion(null); }} placeholder="Search questions or answers" placeholderTextColor="#819187" style={faqStyles.searchInput} />{query.length > 0 && <Pressable accessibilityLabel="Clear FAQ search" onPress={() => setQuery('')} style={faqStyles.clearSearch}><Ionicons name="close" size={17} color="#52695b" /></Pressable>}</View><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={faqStyles.categories}>{categories.map((item) => <Pressable key={item} onPress={() => { setCategory(item); setOpenQuestion(null); }} style={({ pressed }) => [faqStyles.category, category === item && faqStyles.categoryActive, pressed && styles.pressed]}><Text style={[faqStyles.categoryText, category === item && faqStyles.categoryTextActive]}>{item}</Text></Pressable>)}</ScrollView><View style={faqStyles.answers}>{filteredItems.map(([itemCategory, question, answer]) => { const itemKey = `${itemCategory}:${question}`; const isOpen = openQuestion === itemKey; return <Pressable key={itemKey} accessibilityRole="button" accessibilityState={{ expanded: isOpen }} onPress={() => setOpenQuestion(isOpen ? null : itemKey)} style={({ pressed }) => [faqStyles.answerCard, isOpen && faqStyles.answerCardOpen, pressed && styles.pressed]}><View style={faqStyles.questionRow}><View style={faqStyles.questionCopy}><Text style={faqStyles.question}>{question}</Text>{isOpen && <Text style={faqStyles.answer}>{answer}</Text>}</View><Ionicons name={isOpen ? 'chevron-up' : 'chevron-forward'} size={18} color="#009c29" /></View>{isOpen && <View style={faqStyles.answerMeta}><View style={faqStyles.answerDot} /><Text style={faqStyles.answerCategory}>{itemCategory}</Text></View>}</Pressable>; })}{filteredItems.length === 0 && <View style={faqStyles.empty}><Ionicons name="search-outline" size={30} color="#698073" /><Text style={faqStyles.emptyTitle}>No answers found</Text><Text style={faqStyles.emptyCopy}>Try another phrase or choose a different category.</Text></View>}</View></View>;
 }
 const admissionLocations = [
   { number: 1, name: 'Office of Student Affairs and Services (OSAS) - Registrar', purpose: 'Validation and assessment of requirements', description: 'Submit your required documents here for validation and assessment before moving to the next admission step.', guide: 'Start at the southern entrance and follow the road to marker 1 beside the oval.', image: require('../assets/OSAS (Final).jpg'), guideVideos: [{ label: 'From Gate 1', source: require('../assets/G1 to OSAS.mp4') }, { label: 'From Gate 2', source: require('../assets/G2 to OSAS.mp4') }, { label: 'From Gate 3', source: require('../assets/G3 to OSAS.MOV') }] },
@@ -815,7 +786,7 @@ const campusTips = [
   ['Getting Around', 'If you are not sure how to get to a building, you can ride a tricycle for around 15 pesos. Ask the driver or campus personnel for directions to your destination.'],
   ['Prepare for Inspection', 'Security personnel may check your attire, identification, bags, and other requirements before allowing entry. Keep your documents ready and follow campus guidelines.']
 ];
-function MapPage({ profilePhoto, onMapInteractionChange }) {
+function MapPage({ content = bundledContent, profilePhoto }) {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [selectedGate, setSelectedGate] = useState(null);
   const [activeGuideRoute, setActiveGuideRoute] = useState(null);
@@ -876,24 +847,78 @@ function MapPage({ profilePhoto, onMapInteractionChange }) {
   const resetMap = () => setZoom(1);
   return <View style={mapStyles.page}>
     <View style={[journeyStyles.hero, mapStyles.hero]}><View style={journeyStyles.heroTop}><Text style={journeyStyles.heroTag}>CAMPUS TRAIL</Text></View><Text style={journeyStyles.heroTitle}>Campus Map</Text><Text style={journeyStyles.heroCopy}>Follow the guided route from the road to your admission stop.</Text></View>
-    <AttireGuide expanded={showAttireGuide} onToggle={() => setShowAttireGuide((current) => !current)} onOpenImage={setAttireImage} />
+    <AttireGuide guide={getAttireGuide(content)} expanded={showAttireGuide} onToggle={() => setShowAttireGuide((current) => !current)} onOpenImage={setAttireImage} />
     <View style={mapStyles.mapCard}>
-      <View style={mapStyles.mapHeader}><View><Text style={mapStyles.mapTitle}>CvSU Main Campus</Text><Text style={mapStyles.mapSubtitle}>Select a building, then tap ⓘ for info & guides</Text></View><View style={mapStyles.guidedBadge}><View style={mapStyles.guidedDot} /><Text style={mapStyles.guidedText}>GUIDED</Text></View></View>
+      <View style={mapStyles.mapHeader}><View><Text style={mapStyles.mapTitle}>CvSU Main Campus</Text><Text style={mapStyles.mapSubtitle}>Use the controls to inspect the campus</Text></View><View style={mapStyles.guidedBadge}><View style={mapStyles.guidedDot} /><Text style={mapStyles.guidedText}>GUIDED</Text></View></View>
       <MapLegend />
-      <MapCanvas onInteractionChange={onMapInteractionChange} walkingSpeed={walkingSpeed} onWalkingSpeedChange={setWalkingSpeed} zoom={zoom} selected={selected} guideRoute={activeGuideRoute} selectedBuildingNumber={selectedGate === null && selectedLocation !== null ? selected.number : null} selectedGateNumber={selectedGate !== null ? selected.number : null} showLocationPreview={showLocationPreview} showLocationDetailsButton={showLocationDetailsButton} onCloseLocationPreview={() => { setShowLocationPreview(false); setShowLocationDetailsButton(true); }} onOpenLocationPreview={() => setShowLocationPreview(true)} onOpenLocationImage={() => setShowLocationImage(true)} onOpenGuideVideo={setGuideVideo} onSelectMarker={selectMarker} onSelectGate={selectGate} onZoomIn={zoomIn} onZoomOut={zoomOut} onReset={resetMap} onFullscreen={() => { setZoom(1); setIsFullscreen(true); }} profilePhoto={profilePhoto} />
+      <MapCanvas walkingSpeed={walkingSpeed} onWalkingSpeedChange={setWalkingSpeed} zoom={zoom} selected={selected} guideRoute={activeGuideRoute} selectedBuildingNumber={selectedGate === null && selectedLocation !== null ? selected.number : null} selectedGateNumber={selectedGate !== null ? selected.number : null} showLocationPreview={showLocationPreview} showLocationDetailsButton={showLocationDetailsButton} onCloseLocationPreview={() => { setShowLocationPreview(false); setShowLocationDetailsButton(true); }} onOpenLocationPreview={() => setShowLocationPreview(true)} onOpenLocationImage={() => setShowLocationImage(true)} onOpenGuideVideo={setGuideVideo} onSelectMarker={selectMarker} onSelectGate={selectGate} onZoomIn={zoomIn} onZoomOut={zoomOut} onReset={resetMap} onFullscreen={() => { setZoom(1); setIsFullscreen(true); }} profilePhoto={profilePhoto} />
     </View>
     <View style={mapStyles.locationsCard}><View style={mapStyles.locationsHeader}><Text style={mapStyles.locationsTitle}>Admission Locations</Text><Text style={mapStyles.locationsCount}>3 stops</Text></View>{admissionLocations.map((location, index) => <Pressable key={location.number} onPress={() => selectLocation(index)} style={({ pressed }) => [mapStyles.locationRow, selectedGate === null && index === selectedLocation && mapStyles.locationRowSelected, index === admissionLocations.length - 1 && mapStyles.locationRowLast, pressed && styles.pressed]}>{selectedGate === null && index === selectedLocation && <View pointerEvents="none" style={mapStyles.locationSelectedStripe} />}<View style={[mapStyles.locationNumber, selectedGate === null && index === selectedLocation && mapStyles.locationNumberSelected]}><Text style={mapStyles.locationNumberText}>{location.number}</Text></View><View style={mapStyles.locationCopy}><Text style={mapStyles.locationName}>{location.name}</Text><Text style={mapStyles.locationPurpose}>{location.purpose}</Text></View><Ionicons name="chevron-forward" size={20} color="#075b31" /></Pressable>)}</View>
     <Pressable accessibilityRole="button" accessibilityLabel="Show next campus tip" onPress={() => setTipIndex((current) => (current + 1) % campusTips.length)} style={({ pressed }) => [mapStyles.tip, pressed && styles.pressed]}><View style={mapStyles.tipBadge}><Text style={mapStyles.tipBadgeText}>TIP</Text></View><View style={mapStyles.tipCopy}><Text style={mapStyles.tipTitle}>{tip[0]}</Text><Text style={mapStyles.tipText}>{tip[1]}</Text><Text style={mapStyles.tipHint}>Tap for another tip</Text></View><Ionicons name="chevron-forward-circle-outline" size={23} color="#8a7412" /></Pressable>
-    <Modal visible={isFullscreen} animationType="fade" onRequestClose={() => setIsFullscreen(false)}><SafeAreaView style={mapStyles.fullscreen}><View style={mapStyles.fullscreenHeader}><View><Text style={mapStyles.fullscreenEyebrow}>CVSU MAIN CAMPUS</Text><Text style={mapStyles.fullscreenTitle}>Campus Map</Text></View><Pressable accessibilityLabel="Close full screen map" onPress={() => setIsFullscreen(false)} style={({ pressed }) => [mapStyles.closeControl, pressed && styles.pressed]}><Ionicons name="close" size={24} color="#183225" /></Pressable></View><MapLegend fullscreen /><MapCanvas fullscreen walkingSpeed={walkingSpeed} onWalkingSpeedChange={setWalkingSpeed} zoom={zoom} selected={selected} guideRoute={activeGuideRoute} selectedBuildingNumber={selectedGate === null && selectedLocation !== null ? selected.number : null} selectedGateNumber={selectedGate !== null ? selected.number : null} showLocationPreview={showLocationPreview} showLocationDetailsButton={showLocationDetailsButton} onCloseLocationPreview={() => { setShowLocationPreview(false); setShowLocationDetailsButton(true); }} onOpenLocationPreview={() => setShowLocationPreview(true)} onOpenLocationImage={() => setShowLocationImage(true)} onOpenGuideVideo={setGuideVideo} onSelectMarker={selectMarker} onSelectGate={selectGate} onZoomIn={zoomIn} onZoomOut={zoomOut} onReset={resetMap} onFullscreen={() => setIsFullscreen(false)} profilePhoto={profilePhoto} /></SafeAreaView></Modal>
+    <Modal visible={isFullscreen} animationType="fade" onRequestClose={() => setIsFullscreen(false)}><SafeAreaView style={mapStyles.fullscreen}><View style={mapStyles.fullscreenHeader}><View><Text style={mapStyles.fullscreenEyebrow}>CVSU MAIN CAMPUS</Text><Text style={mapStyles.fullscreenTitle}>Campus Map</Text></View><Pressable accessibilityLabel="Close full screen map" onPress={() => setIsFullscreen(false)} style={({ pressed }) => [mapStyles.closeControl, pressed && styles.pressed]}><Ionicons name="close" size={24} color="#183225" /></Pressable></View><MapLegend fullscreen /><MapCanvas fullscreen walkingSpeed={walkingSpeed} onWalkingSpeedChange={setWalkingSpeed} zoom={1} selected={selected} guideRoute={activeGuideRoute} selectedBuildingNumber={selectedGate === null && selectedLocation !== null ? selected.number : null} selectedGateNumber={selectedGate !== null ? selected.number : null} showLocationPreview={showLocationPreview} showLocationDetailsButton={showLocationDetailsButton} onCloseLocationPreview={() => { setShowLocationPreview(false); setShowLocationDetailsButton(true); }} onOpenLocationPreview={() => setShowLocationPreview(true)} onOpenLocationImage={() => setShowLocationImage(true)} onOpenGuideVideo={setGuideVideo} onSelectMarker={selectMarker} onSelectGate={selectGate} onZoomIn={zoomIn} onZoomOut={zoomOut} onReset={resetMap} onFullscreen={() => setIsFullscreen(false)} profilePhoto={profilePhoto} /></SafeAreaView></Modal>
     <Modal visible={showLocationImage && !!selected} transparent animationType="fade" hardwareAccelerated onRequestClose={() => setShowLocationImage(false)}><View style={mapStyles.imageModal}><Pressable accessibilityLabel="Close location image" onPress={() => setShowLocationImage(false)} style={mapStyles.imageModalBackdrop} /><View style={mapStyles.imageModalContent}>{selected && <Image source={selected.image} style={mapStyles.imageModalImage} resizeMode="contain" />}<Pressable accessibilityLabel="Close location image" onPress={() => setShowLocationImage(false)} style={({ pressed }) => [mapStyles.imageModalClose, pressed && styles.pressed]}><Ionicons name="close" size={24} color="#183225" /></Pressable></View></View></Modal>
     <Modal visible={!!attireImage} transparent animationType="fade" hardwareAccelerated onRequestClose={() => setAttireImage(null)}><View style={mapStyles.imageModal}><Pressable accessibilityLabel="Close attire image" onPress={() => setAttireImage(null)} style={mapStyles.imageModalBackdrop} /><View style={mapStyles.imageModalContent}>{attireImage && <Image source={attireImage.source} style={mapStyles.imageModalImage} resizeMode="contain" />}<Pressable accessibilityLabel="Close attire image" onPress={() => setAttireImage(null)} style={({ pressed }) => [mapStyles.imageModalClose, pressed && styles.pressed]}><Ionicons name="close" size={24} color="#183225" /></Pressable></View></View></Modal>
     <Modal visible={!!guideVideo} transparent animationType="fade" hardwareAccelerated onRequestClose={() => setGuideVideo(null)}><View style={mapStyles.videoModal}><Pressable accessibilityLabel="Close guide video" onPress={() => setGuideVideo(null)} style={mapStyles.imageModalBackdrop} /><View style={mapStyles.videoModalContent}>{guideVideo && <GuideVideo key={guideVideo} source={guideVideo} />}<Pressable accessibilityLabel="Close guide video" onPress={() => setGuideVideo(null)} style={({ pressed }) => [mapStyles.imageModalClose, pressed && styles.pressed]}><Ionicons name="close" size={24} color="#183225" /></Pressable></View></View></Modal>
   </View>;
 }
-function AttireGuide({ expanded, onToggle, onOpenImage }) {
+const bundledAttireImages = {
+  dressCode: require('../assets/Dresscode.jpg'),
+  femaleUniform: require('../assets/Female_Uniform.jpg'),
+  maleUniform: require('../assets/Male_Uniform.jpg')
+};
+
+function AttireGuide({ guide = bundledContent.attireGuide, expanded, onToggle, onOpenImage }) {
   const [tab, setTab] = useState('visit');
-  return <View style={mapStyles.attireSection}><Pressable accessibilityLabel={`${expanded ? 'Collapse' : 'Expand'} campus attire and uniform guide`} onPress={onToggle} style={({ pressed }) => [mapStyles.attireHeader, pressed && styles.pressed]}><Text style={mapStyles.attireHeaderText}>Campus attire & uniform guide</Text><Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={22} color="#f7d521" /></Pressable>{expanded && <View style={mapStyles.attireCard}><Text style={mapStyles.attireEyebrow}>CAMPUS READY</Text><Text style={mapStyles.attireGuideTitle}>Dress for your next stop</Text><View style={mapStyles.attireTabs}><Pressable onPress={() => setTab('visit')} style={({ pressed }) => [mapStyles.attireTab, tab === 'visit' && mapStyles.attireTabActive, pressed && styles.pressed]}><Text style={[mapStyles.attireTabText, tab === 'visit' && mapStyles.attireTabTextActive]}>Admission visit</Text></Pressable><Pressable onPress={() => setTab('classes')} style={({ pressed }) => [mapStyles.attireTab, tab === 'classes' && mapStyles.attireTabActive, pressed && styles.pressed]}><Text style={[mapStyles.attireTabText, tab === 'classes' && mapStyles.attireTabTextActive]}>During classes</Text></Pressable></View>{tab === 'visit' ? <><Text style={mapStyles.attireIntro}>No school uniform is needed for admission visits. Neat, decent casual attire is acceptable any day, including regular office days.</Text><View style={mapStyles.attireNote}><Text style={mapStyles.attireNoteTitle}>Keep it neat and presentable</Text><Text style={mapStyles.attireNoteText}>No shorts, sandals or sleeveless tops, slippers, bare midriff, spaghetti straps, tube or backless tops, tight-fit blouses, jerseys, leggings, or ripped jeans that expose skin.</Text><Text style={mapStyles.attireNoteText}>Clean clothing and a neat hairstyle make campus transactions more comfortable.</Text></View><Pressable accessibilityLabel="View dress code image" onPress={() => onOpenImage({ source: require('../assets/Dresscode.jpg') })} style={({ pressed }) => [mapStyles.attireImageButton, pressed && styles.pressed]}><Image source={require('../assets/Dresscode.jpg')} style={mapStyles.attireDresscodeImage} resizeMode="contain" /></Pressable><Text style={mapStyles.attireCaption}>Student policy reference. Uniform rules apply after enrollment and class start.</Text></> : <><Text style={mapStyles.attireIntro}>Prescribed school uniforms for male and female students apply during classes. Confirm program-specific details with your college or department.</Text><View style={mapStyles.attireNote}><Text style={mapStyles.attireNoteTitle}>Uniform options</Text><Text style={mapStyles.attireNoteText}>LGBTQ+ students may wear their preferred official uniform option (male or female), as long as it remains complete, proper, and compliant with university rules.</Text></View><View style={mapStyles.attireNote}><Text style={mapStyles.attireNoteTitle}>Wash Day: Wednesday and Saturday</Text><Text style={mapStyles.attireNoteText}>Students may wear appropriate civilian attire during Wash Days or declared field and special days.</Text><Text style={mapStyles.attireNoteText}>Civilian attire must be neat, decent, and not revealing. Avoid slippers or sandals, shorts or skirts more than three inches above the knee, sleeveless tops, bare midriff, spaghetti straps, tube or backless tops, tight-fit blouses, jerseys, leggings, and ripped jeans that expose skin.</Text><Text style={mapStyles.attireNoteText}>Long hair should be tied in a ponytail. Bright hair colors are prohibited.</Text></View><Text style={mapStyles.attireCaption}>Source: Office Memorandum No. PHDR-129-19 and Office Memorandum No. 32, s. 2023.</Text><View style={mapStyles.attireNote}><Text style={mapStyles.attireNoteTitle}>Daily reminder</Text><Text style={mapStyles.attireNoteText}>Always wear your student ID or bring your registration form when entering campus or attending classes.</Text></View><View style={mapStyles.uniformRow}><Pressable accessibilityLabel="View female uniform image" onPress={() => onOpenImage({ source: require('../assets/Female_Uniform.jpg') })} style={({ pressed }) => [mapStyles.uniformCard, pressed && styles.pressed]}><Image source={require('../assets/Female_Uniform.jpg')} style={mapStyles.uniformImage} resizeMode="contain" /><Text style={mapStyles.uniformLabel}>Female uniform</Text></Pressable><Pressable accessibilityLabel="View male uniform image" onPress={() => onOpenImage({ source: require('../assets/Male_Uniform.jpg') })} style={({ pressed }) => [mapStyles.uniformCard, pressed && styles.pressed]}><Image source={require('../assets/Male_Uniform.jpg')} style={mapStyles.uniformImage} resizeMode="contain" /><Text style={mapStyles.uniformLabel}>Male uniform</Text></Pressable></View></>}</View>}</View>;
+  const section = guide[tab];
+  const renderImage = (key) => {
+    const image = guide.images[key];
+    if (image.url === null) return null;
+    const source = image.url ? { uri: image.url } : bundledAttireImages[key];
+    const isDressCode = key === 'dressCode';
+    return (
+      <Pressable key={key} accessibilityRole="button" accessibilityLabel={'View ' + image.label}
+        onPress={() => onOpenImage({ source })}
+        style={({ pressed }) => [isDressCode ? mapStyles.attireImageButton : mapStyles.uniformCard, pressed && styles.pressed]}>
+        <Image source={source} style={isDressCode ? mapStyles.attireDresscodeImage : mapStyles.uniformImage} resizeMode="contain" />
+        {!isDressCode && <Text style={mapStyles.uniformLabel}>{image.label}</Text>}
+      </Pressable>
+    );
+  };
+  return (
+    <View style={mapStyles.attireSection}>
+      <Pressable accessibilityRole="button" accessibilityState={{ expanded }} onPress={onToggle}
+        style={({ pressed }) => [mapStyles.attireHeader, pressed && styles.pressed]}>
+        <Text style={mapStyles.attireHeaderText}>Campus attire &amp; uniform guide</Text>
+        <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={22} color="#f7d521" />
+      </Pressable>
+      {expanded && <View style={mapStyles.attireCard}>
+        <Text style={mapStyles.attireEyebrow}>CAMPUS READY</Text>
+        <Text style={mapStyles.attireGuideTitle}>{guide.title}</Text>
+        <View style={mapStyles.attireTabs}>
+          {['visit', 'classes'].map((key) => (
+            <Pressable key={key} accessibilityRole="tab" accessibilityState={{ selected: tab === key }}
+              onPress={() => setTab(key)}
+              style={({ pressed }) => [mapStyles.attireTab, tab === key && mapStyles.attireTabActive, pressed && styles.pressed]}>
+              <Text style={[mapStyles.attireTabText, tab === key && mapStyles.attireTabTextActive]}>{guide[key].label}</Text>
+            </Pressable>
+          ))}
+        </View>
+        <Text style={mapStyles.attireIntro}>{section.intro}</Text>
+        {section.notes.map(([title, paragraphs], index) => (
+          <View key={title + index} style={mapStyles.attireNote}>
+            <Text style={mapStyles.attireNoteTitle}>{title}</Text>
+            {paragraphs.map((paragraph) => <Text key={paragraph} style={mapStyles.attireNoteText}>{paragraph}</Text>)}
+          </View>
+        ))}
+        {tab === 'visit' && renderImage('dressCode')}
+        {Boolean(section.caption) && <Text style={mapStyles.attireCaption}>{section.caption}</Text>}
+        {tab === 'classes' && (guide.images.femaleUniform.url !== null || guide.images.maleUniform.url !== null) &&
+          <View style={mapStyles.uniformRow}>{renderImage('femaleUniform')}{renderImage('maleUniform')}</View>}
+      </View>}
+    </View>
+  );
 }
+
 function MapLegend({ fullscreen = false }) { return <View style={[mapStyles.legendImageFrame, fullscreen && mapStyles.fullscreenLegend]}><Image source={require('../assets/CvSU_Map_Legends.png')} style={mapStyles.legendImage} resizeMode="contain" /></View>; }
 function LocationPreview({ location, onClose, onOpenImage, onOpenVideo }) { return <View style={mapStyles.locationPreview}><Pressable accessibilityLabel={`View ${location.name} image`} onPress={onOpenImage}><Image source={location.image} style={mapStyles.locationPreviewImage} resizeMode="cover" /><View style={mapStyles.locationPreviewImageHint}><Ionicons name="expand-outline" size={15} color="#fff" /><Text style={mapStyles.locationPreviewImageHintText}>View image</Text></View></Pressable><Pressable accessibilityLabel="Close location details" onPress={onClose} style={({ pressed }) => [mapStyles.locationPreviewClose, pressed && styles.pressed]}><Ionicons name="close" size={18} color="#183225" /></Pressable><View style={mapStyles.locationPreviewCopy}><Text style={mapStyles.locationPreviewEyebrow}>{location.name.startsWith('Gate') ? location.name.toUpperCase() : `LOCATION ${location.number}`}</Text><Text numberOfLines={2} style={mapStyles.locationPreviewTitle}>{location.name}</Text><Text style={mapStyles.locationPreviewPurpose}>{location.purpose}</Text><View style={mapStyles.videoList}>{location.guideVideos.map((video) => <Pressable key={video.label} accessibilityLabel={`${video.label} guide video`} onPress={() => onOpenVideo(video.source)} style={({ pressed }) => [mapStyles.videoButton, pressed && styles.pressed]}><Ionicons name="play-circle-outline" size={18} color="#fff" /><Text style={mapStyles.videoButtonText}>{video.label}</Text></Pressable>)}</View></View></View>; }
 const guidePlaybackSpeeds = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4];
@@ -1047,78 +1072,37 @@ function GateMarkers({ selectedNumber, onSelect, mapSize }) {
 function MapMarkers({ selectedNumber, onSelect, mapSize }) {
   return <View pointerEvents="box-none" style={[mapStyles.mapMarkerLayer, { width: mapSize.width, height: mapSize.height }]}>{[1, 2, 3].map((number) => <Pressable key={number} accessibilityLabel={`Show location ${number}`} onPress={() => onSelect(number - 1)} style={[mapStyles.mapMarker, markerPoint(mapMarkerPositions[number], mapSize), number === selectedNumber && mapStyles.mapMarkerSelected]}><Text style={mapStyles.mapMarkerText}>{number}</Text></Pressable>)}</View>;
 }
-function BuildingInfoButton({ location, onPress, fullscreen = false }) {
-  const pulse = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    let animation;
-    let disposed = false;
-    const updateMotion = (reduceMotion) => {
-      animation?.stop();
-      pulse.setValue(0);
-      if (!reduceMotion && !disposed) {
-        animation = Animated.loop(Animated.sequence([
-          Animated.timing(pulse, { toValue: 1, duration: 900, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-          Animated.timing(pulse, { toValue: 0, duration: 900, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-          Animated.delay(900)
-        ]));
-        animation.start();
-      }
-    };
-    AccessibilityInfo.isReduceMotionEnabled().then((enabled) => { if (!disposed) updateMotion(enabled); }).catch(() => {});
-    const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', updateMotion);
-    return () => { disposed = true; animation?.stop(); subscription.remove(); };
-  }, [pulse, location]);
-  return <Pressable accessibilityRole="button" accessibilityLabel={`More information and guides for ${location.name}`} accessibilityHint="Opens this location's details and available guides" onPress={onPress} hitSlop={fullscreen ? 0 : 7} style={({ pressed }) => [mapStyles.locationDetailsButton, fullscreen && mapStyles.locationDetailsButtonExpanded, pressed && styles.pressed]}>
-    <View style={[mapStyles.locationDetailsIcon, fullscreen && mapStyles.locationDetailsIconExpanded]}>
-      <Animated.View pointerEvents="none" style={[mapStyles.locationDetailsHalo, { opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.2, 0.65] }), transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.3] }) }] }]} />
-      <Ionicons name="information" size={fullscreen ? 20 : 17} color="#f7d521" />
-    </View>
-    {fullscreen && <><Text numberOfLines={1} style={mapStyles.locationDetailsTitle}>Info & guides</Text><Ionicons name="chevron-forward" size={14} color="#f7d521" /></>}
-  </Pressable>;
-}
-function MapViewport({ zoom, mapSize, children, onInteractionChange }) {
-  const translation = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
-  const offset = useRef({ x: 0, y: 0 });
-  const dragStart = useRef({ x: 0, y: 0 });
-  const bounds = useRef({ x: 0, y: 0 });
-  const scale = useRef(new Animated.Value(zoom)).current;
-  bounds.current = { x: Math.max(0, (zoom - 1) * mapSize.width / 2), y: Math.max(0, (zoom - 1) * mapSize.height / 2) };
-  const moveMap = (x, y) => {
-    const next = { x: Math.max(-bounds.current.x, Math.min(bounds.current.x, x)), y: Math.max(-bounds.current.y, Math.min(bounds.current.y, y)) };
-    offset.current = next;
-    translation.setValue(next);
-  };
-  useEffect(() => {
-    // Keep the entire transform animated so button updates reach the native view
-    // without waiting for the next drag to refresh its transform.
-    scale.setValue(zoom);
-    moveMap(offset.current.x, offset.current.y);
-  }, [zoom, mapSize.width, mapSize.height]);
-  useEffect(() => () => onInteractionChange?.(false), [onInteractionChange]);
-  const drag = useMemo(() => Gesture.Pan()
-    .enabled(zoom > 1)
-    .minDistance(5)
-    .maxPointers(1)
-    .shouldCancelWhenOutside(false)
-    .runOnJS(true)
-    .onTouchesDown(() => onInteractionChange?.(true))
-    .onTouchesUp((event) => { if (event.numberOfTouches === 0) onInteractionChange?.(false); })
-    .onTouchesCancelled(() => onInteractionChange?.(false))
-    .onFinalize(() => onInteractionChange?.(false))
-    .onStart(() => { dragStart.current = { ...offset.current }; })
-    .onUpdate((event) => { moveMap(dragStart.current.x + event.translationX, dragStart.current.y + event.translationY); }), [zoom, onInteractionChange]);
-  return <GestureHandlerRootView style={{ position: 'absolute', left: 0, top: 0, width: mapSize.width, height: mapSize.height }}>
-    <GestureDetector gesture={drag} touchAction="none">
-      <View collapsable={false} style={{ flex: 1 }}>
-        <Animated.View collapsable={false} style={{ position: 'absolute', left: 0, top: 0, width: mapSize.width, height: mapSize.height, transform: [{ translateX: translation.x }, { translateY: translation.y }, { scale }] }}>{children}</Animated.View>
-      </View>
-    </GestureDetector>
-  </GestureHandlerRootView>;
-}
-function MapCanvas({ onInteractionChange, walkingSpeed = 1, onWalkingSpeedChange, zoom, selected, guideRoute, selectedBuildingNumber, selectedGateNumber, showLocationPreview, showLocationDetailsButton, onCloseLocationPreview, onOpenLocationPreview, onOpenLocationImage, onOpenGuideVideo, onSelectMarker, onSelectGate, onZoomIn, onZoomOut, onReset, onFullscreen, profilePhoto, fullscreen = false }) {
+function MapCanvas({ walkingSpeed = 1, onWalkingSpeedChange, zoom, selected, guideRoute, selectedBuildingNumber, selectedGateNumber, showLocationPreview, showLocationDetailsButton, onCloseLocationPreview, onOpenLocationPreview, onOpenLocationImage, onOpenGuideVideo, onSelectMarker, onSelectGate, onZoomIn, onZoomOut, onReset, onFullscreen, profilePhoto, fullscreen = false }) {
   const [mapSize, setMapSize] = useState({ width: 0, height: 0 });
-  const mapContent = <><Image source={require('../assets/CvSU_Map.png')} style={mapStyles.mapImage} resizeMode="contain" /><GuideCharacter walkingSpeed={walkingSpeed} routeRequest={guideRoute} mapSize={mapSize} profilePhoto={profilePhoto} /><MapMarkers mapSize={mapSize} selectedNumber={selectedBuildingNumber} onSelect={onSelectMarker} /><GateMarkers mapSize={mapSize} selectedNumber={selectedGateNumber} onSelect={onSelectGate} /></>;
-  return <View onLayout={({ nativeEvent }) => setMapSize(nativeEvent.layout)} style={[mapStyles.mapFrame, fullscreen && mapStyles.fullscreenMap]}><MapViewport zoom={zoom} mapSize={mapSize} onInteractionChange={fullscreen ? undefined : onInteractionChange}>{mapContent}</MapViewport>{!showLocationPreview && !showLocationDetailsButton && selected?.guide && <View style={mapStyles.guideBubble}><Text style={mapStyles.guideLabel}>STOP {selected.number}</Text><Text style={mapStyles.guideText}>{selected.guide}</Text></View>}{selected && showLocationDetailsButton && !showLocationPreview && <BuildingInfoButton location={selected} onPress={onOpenLocationPreview} fullscreen={fullscreen} />}{selected && showLocationPreview && <LocationPreview location={selected} onClose={onCloseLocationPreview} onOpenImage={onOpenLocationImage} onOpenVideo={onOpenGuideVideo} />}<View style={mapStyles.mapControls}><MapControl icon={fullscreen ? 'contract-outline' : 'scan-outline'} label={fullscreen ? 'Exit full screen' : 'Full screen'} onPress={onFullscreen} />{<><MapControl icon="add" label="Zoom in" onPress={onZoomIn} disabled={zoom === 3} /><MapControl icon="remove" label="Zoom out" onPress={onZoomOut} disabled={zoom === 1} /><Pressable accessibilityLabel="Reset map zoom" onPress={onReset} style={({ pressed }) => [mapStyles.resetControl, pressed && styles.pressed]}><Text style={mapStyles.resetText}>Reset</Text></Pressable></>}</View><Pressable accessibilityRole="button" accessibilityLabel={"Walking speed " + walkingSpeed + " times. Tap to change."} onPress={() => { const speeds = [0.5, 1, 1.5, 2, 3]; onWalkingSpeedChange?.(speeds[(speeds.indexOf(walkingSpeed) + 1) % speeds.length]); }} style={({ pressed }) => [mapStyles.walkingSpeedButton, pressed && styles.pressed]}><Ionicons name="walk-outline" size={18} color="#fff" /><Text style={mapStyles.walkingSpeedText}>Walk {walkingSpeed}x</Text></Pressable><View style={mapStyles.zoomBadge}><Text style={mapStyles.zoomText}>{zoom.toFixed(1)}x</Text></View></View>;
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  useEffect(() => { if (zoom === 1) setPanOffset({ x: 0, y: 0 }); }, [zoom]);
+  const panOffsetRef = useRef(panOffset);
+  panOffsetRef.current = panOffset;
+  const mapSizeRef = useRef(mapSize);
+  mapSizeRef.current = mapSize;
+  const zoomRef = useRef(zoom);
+  zoomRef.current = zoom;
+  const panStart = useRef({ x: 0, y: 0 }).current;
+  const panResponder = useRef(PanResponder.create({
+    onStartShouldSetPanResponder: ({ nativeEvent }) => nativeEvent.touches.length >= 2,
+    onMoveShouldSetPanResponder: ({ nativeEvent }) => nativeEvent.touches.length >= 2,
+    onPanResponderGrant: () => { panStart.x = panOffsetRef.current.x; panStart.y = panOffsetRef.current.y; },
+    onPanResponderMove: ({ nativeEvent }, gestureState) => {
+      if (nativeEvent.touches.length >= 2 && zoomRef.current > 1) {
+        const maxPanX = (zoomRef.current - 1) * mapSizeRef.current.width / 2;
+        const maxPanY = (zoomRef.current - 1) * mapSizeRef.current.height / 2;
+        setPanOffset({
+          x: Math.max(-maxPanX, Math.min(maxPanX, panStart.x + gestureState.dx)),
+          y: Math.max(-maxPanY, Math.min(maxPanY, panStart.y + gestureState.dy))
+        });
+      }
+    }
+  })).current;
+  const resetMapPosition = () => { setPanOffset({ x: 0, y: 0 }); onReset(); };
+  const maxPanX = Math.max(0, (zoom - 1) * mapSize.width / 2);
+  const maxPanY = Math.max(0, (zoom - 1) * mapSize.height / 2);
+  const boundedPanOffset = { x: Math.max(-maxPanX, Math.min(maxPanX, panOffset.x)), y: Math.max(-maxPanY, Math.min(maxPanY, panOffset.y)) };
+  return <View onLayout={({ nativeEvent }) => setMapSize(nativeEvent.layout)} style={[mapStyles.mapFrame, fullscreen && mapStyles.fullscreenMap]} {...panResponder.panHandlers}><View style={[mapStyles.mapZoomLayer, { width: mapSize.width, height: mapSize.height, transform: [{ translateX: boundedPanOffset.x }, { translateY: boundedPanOffset.y }, { scale: zoom }] }]}><Image source={require('../assets/CvSU_Map.png')} style={mapStyles.mapImage} resizeMode="contain" /><GuideCharacter walkingSpeed={walkingSpeed} routeRequest={guideRoute} mapSize={mapSize} profilePhoto={profilePhoto} /><MapMarkers mapSize={mapSize} selectedNumber={selectedBuildingNumber} onSelect={onSelectMarker} /><GateMarkers mapSize={mapSize} selectedNumber={selectedGateNumber} onSelect={onSelectGate} /></View>{!showLocationPreview && !showLocationDetailsButton && selected?.guide && <View style={mapStyles.guideBubble}><Text style={mapStyles.guideLabel}>STOP {selected.number}</Text><Text style={mapStyles.guideText}>{selected.guide}</Text></View>}{selected && showLocationDetailsButton && !showLocationPreview && <Pressable accessibilityLabel={`Show details for ${selected.name}`} onPress={onOpenLocationPreview} style={({ pressed }) => [mapStyles.locationDetailsButton, pressed && styles.pressed]}><Ionicons name="information" size={20} color="#fff" /></Pressable>}{selected && showLocationPreview && <LocationPreview location={selected} onClose={onCloseLocationPreview} onOpenImage={onOpenLocationImage} onOpenVideo={onOpenGuideVideo} />}<View style={mapStyles.mapControls}><MapControl icon={fullscreen ? 'contract-outline' : 'scan-outline'} label={fullscreen ? 'Exit full screen' : 'Full screen'} onPress={onFullscreen} />{!fullscreen && <><MapControl icon="add" label="Zoom in" onPress={onZoomIn} disabled={zoom === 3} /><MapControl icon="remove" label="Zoom out" onPress={onZoomOut} disabled={zoom === 1} /><Pressable accessibilityLabel="Reset map zoom" onPress={resetMapPosition} style={({ pressed }) => [mapStyles.resetControl, pressed && styles.pressed]}><Text style={mapStyles.resetText}>Reset</Text></Pressable></>}</View><Pressable accessibilityRole="button" accessibilityLabel={"Walking speed " + walkingSpeed + " times. Tap to change."} onPress={() => { const speeds = [0.5, 1, 1.5, 2, 3]; onWalkingSpeedChange?.(speeds[(speeds.indexOf(walkingSpeed) + 1) % speeds.length]); }} style={({ pressed }) => [mapStyles.walkingSpeedButton, pressed && styles.pressed]}><Ionicons name="walk-outline" size={18} color="#fff" /><Text style={mapStyles.walkingSpeedText}>Walk {walkingSpeed}x</Text></Pressable><View style={mapStyles.zoomBadge}><Text style={mapStyles.zoomText}>{zoom.toFixed(1)}x</Text></View></View>;
 }
 function MapControl({ icon, label, onPress, disabled }) { return <Pressable accessibilityLabel={label} disabled={disabled} onPress={onPress} style={({ pressed }) => [mapStyles.mapControl, disabled && mapStyles.mapControlDisabled, pressed && styles.pressed]}><Ionicons name={icon} size={23} color="#183225" /></Pressable>; }
 function LegacyMapPage() {
@@ -1159,85 +1143,89 @@ function StepDetailsHandle({ onClose }) {
 
   return <View {...responder.panHandlers} accessible accessibilityRole="button" accessibilityLabel="Close step details" accessibilityHint="Tap or swipe down to close" onAccessibilityTap={onClose} style={{ alignItems: 'center', justifyContent: 'center', height: 44, touchAction: 'none' }}><View pointerEvents="none" style={{ width: 42, height: 4, borderRadius: 2, backgroundColor: '#b8d3bc' }} /></View>;
 }
-function StatusPage({ displayName, profile, program, track, steps, currentStatusIndex, onStatusChange, selectedStepIndex, onSelectStep, checkedRequirements, onRequirementsChange, examinationAttempt, onExaminationAttemptChange, failedProgram, reapplicationProgram, onFailedProgramChange, onReapplicationProgramChange, onProgramChange, isGuest = false, detailsOnly = false }) {
+function StatusPage({ content = bundledContent, displayName, profile, program, track, steps, currentStatusIndex, onStatusChange, selectedStepIndex, onSelectStep, checkedRequirements, onRequirementsChange, examinationAttempt, onExaminationAttemptChange, failedProgram, reapplicationProgram, onFailedProgramChange, onReapplicationProgramChange, onProgramChange, isGuest = false, detailsOnly = false }) {
+  const { statusStepDetails } = content;
   const isFinished = currentStatusIndex === steps.length;
   const applicationStopped = examinationAttempt === 'stopped';
   const selectedStep = selectedStepIndex === null ? null : steps[selectedStepIndex];
-  const selectedDetails = selectedStep ? getStatusStepDetails(selectedStep, profile) : null;
-  const selectedChecks = selectedStep ? checkedRequirements[selectedStep] || [] : [];
-  const [showRequirementsWarning, setShowRequirementsWarning] = useState(false);
-  const uncheckedRequirements = (selectedDetails?.requirements || []).filter((_, index) => !selectedChecks.includes(index));
-  useEffect(() => { setShowRequirementsWarning(false); }, [selectedStep]);
-  const canCompleteRequirements = () => {
-    if (uncheckedRequirements.length > 0) {
-      setShowRequirementsWarning(true);
-      return false;
-    }
-    return true;
-  };
+  const selectedDetails = selectedStep ? statusStepDetails[selectedStep] : null;
+  const selectedRequirements = selectedStep ? getStepRequirements(content, profile, selectedStep) : [];
+  const selectedChecks = selectedRequirements.flatMap((item, index) => checkedRequirements[selectedStep]?.includes(item) ? [index] : []);
+  const uncheckedRequirements = selectedRequirements.filter((_, index) => !selectedChecks.includes(index));
+  const [pendingAction, setPendingAction] = useState(null);
+  const showRequirementsWarning = pendingAction?.step === selectedStep;
+  useEffect(() => { setPendingAction(null); }, [selectedStep, content]);
   const [localFailedProgram, setLocalFailedProgram] = useState(failedProgram || '');
   const [localReapplicationProgram, setLocalReapplicationProgram] = useState(reapplicationProgram || '');
   const failedProgramValue = failedProgram || localFailedProgram || (examinationAttempt === 'failed' || examinationAttempt === 'reapplication' ? program : '');
   const reapplicationProgramValue = reapplicationProgram || localReapplicationProgram;
-  const profileLabel = profiles.find(([value]) => value === profile)?.[1] || profile;
+  const reapplicationOptions = getReapplicationPrograms(content, profile, track, failedProgramValue);
+  const profileLabel = getAcademicStatusLabel(content, profile);
+  const checklistDisabled = isGuest || applicationStopped || selectedStepIndex < currentStatusIndex;
+  const canUpdateCurrentStep = selectedStep && !isGuest && !applicationStopped && selectedStepIndex === currentStatusIndex;
   const toggleRequirement = (index) => {
-    if (isGuest || selectedStepIndex < currentStatusIndex) return;
+    if (checklistDisabled || !selectedRequirements[index]) return;
     onRequirementsChange((current) => {
       const stepChecks = current[selectedStep] || [];
-      return { ...current, [selectedStep]: stepChecks.includes(index) ? stepChecks.filter((item) => item !== index) : [...stepChecks, index] };
+      const requirement = selectedRequirements[index];
+      return { ...current, [selectedStep]: stepChecks.includes(requirement) ? stepChecks.filter((item) => item !== requirement) : [...stepChecks, requirement] };
     });
   };
   const toggleAllRequirements = () => {
-    if (isGuest || !selectedStep || selectedStepIndex < currentStatusIndex) return;
-    const requirements = selectedDetails?.requirements || [];
+    if (checklistDisabled || !selectedStep) return;
     onRequirementsChange((current) => {
-      const allChecked = requirements.every((_, index) => (current[selectedStep] || []).includes(index));
-      return { ...current, [selectedStep]: allChecked ? [] : requirements.map((_, index) => index) };
+      const marked = current[selectedStep] || [];
+      const allChecked = selectedRequirements.every((item) => marked.includes(item));
+      return { ...current, [selectedStep]: allChecked ? [] : [...selectedRequirements] };
     });
   };
-  const completeSelectedStep = (confirmAllDone = false) => {
-    if (isGuest || selectedStepIndex !== currentStatusIndex) return;
-    if (!selectedStep) return;
-    if (confirmAllDone !== true && !canCompleteRequirements()) return;
-    if (confirmAllDone === true) {
-      onRequirementsChange((current) => ({ ...current, [selectedStep]: (selectedDetails?.requirements || []).map((_, index) => index) }));
+  const runWithRequirements = (action) => {
+    if (!canUpdateCurrentStep) return;
+    if (uncheckedRequirements.length) {
+      setPendingAction({ step: selectedStep, action });
+      return;
     }
-    setShowRequirementsWarning(false);
+    action();
+  };
+  const confirmAllRequirements = () => {
+    if (!canUpdateCurrentStep || !showRequirementsWarning) return;
+    onRequirementsChange((current) => ({ ...current, [selectedStep]: [...selectedRequirements] }));
+    setPendingAction(null);
+    pendingAction.action();
+  };
+  const advanceStep = () => {
     onStatusChange(currentStatusIndex + 1);
     onSelectStep(null);
   };
-  const renderGuestModeMessage = () => {
-    return (
-      <View style={{ padding: 14, borderRadius: 8, backgroundColor: '#fffde8', borderWidth: 1, borderColor: '#f7d521', marginTop: 12 }}>
-        <Text style={{ color: '#183225', fontWeight: '700', textAlign: 'center' }}>Guest Mode - View Only</Text>
-        <Text style={{ color: '#52695b', fontSize: 12, textAlign: 'center', marginTop: 6 }}>Exit guest mode and use your applicant profile to accomplish the admission steps.</Text>
-      </View>
-    );
-  };
-  const passExamination = (confirmAllDone = false) => {
-    if (isGuest || selectedStep !== 'Admission Examination' || selectedStepIndex !== currentStatusIndex) return;
-    if (confirmAllDone !== true && !canCompleteRequirements()) return;
-    if (examinationAttempt === 'reapplication') {
-      if (!reapplicationProgramValue || reapplicationProgramValue === failedProgramValue) return;
-      onProgramChange?.(reapplicationProgramValue);
-      onRequirementsChange((previous) => Object.fromEntries(Object.entries(previous).filter(([step]) => steps.indexOf(step) >= 0 && steps.indexOf(step) <= currentStatusIndex)));
-    }
-    onExaminationAttemptChange('passed');
-    completeSelectedStep(confirmAllDone === true);
+  const passExamination = () => {
+    if (selectedStep !== 'Admission Examination') return;
+    if (examinationAttempt === 'reapplication' && !reapplicationOptions.includes(reapplicationProgramValue)) return;
+    runWithRequirements(() => {
+      if (examinationAttempt === 'reapplication') {
+        onProgramChange?.(reapplicationProgramValue);
+        onRequirementsChange((previous) => Object.fromEntries(Object.entries(previous).filter(([step]) => steps.indexOf(step) >= 0 && steps.indexOf(step) <= currentStatusIndex)));
+      }
+      onExaminationAttemptChange('passed');
+      advanceStep();
+    });
   };
   const failExamination = () => {
-    if (isGuest) return;
-    if (examinationAttempt === 'reapplication') { onExaminationAttemptChange('stopped'); return; }
-    setLocalFailedProgram(program);
-    onFailedProgramChange?.(program);
-    onExaminationAttemptChange((attempt) => attempt === 'reapplication' ? 'stopped' : 'failed');
+    if (selectedStep !== 'Admission Examination') return;
+    runWithRequirements(() => {
+      if (examinationAttempt === 'reapplication') { onExaminationAttemptChange('stopped'); return; }
+      setLocalFailedProgram(program);
+      onFailedProgramChange?.(program);
+      onExaminationAttemptChange('failed');
+    });
   };
   const startReapplication = (selectedProgram) => {
-    if (isGuest) return;
-    if (!programs.includes(selectedProgram) || selectedProgram === failedProgramValue) return;
-    setLocalReapplicationProgram(selectedProgram);
-    onReapplicationProgramChange?.(selectedProgram);
-    onExaminationAttemptChange('reapplication');
+    if (selectedStep !== 'Admission Examination') return;
+    if (!reapplicationOptions.includes(selectedProgram)) return;
+    runWithRequirements(() => {
+      setLocalReapplicationProgram(selectedProgram);
+      onReapplicationProgramChange?.(selectedProgram);
+      onExaminationAttemptChange('reapplication');
+    });
   };
   const undoLatestCompletedStep = () => {
     if (isGuest || selectedStepIndex !== currentStatusIndex - 1) return;
@@ -1254,12 +1242,13 @@ function StatusPage({ displayName, profile, program, track, steps, currentStatus
     const isComplete = index < currentStatusIndex;
     const isCurrent = index === currentStatusIndex;
     const state = item === 'Admission Examination' && applicationStopped ? 'Application ended' : applicationStopped && index > currentStatusIndex ? 'Unavailable' : isComplete ? 'Completed' : isCurrent ? 'In progress' : 'Upcoming';
-    const requirementCount = getStatusStepDetails(item, profile).requirements.length;
-    const checkedCount = checkedRequirements[item]?.length || 0;
-    return <Pressable key={item} onPress={() => onSelectStep(index)} style={({ pressed }) => [styles.statusStep, pressed && styles.pressed]}><View style={[styles.statusDot, isComplete && styles.currentStatusDot, isCurrent && { backgroundColor: '#fff7d6', borderColor: '#f7d521', borderWidth: 3 }]}>{isCurrent ? <Ionicons name="time" size={18} color="#8a5e12" /> : <Text style={[styles.statusNumber, isComplete && { color: '#fff' }]}>{isComplete ? '✓' : index + 1}</Text>}</View><View style={styles.statusStepCopy}><Text style={styles.statusStepTitle}>{item}</Text><Text style={[styles.statusStepState, isComplete && { color: '#009c29', fontWeight: '700' }, isCurrent && { color: '#8a5e12', fontWeight: '800' }]}>{state}</Text><Text style={styles.statusStepDescription}>{statusStepDetails[item].description}</Text><Text style={{ color: checkedCount === requirementCount ? '#009c29' : '#698073', fontSize: 11, fontWeight: '700', marginTop: 5 }}>{checkedCount} / {requirementCount} requirements ready</Text></View>{index < steps.length - 1 && <View style={[styles.statusConnector, isComplete && { backgroundColor: '#009c29' }]} />}</Pressable>;
-  })}{isFinished && <Pressable onPress={() => onStatusChange(0)} style={({ pressed }) => [styles.back, { marginTop: 8, alignItems: 'center' }, pressed && styles.pressed]}><Text style={styles.backText}>Reset progress</Text></Pressable>}</View></>}<Modal visible={selectedStep !== null} transparent animationType="slide" onRequestClose={() => showRequirementsWarning ? setShowRequirementsWarning(false) : onSelectStep(null)}><View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(8, 35, 21, 0.55)' }}>{!showRequirementsWarning && <View style={{ maxHeight: '88%', backgroundColor: '#fff', borderTopLeftRadius: 12, borderTopRightRadius: 12, paddingTop: 8 }}><StepDetailsHandle onClose={() => onSelectStep(null)} /><ScrollView contentContainerStyle={{ padding: 22, paddingBottom: 30 }}><View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}><View style={{ flex: 1, paddingRight: 14 }}><Text style={styles.cardEyebrow}>ADMISSION STEP {selectedStepIndex + 1}</Text><Text style={[styles.statusHeading, { marginTop: 8 }]}>{selectedStep}</Text></View><Pressable accessibilityLabel="Close details" onPress={() => onSelectStep(null)} style={({ pressed }) => [{ width: 38, height: 38, alignItems: 'center', justifyContent: 'center', borderRadius: 19, backgroundColor: '#e4eee4' }, pressed && styles.pressed]}><Ionicons name="close" size={22} color="#075b31" /></Pressable></View><Text style={[styles.statusCaption, { fontSize: 14, marginBottom: 20 }]}>{selectedDetails?.description}</Text><DetailSection title="Instructions" items={selectedDetails?.instructions} numbered /><RequirementChecklist items={selectedDetails?.requirements} checked={selectedChecks} onToggle={toggleRequirement} onToggleAll={toggleAllRequirements} disabled={isGuest || selectedStepIndex < currentStatusIndex} />{selectedDetails?.location && <DetailSection title="Location" items={[selectedDetails.location]} />}{selectedDetails?.details && <DetailSection title="Medical details" items={selectedDetails.details} />}{isGuest ? selectedStepIndex === currentStatusIndex && <Pressable onPress={() => onSelectStep(null)} disabled style={{ padding: 14, borderRadius: 8, backgroundColor: '#fffde8', borderWidth: 1, borderColor: '#f7d521', marginTop: 12 }}><Text style={{ color: '#183225', fontWeight: '700', textAlign: 'center' }}>Guest Mode - View Only</Text><Text style={{ color: '#52695b', fontSize: 12, textAlign: 'center', marginTop: 6 }}>Exit guest mode and use your applicant profile to accomplish the admission steps.</Text></Pressable> : selectedStepIndex < currentStatusIndex ? selectedStepIndex === currentStatusIndex - 1 && !applicationStopped ? <Pressable onPress={undoLatestCompletedStep} style={({ pressed }) => [styles.back, { marginTop: 4, alignItems: 'center' }, pressed && styles.pressed]}><Text style={styles.backText}>Undo completion</Text></Pressable> : <View style={{ padding: 14, borderRadius: 8, backgroundColor: '#dff5df', alignItems: 'center' }}><Text style={{ color: '#075b31', fontWeight: '700' }}>Completed</Text></View> : selectedStepIndex > currentStatusIndex ? <View style={{ padding: 14, borderRadius: 8, backgroundColor: '#eef3ee', alignItems: 'center' }}><Text style={{ color: '#52695b', fontWeight: '700', textAlign: 'center' }}>{applicationStopped ? 'The application process has ended' : 'Complete the previous step first'}</Text></View> : selectedStep === 'Admission Examination' ? <ExaminationResultActions attempt={examinationAttempt} onPassed={passExamination} onFailed={failExamination} onReapply={startReapplication} failedProgram={failedProgramValue} reapplicationProgram={reapplicationProgramValue} /> : <Pressable onPress={completeSelectedStep} style={({ pressed }) => [styles.action, { flex: 0, marginTop: 4 }, pressed && styles.pressed]}><Text style={styles.actionText}>Mark as completed</Text></Pressable>}</ScrollView></View>}{showRequirementsWarning && <View accessibilityViewIsModal style={{ flex: 1, justifyContent: 'center', padding: 24 }}><View style={{ backgroundColor: '#fff', borderRadius: 18, padding: 22, maxHeight: '80%', width: '100%', maxWidth: 460, alignSelf: 'center' }}><Ionicons name="warning-outline" size={30} color="#a56b00" /><Text accessibilityRole="header" style={{ color: '#183225', fontSize: 20, fontWeight: '800', marginTop: 10 }}>Requirements still unchecked</Text><Text style={{ color: '#52695b', fontSize: 14, lineHeight: 21, marginTop: 8 }}>These requirements are still unchecked for {selectedStep}. Review them below, or confirm that you have already completed them to check all items and finish this step.</Text><ScrollView style={{ marginVertical: 16 }} contentContainerStyle={{ gap: 12 }}>{uncheckedRequirements.map((item, index) => <View key={index} style={{ flexDirection: 'row', gap: 10 }}><Ionicons name="square-outline" size={19} color="#a56b00" /><Text style={{ flex: 1, color: '#183225', fontSize: 14, lineHeight: 21 }}>{item}</Text></View>)}</ScrollView><Pressable accessibilityRole="button" onPress={() => setShowRequirementsWarning(false)} style={({ pressed }) => [styles.action, { flex: 0, padding: 14 }, pressed && styles.pressed]}><Text style={styles.actionText}>Review requirements</Text></Pressable><Pressable accessibilityRole="button" onPress={() => selectedStep === 'Admission Examination' ? passExamination(true) : completeSelectedStep(true)} style={({ pressed }) => [styles.back, { marginTop: 10, padding: 14, alignItems: 'center' }, pressed && styles.pressed]}><Text style={[styles.backText, { textAlign: 'center' }]}>All requirements are done — complete step</Text></Pressable></View></View>}</View></Modal></>;
+    const requirements = getStepRequirements(content, profile, item);
+    const requirementCount = requirements.length;
+    const checkedCount = requirements.filter((requirement) => checkedRequirements[item]?.includes(requirement)).length;
+    return <Pressable key={item} onPress={() => onSelectStep(index)} style={({ pressed }) => [styles.statusStep, pressed && styles.pressed]}><View style={[styles.statusDot, isComplete && styles.currentStatusDot, isCurrent && { backgroundColor: '#fff7d6', borderColor: '#f7d521', borderWidth: 3 }]}>{isCurrent ? <Ionicons name="time" size={18} color="#8a5e12" /> : <Text style={[styles.statusNumber, isComplete && { color: '#fff' }]}>{isComplete ? '✓' : index + 1}</Text>}</View><View style={styles.statusStepCopy}><Text style={styles.statusStepTitle}>{statusStepDetails[item].title || item}</Text><Text style={[styles.statusStepState, isComplete && { color: '#009c29', fontWeight: '700' }, isCurrent && { color: '#8a5e12', fontWeight: '800' }]}>{state}</Text><Text style={styles.statusStepDescription}>{statusStepDetails[item].description}</Text><Text style={{ color: checkedCount === requirementCount ? '#009c29' : '#698073', fontSize: 11, fontWeight: '700', marginTop: 5 }}>{checkedCount} / {requirementCount} requirements ready</Text></View>{index < steps.length - 1 && <View style={[styles.statusConnector, isComplete && { backgroundColor: '#009c29' }]} />}</Pressable>;
+  })}{isFinished && <Pressable onPress={() => onStatusChange(0)} style={({ pressed }) => [styles.back, { marginTop: 8, alignItems: 'center' }, pressed && styles.pressed]}><Text style={styles.backText}>Reset progress</Text></Pressable>}</View></>}<Modal visible={selectedStep !== null} transparent animationType="slide" onRequestClose={() => showRequirementsWarning ? setPendingAction(null) : onSelectStep(null)}><View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(8, 35, 21, 0.55)' }}>{showRequirementsWarning ? <RequirementsWarning items={uncheckedRequirements} stepTitle={selectedDetails?.title || selectedStep} onReview={() => setPendingAction(null)} onConfirm={confirmAllRequirements} /> : <View style={{ maxHeight: '88%', backgroundColor: '#fff', borderTopLeftRadius: 12, borderTopRightRadius: 12, paddingTop: 8 }}><StepDetailsHandle onClose={() => onSelectStep(null)} /><ScrollView contentContainerStyle={{ padding: 22, paddingBottom: 30 }}><View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}><View style={{ flex: 1, paddingRight: 14 }}><Text style={styles.cardEyebrow}>ADMISSION STEP {selectedStepIndex + 1}</Text><Text style={[styles.statusHeading, { marginTop: 8 }]}>{selectedDetails?.title || selectedStep}</Text></View><Pressable accessibilityLabel="Close details" onPress={() => onSelectStep(null)} style={({ pressed }) => [{ width: 38, height: 38, alignItems: 'center', justifyContent: 'center', borderRadius: 19, backgroundColor: '#e4eee4' }, pressed && styles.pressed]}><Ionicons name="close" size={22} color="#075b31" /></Pressable></View><Text style={[styles.statusCaption, { fontSize: 14, marginBottom: 20 }]}>{selectedDetails?.description}</Text><DetailSection title="Instructions" items={selectedDetails?.instructions} numbered /><RequirementChecklist items={selectedRequirements} checked={selectedChecks} onToggle={toggleRequirement} onToggleAll={toggleAllRequirements} disabled={checklistDisabled} />{canUpdateCurrentStep && uncheckedRequirements.length > 0 && <Text style={statusInfoStyles.requirementsReminder}>Check every requirement before continuing.</Text>}{selectedDetails?.location && <DetailSection title="Location" items={[selectedDetails.location]} />}{Boolean(selectedDetails?.details?.length) && <DetailSection title="Additional details" items={selectedDetails.details} />}{isGuest ? selectedStepIndex === currentStatusIndex && <Pressable onPress={() => onSelectStep(null)} disabled style={{ padding: 14, borderRadius: 8, backgroundColor: '#fffde8', borderWidth: 1, borderColor: '#f7d521', marginTop: 12 }}><Text style={{ color: '#183225', fontWeight: '700', textAlign: 'center' }}>Guest Mode - View Only</Text><Text style={{ color: '#52695b', fontSize: 12, textAlign: 'center', marginTop: 6 }}>Exit guest mode and use your applicant profile to accomplish the admission steps.</Text></Pressable> : selectedStepIndex < currentStatusIndex ? selectedStepIndex === currentStatusIndex - 1 && !applicationStopped ? <Pressable onPress={undoLatestCompletedStep} style={({ pressed }) => [styles.back, { marginTop: 4, alignItems: 'center' }, pressed && styles.pressed]}><Text style={styles.backText}>Undo completion</Text></Pressable> : <View style={{ padding: 14, borderRadius: 8, backgroundColor: '#dff5df', alignItems: 'center' }}><Text style={{ color: '#075b31', fontWeight: '700' }}>Completed</Text></View> : selectedStepIndex > currentStatusIndex ? <View style={{ padding: 14, borderRadius: 8, backgroundColor: '#eef3ee', alignItems: 'center' }}><Text style={{ color: '#52695b', fontWeight: '700', textAlign: 'center' }}>{applicationStopped ? 'The application process has ended' : 'Complete the previous step first'}</Text></View> : selectedStep === 'Admission Examination' ? <ExaminationResultActions availablePrograms={reapplicationOptions} attempt={examinationAttempt === 'reapplication' && !reapplicationOptions.includes(reapplicationProgramValue) ? 'failed' : examinationAttempt} onPassed={passExamination} onFailed={failExamination} onReapply={startReapplication} reapplicationProgram={reapplicationProgramValue} /> : <Pressable onPress={() => runWithRequirements(advanceStep)} style={({ pressed }) => [styles.action, { flex: 0, marginTop: 4 }, pressed && styles.pressed]}><Text style={styles.actionText}>Mark as completed</Text></Pressable>}</ScrollView></View>}</View></Modal></>;
 }
-function JourneyPage({ displayName, program, profilePhoto, steps, currentStatusIndex, examinationAttempt, onOpenStep, isGuest = false }) {
+function JourneyPage({ content = bundledContent, displayName, program, profilePhoto, steps, currentStatusIndex, examinationAttempt, onOpenStep, isGuest = false }) {
   const roadGlow = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     const animation = Animated.loop(Animated.sequence([
@@ -1272,7 +1261,7 @@ function JourneyPage({ displayName, program, profilePhoto, steps, currentStatusI
   const applicationStopped = examinationAttempt === 'stopped';
   const isFinished = currentStatusIndex === steps.length;
   const progress = Math.round((currentStatusIndex / steps.length) * 100);
-  const currentStep = applicationStopped ? 'Application ended' : isFinished ? 'Finish line reached' : steps[currentStatusIndex];
+  const currentStep = applicationStopped ? 'Application ended' : isFinished ? 'Finish line reached' : content.statusStepDetails[steps[currentStatusIndex]]?.title || steps[currentStatusIndex];
   return <View style={journeyStyles.page}><View style={journeyStyles.hero}><View style={journeyStyles.heroTop}><Text style={journeyStyles.heroTag}>ADMISSION TRAIL</Text><Text style={journeyStyles.heroCount}>{currentStatusIndex}/{steps.length}</Text></View><Text style={journeyStyles.heroTitle}>CvSU Journey for {displayName}</Text><Text style={journeyStyles.heroCopy}>{applicationStopped ? 'Your trail has ended, ' + displayName + '. Thank you for applying.' : 'Follow the trail from application to enrollment, ' + displayName + '.'}</Text><View style={[journeyStyles.currentStop, applicationStopped && journeyStyles.stoppedStop]}><Text style={journeyStyles.stopLabel}>{applicationStopped ? 'TRAIL STATUS' : isFinished ? 'DESTINATION REACHED' : 'CURRENT STOP'}</Text><Text style={journeyStyles.stopTitle}>{currentStep}</Text><Text style={journeyStyles.stopCopy}>{applicationStopped ? 'The re-application result ended this application.' : isFinished ? 'Every admission mission is complete.' : 'Tap the open station on the trail to continue.'}</Text></View></View><View style={journeyStyles.passportSummary}><View style={journeyStyles.passportProfile}><Image source={profilePhoto ? { uri: profilePhoto } : require('../assets/Profile.png')} style={journeyStyles.passportAvatar} /><View style={{ flex: 1, minWidth: 0 }}><Text style={journeyStyles.passportName}>{displayName}</Text><Text style={journeyStyles.passportProgram}>{program || 'Your admission path'}</Text></View></View><View style={journeyStyles.passportProgressRow}><Text style={journeyStyles.passportProgressCopy}>{currentStatusIndex} / {steps.length} stops completed</Text><Text style={journeyStyles.passportPercent}>{progress}%</Text></View><View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: steps.length, now: currentStatusIndex }} style={journeyStyles.passportTrack}><View style={[journeyStyles.passportFill, { width: progress + '%' }]} /></View><View style={journeyStyles.passportStamps}>{steps.map((step, index) => <Pressable key={step} accessibilityRole="button" accessibilityLabel={step + (index < currentStatusIndex ? ', completed' : index === currentStatusIndex && !applicationStopped ? ', current step' : ', upcoming')} onPress={() => onOpenStep(index)} style={({ pressed }) => [journeyStyles.passportStamp, index < currentStatusIndex && journeyStyles.passportStampComplete, pressed && journeyStyles.passportStampPressed]}><Ionicons name={index < currentStatusIndex ? 'checkmark-circle' : 'ellipse-outline'} size={19} color={index < currentStatusIndex ? '#075b31' : '#bed7c8'} /><Text style={[journeyStyles.passportStampNumber, index < currentStatusIndex && { color: '#075b31' }]}>{index + 1}</Text></Pressable>)}</View></View><View style={journeyStyles.trailCard}><View style={journeyStyles.trailHeading}><View><Text style={journeyStyles.trailEyebrow}>CAMPUS TRAIL</Text><Text style={journeyStyles.trailTitle}>Admission Journey</Text></View><Ionicons name="map" size={28} color="#f4bf32" /></View><View style={journeyStyles.legend}><LegendItem color="#078743" icon="checkmark" label="Completed" /><LegendItem color="#fff" border="#078743" label="Open" /><LegendItem color="#dfe7e1" icon="lock-closed" label="Locked" /></View><View style={journeyStyles.trail}>{steps.map((step, index) => {
     const completed = index < currentStatusIndex;
     const current = index === currentStatusIndex && !applicationStopped;
@@ -1280,7 +1269,7 @@ function JourneyPage({ displayName, program, profilePhoto, steps, currentStatusI
     const locked = !completed && !current && !stopped;
     const icon = completed ? 'checkmark' : stopped ? 'close' : 'lock-closed';
     const stateLabel = completed ? 'Mission complete' : stopped ? 'Trail ended' : current ? 'Open mission' : 'Locked';
-    return <View key={step} style={journeyStyles.stationRow}>{index < steps.length - 1 && <GlowRoad glow={roadGlow} direction={index % 2 === 0 ? 'right' : 'left'} completed={completed} />}<Pressable accessibilityLabel={`${step}, ${stateLabel}`} onPress={() => !isGuest && onOpenStep(index)} disabled={isGuest} style={({ pressed }) => [journeyStyles.station, index % 2 === 0 ? journeyStyles.stationLeft : journeyStyles.stationRight, pressed && styles.pressed]}>{current && <View style={journeyStyles.currentMarker}><Image source={profilePhoto ? { uri: profilePhoto } : require('../assets/Profile.png')} style={journeyStyles.avatarImage} /></View>}<View style={[journeyStyles.node, completed && journeyStyles.nodeComplete, current && journeyStyles.nodeCurrent, locked && journeyStyles.nodeLocked, stopped && journeyStyles.nodeStopped]}>{current ? <Text style={journeyStyles.nodeNumber}>{index + 1}</Text> : <Ionicons name={icon} size={completed ? 28 : 21} color={completed || stopped ? '#fff' : '#829489'} />}</View><Text style={[journeyStyles.nodeLabel, current && journeyStyles.nodeLabelCurrent, stopped && journeyStyles.nodeLabelStopped]} numberOfLines={2}>{step}</Text></Pressable></View>;
+    return <View key={step} style={journeyStyles.stationRow}>{index < steps.length - 1 && <GlowRoad glow={roadGlow} direction={index % 2 === 0 ? 'right' : 'left'} completed={completed} />}<Pressable accessibilityLabel={`${content.statusStepDetails[step]?.title || step}, ${stateLabel}`} onPress={() => !isGuest && onOpenStep(index)} disabled={isGuest} style={({ pressed }) => [journeyStyles.station, index % 2 === 0 ? journeyStyles.stationLeft : journeyStyles.stationRight, pressed && styles.pressed]}>{current && <View style={journeyStyles.currentMarker}><Image source={profilePhoto ? { uri: profilePhoto } : require('../assets/Profile.png')} style={journeyStyles.avatarImage} /></View>}<View style={[journeyStyles.node, completed && journeyStyles.nodeComplete, current && journeyStyles.nodeCurrent, locked && journeyStyles.nodeLocked, stopped && journeyStyles.nodeStopped]}>{current ? <Text style={journeyStyles.nodeNumber}>{index + 1}</Text> : <Ionicons name={icon} size={completed ? 28 : 21} color={completed || stopped ? '#fff' : '#829489'} />}</View><Text style={[journeyStyles.nodeLabel, current && journeyStyles.nodeLabelCurrent, stopped && journeyStyles.nodeLabelStopped]} numberOfLines={2}>{content.statusStepDetails[step]?.title || step}</Text></Pressable></View>;
   })}<View style={journeyStyles.finish}><View style={journeyStyles.finishFlag}><Ionicons name="flag" size={26} color="#f7d521" /></View><View style={journeyStyles.finishCopy}><Text style={journeyStyles.finishLabel}>FINAL DESTINATION</Text>{isFinished && <><Text style={journeyStyles.finishTitle}>WELCOME TO CvSU</Text><View style={journeyStyles.finishProgram}><View style={journeyStyles.finishProgramCopy}><Text style={journeyStyles.finishProgramLabel}>YOUR ADMISSION PATH</Text><Text style={journeyStyles.program} numberOfLines={3}>{program}</Text></View></View></>}</View><View style={journeyStyles.finishFlag}><Ionicons name="flag" size={26} color="#f7d521" /></View></View></View></View></View>;
 }
 function GlowRoad({ direction, completed, glow }) {
@@ -1290,14 +1279,33 @@ function GlowRoad({ direction, completed, glow }) {
 function LegendItem({ color, border, icon, label }) { return <View style={journeyStyles.legendItem}><View style={[journeyStyles.legendDot, { backgroundColor: color, borderColor: border || color }]}>{icon && <Ionicons name={icon} size={11} color={color === '#009c29' ? '#fff' : '#829489'} />}</View><Text style={journeyStyles.legendText}>{label}</Text></View>; }
 function ProfileRow({ label, value, last }) { return <View style={[statusInfoStyles.profileRow, last && { marginBottom: 0 }]}><Text style={statusInfoStyles.profileLabel}>{label}</Text><Text style={statusInfoStyles.profileValue}>{value}</Text></View>; }
 function DetailSection({ title, items = [], numbered = false }) { return <View style={{ marginBottom: 22 }}><Text style={{ color: '#075b31', fontSize: 14, fontWeight: '700', marginBottom: 10 }}>{title}</Text>{items.map((item, index) => <View key={item} style={{ flexDirection: 'row', marginBottom: 9 }}><Text style={{ width: 24, color: '#078743', fontWeight: '700' }}>{numbered ? `${index + 1}.` : '•'}</Text><Text style={{ flex: 1, color: '#52695b', fontSize: 13, lineHeight: 19 }}>{item}</Text></View>)}</View>; }
-function ExaminationResultActions({ attempt, onPassed, onFailed, onReapply, failedProgram, reapplicationProgram }) {
-  const availablePrograms = programs.filter((item) => item !== failedProgram);
+function ExaminationResultActions({ availablePrograms, attempt, onPassed, onFailed, onReapply, reapplicationProgram }) {
   if (attempt === 'stopped') return <View style={{ padding: 18, borderRadius: 8, backgroundColor: '#eef3ee' }}><Text style={{ color: '#183225', fontSize: 16, fontWeight: '700', textAlign: 'center' }}>Thank you for applying</Text><Text style={{ color: '#52695b', fontSize: 13, lineHeight: 19, textAlign: 'center', marginTop: 7, textAlign: 'center' }}>The re-application was not passed, so the admission process has ended.</Text></View>;
-  if (attempt === 'failed') return <View><View style={{ padding: 14, borderRadius: 8, backgroundColor: '#fffde8', borderWidth: 1, borderColor: '#f7d521', marginBottom: 12 }}><Text style={{ color: '#183225', fontWeight: '700', textAlign: 'center' }}>Admission examination failed</Text><Text style={{ color: '#52695b', fontSize: 12, textAlign: 'center', marginTop: 6 }}>Select the program for your re-application.</Text><Text style={{ color: '#645f18', fontSize: 12, lineHeight: 18, textAlign: 'center', marginTop: 8 }}>Note: Follow the official re-application instructions in the online admission portal.</Text></View>{availablePrograms.map((item) => <Pressable key={item} onPress={() => onReapply(item)} style={({ pressed }) => [{ padding: 10, borderBottomWidth: 1, borderBottomColor: '#e5ebe5' }, pressed && styles.pressed]}><Text style={{ color: '#183225', fontSize: 12 }}>{item}</Text></Pressable>)}</View>;
+  if (attempt === 'failed') return <View><View style={{ padding: 14, borderRadius: 8, backgroundColor: '#fffde8', borderWidth: 1, borderColor: '#f7d521', marginBottom: 12 }}><Text style={{ color: '#183225', fontWeight: '700', textAlign: 'center' }}>Admission examination failed</Text><Text style={{ color: '#52695b', fontSize: 12, textAlign: 'center', marginTop: 6 }}>{availablePrograms.length ? 'Select the program for your re-application.' : 'No programs are currently available for re-application.'}</Text><Text style={{ color: '#645f18', fontSize: 12, lineHeight: 18, textAlign: 'center', marginTop: 8 }}>Note: Follow the official re-application instructions in the online admission portal.</Text></View>{availablePrograms.map((item) => <Pressable key={item} onPress={() => onReapply(item)} style={({ pressed }) => [{ padding: 10, borderBottomWidth: 1, borderBottomColor: '#e5ebe5' }, pressed && styles.pressed]}><Text style={{ color: '#183225', fontSize: 12 }}>{item}</Text></Pressable>)}</View>;
   return <View><Text style={{ color: '#075b31', fontSize: 14, fontWeight: '700', textAlign: 'center', marginBottom: 12 }}>{attempt === 'reapplication' ? 'Re-application result' : 'Admission examination result'}</Text>{attempt === 'reapplication' && <Text style={{ color: '#645f18', fontSize: 12, lineHeight: 18, textAlign: 'center', marginBottom: 12 }}>Follow the official re-application instructions in the online admission portal.</Text>}{attempt === 'reapplication' && reapplicationProgram && <Text style={{ color: '#52695b', fontSize: 12, textAlign: 'center', marginBottom: 12 }}>Guide program: {reapplicationProgram}</Text>}<View style={{ flexDirection: 'row', gap: 10 }}><Pressable onPress={onFailed} style={({ pressed }) => [styles.back, { flex: 1, alignItems: 'center', borderColor: '#f7d521', backgroundColor: '#fffde8' }, pressed && styles.pressed]}><Text style={{ color: '#183225', fontWeight: '700' }}>Failed</Text></Pressable><Pressable onPress={onPassed} style={({ pressed }) => [styles.action, pressed && styles.pressed]}><Text style={styles.actionText}>Passed</Text></Pressable></View></View>;
 }
+function RequirementsWarning({ items, stepTitle, onReview, onConfirm }) {
+  return (
+    <View accessibilityViewIsModal style={statusInfoStyles.warningFrame}>
+      <View style={statusInfoStyles.warningCard}>
+        <Ionicons name="warning-outline" size={30} color="#a56b00" />
+        <Text accessibilityRole="header" style={styles.statusHeading}>Requirements still unchecked</Text>
+        <Text style={statusInfoStyles.warningCopy}>Review the unchecked items for {stepTitle}, or confirm that you have completed them all.</Text>
+        <ScrollView style={statusInfoStyles.warningList}>
+          <DetailSection title="Unchecked requirements" items={items} />
+        </ScrollView>
+        <Pressable accessibilityRole="button" onPress={onReview} style={({ pressed }) => [styles.action, { flex: 0 }, pressed && styles.pressed]}>
+          <Text style={styles.actionText}>Review requirements</Text>
+        </Pressable>
+        <Pressable accessibilityRole="button" onPress={onConfirm} style={({ pressed }) => [styles.back, statusInfoStyles.warningConfirm, pressed && styles.pressed]}>
+          <Text style={styles.backText}>Mark all as done and continue</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 function RequirementChecklist({ items = [], checked, onToggle, onToggleAll, disabled = false }) {
-  const [expandedExample, setExpandedExample] = useState(null);
   const allChecked = items.length > 0 && items.every((_, index) => checked.includes(index));
   return <View style={{ marginBottom: 22 }}>
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
@@ -1309,23 +1317,12 @@ function RequirementChecklist({ items = [], checked, onToggle, onToggleAll, disa
     </Pressable>}
     {items.map((item, index) => {
       const isChecked = checked.includes(index);
-      const example = getDocumentaryExample(item);
-      const isExpanded = expandedExample === example?.title;
-      return <View key={item} style={{ paddingVertical: 8 }}>
-        <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: isChecked, disabled }} disabled={disabled} onPress={() => onToggle(index)} style={({ pressed }) => [{ flexDirection: 'row', alignItems: 'flex-start' }, pressed && styles.pressed]}>
+      return (
+        <Pressable key={item} accessibilityRole="checkbox" accessibilityState={{ checked: isChecked, disabled }} disabled={disabled} onPress={() => onToggle(index)} style={({ pressed }) => [{ flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 8 }, pressed && styles.pressed]}>
           <View style={{ width: 22, height: 22, borderRadius: 4, borderWidth: 2, borderColor: isChecked ? '#078743' : '#b8d3bc', backgroundColor: isChecked ? '#078743' : '#fff', alignItems: 'center', justifyContent: 'center', marginRight: 10 }}>{isChecked && <Ionicons name="checkmark" size={16} color="#fff" />}</View>
           <Text style={{ flex: 1, color: isChecked ? '#698073' : '#52695b', fontSize: 13, lineHeight: 20, textDecorationLine: isChecked ? 'line-through' : 'none' }}>{item}</Text>
         </Pressable>
-        {example && <>
-          <Pressable accessibilityRole="button" accessibilityLabel={`${isExpanded ? 'Hide' : 'View'} example: ${example.title}`} accessibilityState={{ expanded: isExpanded }} onPress={() => setExpandedExample(isExpanded ? null : example.title)} style={({ pressed }) => [{ alignSelf: 'flex-start', marginLeft: 32, marginTop: 5, paddingVertical: 5 }, pressed && styles.pressed]}>
-            <Text style={{ color: '#075b31', fontSize: 12, fontWeight: '700' }}>{isExpanded ? 'Hide example' : `View example: ${example.title}`}</Text>
-          </Pressable>
-          {isExpanded && <View style={{ marginLeft: 32, marginTop: 4, padding: 8, borderRadius: 8, borderWidth: 1, borderColor: '#d8e2d9', backgroundColor: '#f7fbf7' }}>
-            <Text style={{ color: '#698073', fontSize: 11, marginBottom: 6 }}>Example only. Check the official admission instructions for current requirements.</Text>
-            <Image accessibilityLabel={`Example document: ${example.title}`} source={example.image} resizeMode="contain" style={{ width: '100%', height: 240 }} />
-          </View>}
-        </>}
-      </View>;
+      );
     })}
   </View>;
 }
@@ -1437,12 +1434,7 @@ const mapStyles = StyleSheet.create({
   guideBubble: { position: 'absolute', left: 14, right: 14, top: 14, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.9)', borderLeftWidth: 4, borderLeftColor: '#f7d521', padding: 11 },
   guideLabel: { color: '#009c29', fontSize: 9, fontWeight: '800', letterSpacing: 1 },
   guideText: { color: '#183225', fontSize: 11, lineHeight: 16, marginTop: 3 },
-  locationDetailsButton: { position: 'absolute', top: 12, left: 12, width: 30, height: 30, borderRadius: 15, backgroundColor: '#075b31', borderWidth: 1.5, borderColor: '#f7d521', alignItems: 'center', justifyContent: 'center', elevation: 5, zIndex: 4 },
-  locationDetailsIcon: { width: 22, height: 22, alignItems: 'center', justifyContent: 'center' },
-  locationDetailsHalo: { position: 'absolute', width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, borderColor: '#f7d521', backgroundColor: '#f7d52133' },
-  locationDetailsButtonExpanded: { width: 158, height: 42, paddingVertical: 6, paddingHorizontal: 9, borderRadius: 10, flexDirection: 'row', gap: 7 },
-  locationDetailsIconExpanded: { width: 26, height: 26 },
-  locationDetailsTitle: { color: '#fff', fontSize: 12, fontWeight: '800', flexShrink: 1 },
+  locationDetailsButton: { position: 'absolute', top: 14, left: 14, width: 42, height: 42, borderRadius: 8, backgroundColor: '#075b31', borderWidth: 2, borderColor: '#f7d521', alignItems: 'center', justifyContent: 'center', elevation: 5, zIndex: 4 },
   locationPreview: { position: 'absolute', top: 14, left: 14, width: '52%', maxWidth: 260, backgroundColor: '#fff', borderWidth: 1, borderColor: '#d8e2d9', borderRadius: 8, overflow: 'hidden', elevation: 6, zIndex: 4 },
   locationPreviewImage: { width: '100%', height: 68, backgroundColor: '#d8e2d9' },
   locationPreviewImageHint: { position: 'absolute', left: 8, right: 8, bottom: 7, borderRadius: 6, backgroundColor: 'rgba(7,91,49,0.92)', paddingVertical: 4, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
@@ -1539,6 +1531,10 @@ const profileStyles = StyleSheet.create({
   guestButton: { minHeight: 76, borderRadius: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: '#d8e2d9', alignItems: 'center', justifyContent: 'center', padding: 13, marginBottom: 12 },
   guestTitle: { color: '#183225', fontSize: 12, fontWeight: '800', textAlign: 'center' },
   guestCopy: { color: '#75877b', fontSize: 10, lineHeight: 15, textAlign: 'center', marginTop: 5, maxWidth: 310 },
+  updateCard: { borderRadius: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: '#d8e2d9', marginBottom: 12, paddingBottom: 12 },
+  updateButton: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 12 },
+  updateDisabled: { opacity: 0.65 },
+  updateMessage: { color: '#52695b', fontSize: 12, lineHeight: 17, paddingHorizontal: 14, textAlign: 'center' },
   resetButton: { minHeight: 68, borderRadius: 8, backgroundColor: '#fffde8', borderWidth: 1, borderColor: '#f7d521', justifyContent: 'center', padding: 14 },
   resetTitle: { color: '#183225', fontSize: 13, fontWeight: '800' },
   resetCopy: { color: '#698073', fontSize: 10, marginTop: 5 }
@@ -1558,6 +1554,7 @@ const homeStyles = StyleSheet.create({
   subtitle: { color: '#f2fff4', fontSize: 13, lineHeight: 19, marginTop: 10 },
   progressBadge: { width: 76, height: 76, borderRadius: 38, backgroundColor: '#f7d521', alignItems: 'center', justifyContent: 'center' },
   progressBadgeText: { color: '#4c4a12', fontSize: 18, fontWeight: '800' },
+  progressCardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   portal: { display: 'none' },
   profilePortal: { minHeight: 94, borderRadius: 8, backgroundColor: '#f7d521', padding: 16, flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
   actionIcon: { width: 46, height: 46, borderRadius: 23, backgroundColor: 'rgba(255,255,255,0.7)', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
@@ -1660,6 +1657,12 @@ const journeyStyles = StyleSheet.create({
   program: { color: '#fff', fontSize: 12, lineHeight: 16, fontWeight: '800', marginTop: 2, textAlign: 'center' }
 });
 const statusInfoStyles = StyleSheet.create({
+  requirementsReminder: { color: '#805508', fontSize: 13, fontWeight: '600', marginBottom: 14 },
+  warningFrame: { flex: 1, justifyContent: 'center', padding: 24 },
+  warningCard: { alignSelf: 'center', width: '100%', maxWidth: 460, maxHeight: '85%', padding: 22, borderRadius: 18, backgroundColor: '#fff' },
+  warningCopy: { color: '#52695b', fontSize: 14, lineHeight: 21, marginTop: 8 },
+  warningList: { marginTop: 16, flexGrow: 0 },
+  warningConfirm: { marginTop: 10, alignItems: 'center', padding: 12 },
   card: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#cbd9ce', borderRadius: 10, padding: 20, marginTop: 16, marginBottom: 16 },
   eyebrow: { color: '#009c29', fontSize: 10, fontWeight: '800', letterSpacing: 1.1, marginBottom: 14 },
   body: { color: '#52695b', fontSize: 14, lineHeight: 22 },

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admission Content Admin | CvSU</title>
+  <link rel="stylesheet" href="/admin.css">
+  <script src="/admin.js" defer></script>
+</head>
+<body>
+  <header class="masthead">
+    <div class="brand"><img src="/logo.png" alt="" width="44" height="44"><div><strong>Cavite State University</strong><span>Virtual Admission Guide</span></div></div>
+    <button type="button" id="sign-out" class="secondary" hidden>Sign out</button>
+  </header>
+  <main>
+    <section id="login" class="login" aria-labelledby="login-title">
+      <div class="login-brand">
+        <img src="/logo.png" alt="" width="76" height="76">
+        <div><p class="login-university">Cavite State University</p><p class="login-guide">Virtual Admission Guide</p></div>
+      </div>
+      <div class="login-content">
+        <h1 id="login-title">Admin sign in</h1>
+        <p>Sign in to manage the content applicants see in the guide.</p>
+        <form id="login-form" method="post">
+          <label>Username<input id="username" name="username" required autocomplete="username" autocapitalize="none" spellcheck="false"></label>
+          <div class="password-field">
+            <label for="password">Password</label>
+            <div class="password-control">
+              <input id="password" name="password" type="password" required autocomplete="current-password">
+              <button type="button" id="password-visibility" aria-label="Show password" aria-controls="password">Show</button>
+            </div>
+          </div>
+          <p id="login-status" class="login-status" role="status" hidden></p>
+          <button type="submit" id="login-submit">Sign in</button>
+        </form>
+      </div>
+    </section>
+    <div id="workspace" class="workspace" hidden>
+      <nav aria-label="Content sections">
+        <button type="button" data-section="dashboard">Dashboard</button>
+        <button type="button" data-section="academicStatuses">Academic statuses</button>
+        <button type="button" data-section="tracks">Tracks and strands</button>
+        <button type="button" data-section="programs">Programs</button>
+        <button type="button" data-section="statusStepDetails">Admission steps</button>
+        <button type="button" data-section="faqItems">FAQs</button>
+        <button type="button" data-section="campusGuide">Campus guide</button>
+        <button type="button" data-section="history">Change history</button>
+      </nav>
+      <section class="editor">
+        <div class="editor-header">
+          <div class="editor-heading"><h1 id="section-title" tabindex="-1"></h1><p id="section-description"></p></div>
+          <div class="editor-controls">
+            <span id="draft-state" role="status" hidden>Unpublished changes</span>
+            <div class="actions"><button type="button" id="reload" class="secondary">Reload</button><button type="button" id="publish">Publish changes</button></div>
+          </div>
+        </div>
+        <div id="fields" class="fields"></div>
+      </section>
+    </div>
+    <p id="status" role="status" aria-live="polite"></p>
+  </main>
+</body>
+</html>

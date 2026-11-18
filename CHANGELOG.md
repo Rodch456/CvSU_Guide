@@ -8,6 +8,21 @@ This project uses [Semantic Versioning](https://semver.org/):
 - **Minor** (`1.1.0`): new backward-compatible features or pages
 - **Major** (`2.0.0`): large redesigns or incompatible changes
 
+## [2.0.0] - 2026-11-18
+
+### Added
+
+- Add an authenticated admin website with a program dashboard, publishing confirmation, and change history with section and date filters.
+- Let admins manage academic statuses, track and strand eligibility, programs, admission steps and checklists, FAQs, campus trivia, and attire guidance.
+- Configure exam reapplication programs and choose whether reapplication follows regular eligibility or opens to all or selected tracks.
+- Add in-app content refresh from Profile with a cached copy for offline access.
+
+### Changed
+
+- Limit first-choice programs to the applicant’s selected track or strand, including separate TVL and ALS options.
+- Require applicants to check all requirements before advancing and restore the checklist warning and bulk selection controls.
+- Make the Home progress card open the current admission step.
+
 ## [1.11.0] - 2026-11-17
 
 ### Added

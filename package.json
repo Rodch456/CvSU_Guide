@@ -1,6 +1,6 @@
 {
   "name": "cvsu-admission-guide",
-  "version": "1.11.0",
+  "version": "2.0.0",
   "private": true,
   "main": "index.js",
   "scripts": {
@@ -9,17 +9,18 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "build:android": "npx eas-cli build --platform android --profile preview"
+    "build:android": "npx eas-cli build --platform android --profile preview",
+    "admin": "node admin/server.js"
   },
   "dependencies": {
     "@expo/metro-runtime": "~57.0.17",
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "2.2.0",
-    "expo": "~57.0.30",
+    "expo": "~57.0.33",
     "expo-asset": "~57.0.20",
     "expo-font": "~57.0.4",
-    "expo-image-picker": "~57.0.20",
-    "expo-splash-screen": "~57.0.10",
+    "expo-image-picker": "~57.0.21",
+    "expo-splash-screen": "~57.0.11",
     "expo-status-bar": "~57.0.1",
     "expo-video": "~57.0.5",
     "react": "19.2.3",
