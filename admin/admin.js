@@ -29,8 +29,6 @@ let content;
 let version;
 let availableProgramCount;
 let examVenueNames;
-let activeInstallationCount;
-let activeInstallationDays;
 let history = [];
 let historySection = '';
 let historyFrom = '';
@@ -505,19 +503,6 @@ function renderDashboard() {
   const detail = document.createElement('p');
   detail.textContent = 'Each program is counted once across all published academic statuses, tracks and strands.';
   card.append(title, count, detail);
-  const activeCard = document.createElement('section');
-  activeCard.className = 'dashboard-installations';
-  const activeTitle = document.createElement('h2');
-  activeTitle.textContent = 'Active app installations';
-  const activeCount = document.createElement('p');
-  activeCount.className = 'dashboard-count';
-  activeCount.textContent = activeInstallationCount.toLocaleString();
-  const activeDetail = document.createElement('p');
-  activeDetail.textContent = `Distinct app installations that checked in within the last ${activeInstallationDays} days.`;
-  activeCard.append(activeTitle, activeCount, activeDetail);
-  const metrics = document.createElement('div');
-  metrics.className = 'dashboard-metrics';
-  metrics.append(card, activeCard);
 
   const shortcuts = document.createElement('div');
   shortcuts.className = 'dashboard-shortcuts';
@@ -529,7 +514,7 @@ function renderDashboard() {
     button('Manage programs', () => openSection('programs'), 'secondary'),
     button('View change history', () => openSection('history'), 'secondary')
   );
-  fields.append(metrics, shortcutTitle, shortcuts);
+  fields.append(card, shortcutTitle, shortcuts);
 }
 
 function renderHistory() {
@@ -673,7 +658,7 @@ function render(openIndex) {
 }
 
 async function load(secret) {
-  ({ content, version, availableProgramCount, activeInstallationCount, activeInstallationDays, history, examVenueNames } = await request('GET', secret));
+  ({ content, version, availableProgramCount, history, examVenueNames } = await request('GET', secret));
   content.faqTranslations ??= content.faqItems.map(() => null);
   markDirty(false);
   render();
@@ -732,7 +717,7 @@ publish.addEventListener('click', async () => {
       reapplicationPrograms: content.reapplicationPrograms?.filter((program) => catalog.has(program)) ?? null
     };
     const result = await request('PUT', authorization, JSON.stringify(publication));
-    ({ version, availableProgramCount, activeInstallationCount, activeInstallationDays, history } = result);
+    ({ version, availableProgramCount, history } = result);
     content = publication;
     render();
     markDirty(false);
@@ -763,8 +748,6 @@ signOut.addEventListener('click', () => {
   content = undefined;
   version = undefined;
   availableProgramCount = undefined;
-  activeInstallationCount = undefined;
-  activeInstallationDays = undefined;
   history = [];
   historySection = '';
   historyFrom = '';

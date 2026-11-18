@@ -5,7 +5,6 @@ const path = require('node:path');
 const defaults = require('../src/admission-content.json');
 const { examVenueNames, getAcademicStatuses, getAdmissionStepOrder, getCampusTrivia, getExamVenueSettings, getTrackOptions, validateContent } = require('../src/content-schema');
 const { summarizeChanges } = require('./change-history');
-const { activeInstallationDays, openInstallations } = require('./installations');
 
 try {
   process.loadEnvFile(path.join(__dirname, '.env.local'));
@@ -44,12 +43,12 @@ function send(res, status, detail) {
   res.end(JSON.stringify(detail));
 }
 
-async function readBody(req, limit = maxBytes) {
+async function readBody(req) {
   const chunks = [];
   let size = 0;
   for await (const chunk of req) {
     size += chunk.length;
-    if (size <= limit) chunks.push(chunk);
+    if (size <= maxBytes) chunks.push(chunk);
     else throw Object.assign(new Error('Request body is too large.'), { status: 413 });
   }
   try {
@@ -99,8 +98,6 @@ async function loadState() {
 
 async function start() {
   let { content: published, history } = await loadState();
-  const installations = await openInstallations(`${dataFile}.installations.json`);
-  const dashboard = () => ({ availableProgramCount: countAvailablePrograms(published), activeInstallationCount: installations.count(), activeInstallationDays });
   let version = digest(JSON.stringify(published)).toString('hex');
   let writing = false;
   const server = http.createServer(async (req, res) => {
@@ -113,20 +110,11 @@ async function start() {
         res.setHeader('Access-Control-Allow-Origin', '*');
         return send(res, 200, published);
       }
-      if (req.method === 'POST' && route === '/api/installations/check-in') {
-        const { installationId } = (await readBody(req, 256)) ?? {};
-        if (typeof installationId !== 'string' || !/^[a-f0-9]{32}$/.test(installationId)) {
-          return send(res, 400, { error: 'Invalid installation identifier.' });
-        }
-        await installations.record(installationId);
-        res.writeHead(204);
-        return res.end();
-      }
       if (route === '/api/admin/content' && ['GET', 'PUT'].includes(req.method)) {
         if (!timingSafeEqual(digest(req.headers.authorization || ''), credential)) {
           return send(res, 401, { error: 'Enter a valid admin username and password.' });
         }
-        if (req.method === 'GET') return send(res, 200, { content: published, version, history, examVenueNames, ...dashboard() });
+        if (req.method === 'GET') return send(res, 200, { content: published, version, history, examVenueNames, availableProgramCount: countAvailablePrograms(published) });
         if (writing || req.headers['if-match'] !== `"${version}"`) {
           return send(res, 409, { error: 'Another publish is in progress or the content changed. Reload the latest content before publishing.' });
         }
@@ -147,7 +135,7 @@ async function start() {
           if (error) return send(res, 400, { error });
           const groups = summarizeChanges(published, content);
           if (!groups.length) {
-            return send(res, 200, { version, history, changed: false, ...dashboard() });
+            return send(res, 200, { version, history, changed: false, availableProgramCount: countAvailablePrograms(published) });
           }
           const nextHistory = [{ publishedAt: new Date().toISOString(), groups }, ...history];
           await mkdir(path.dirname(dataFile), { recursive: true });
@@ -158,7 +146,7 @@ async function start() {
           published = content;
           history = nextHistory;
           version = digest(JSON.stringify(content)).toString('hex');
-          return send(res, 200, { version, history, changed: true, ...dashboard() });
+          return send(res, 200, { version, history, changed: true, availableProgramCount: countAvailablePrograms(published) });
         } finally {
           writing = false;
         }

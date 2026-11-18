@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, AppState, Easing, Image, Linking, Modal, PanResponder, Platform, Pressable, SafeAreaView, ScrollView, StatusBar as NativeStatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Animated, Easing, Image, Linking, Modal, PanResponder, Platform, Pressable, SafeAreaView, ScrollView, StatusBar as NativeStatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -132,59 +132,6 @@ const startStyles = StyleSheet.create({
 
 const contentCacheKey = 'cvsu-published-content-v1';
 const contentServer = process.env.EXPO_PUBLIC_ADMISSION_CONTENT_URL;
-const installationKey = 'cvsu-installation-id';
-const installationCheckInKey = 'cvsu-installation-last-check-in';
-const checkInInterval = 24 * 60 * 60 * 1000;
-
-function useInstallationCheckIn() {
-  useEffect(() => {
-    if (Platform.OS === 'web' || !contentServer) return;
-    const endpoint = contentServer.replace(/\/api\/content(?:[?#].*)?$/, '/api/installations/check-in');
-    if (endpoint === contentServer) return;
-    let request = null;
-
-    async function checkIn() {
-      if (request) return;
-      const controller = new AbortController();
-      request = controller;
-      const timer = setTimeout(() => controller.abort(), 75000);
-      try {
-        const lastCheckIn = Number(await AsyncStorage.getItem(installationCheckInKey));
-        if (Date.now() - lastCheckIn < checkInInterval) return;
-        let installationId = await AsyncStorage.getItem(installationKey);
-        if (!installationId) {
-          installationId = Array.from({ length: 4 }, () =>
-            Math.floor(Math.random() * 0x100000000).toString(16).padStart(8, '0')
-          ).join('');
-          await AsyncStorage.setItem(installationKey, installationId);
-        }
-        if (controller.signal.aborted) return;
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ installationId }),
-          signal: controller.signal
-        });
-        if (response.status === 204) await AsyncStorage.setItem(installationCheckInKey, String(Date.now()));
-      } catch {
-        // The guide remains usable when a check-in cannot be sent.
-      } finally {
-        clearTimeout(timer);
-        request = null;
-      }
-    }
-
-    checkIn();
-    const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active') checkIn();
-    });
-    return () => {
-      subscription.remove();
-      request?.abort();
-    };
-  }, []);
-}
-
 async function fetchAdmissionContent(controller) {
   const timer = setTimeout(() => controller.abort(), 3500);
   try {

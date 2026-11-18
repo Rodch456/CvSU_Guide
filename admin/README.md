@@ -22,8 +22,6 @@ When the server first opens a published file from before program eligibility, it
 
 In **Campus trivia**, edit the facts shown in FAQs and publish the changes to send them to applicants. The campus attire and uniform guide is bundled with the applicant app.
 
-**Active app installations** counts distinct native app installations that checked in during the last 30 days. A check-in contains a randomly generated installation identifier, with no applicant profile fields. Web sessions and older app releases do not check in. A disconnected or uninstalled app stops counting after its last check-in ages out. Use **Reload** on the dashboard to refresh the count. The check-in file is stored next to `ADMISSION_DATA_FILE`, so it uses the same persistent volume.
-
 ## Run locally
 
 Use Node.js 20.12 or newer. Set `ADMISSION_ADMIN_USERNAME` and `ADMISSION_ADMIN_PASSWORD` in the server environment or in the ignored `admin/.env.local` file. The username defaults to `Admin`. To create a password from PowerShell and start the server, run:

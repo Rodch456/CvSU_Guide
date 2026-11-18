@@ -139,12 +139,7 @@ p { color: var(--muted); line-height: 1.55; }
 }
 .panel .panel, details details { background: #f8faf7; }
 
-.dashboard-metrics {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 310px), 1fr));
-  gap: 14px;
-}
-.dashboard-programs, .dashboard-installations {
+.dashboard-programs {
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -155,7 +150,6 @@ p { color: var(--muted); line-height: 1.55; }
   background: linear-gradient(115deg, #143b2d, #215b43);
   color: #fff;
 }
-.dashboard-installations { background: #eef5ed; border-color: var(--line); color: #172a21; }
 .dashboard-programs::after {
   position: absolute;
   z-index: -1;
@@ -167,10 +161,9 @@ p { color: var(--muted); line-height: 1.55; }
   box-shadow: 0 0 0 30px #dae9db0e, 0 0 0 64px #dae9db0b, 0 0 0 98px #dae9db08;
   content: "";
 }
-.dashboard-metrics h2 { font-size: clamp(1.05rem, 2vw, 1.35rem); }
+.dashboard-programs h2 { font-size: clamp(1.05rem, 2vw, 1.35rem); }
 .dashboard-programs p { max-width: 47ch; margin-top: 14px; color: #e4eee7; }
-.dashboard-installations p { max-width: 40ch; margin-top: 14px; }
-.dashboard-metrics .dashboard-count {
+.dashboard-programs .dashboard-count {
   margin-top: 10px;
   color: #f5d784;
   font-size: clamp(3.8rem, 9vw, 6.7rem);
@@ -179,8 +172,7 @@ p { color: var(--muted); line-height: 1.55; }
   line-height: .98;
   font-variant-numeric: tabular-nums;
 }
-.dashboard-installations .dashboard-count { color: var(--green); }
-.dashboard-metrics + h2 { margin-top: 12px; }
+.dashboard-programs + h2 { margin-top: 12px; }
 .dashboard-shortcuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .dashboard-shortcuts button {
   display: flex;
