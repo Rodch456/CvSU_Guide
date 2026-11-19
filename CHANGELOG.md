@@ -8,6 +8,12 @@ This project uses [Semantic Versioning](https://semver.org/):
 - **Minor** (`1.1.0`): new backward-compatible features or pages
 - **Major** (`2.0.0`): large redesigns or incompatible changes
 
+## [2.2.0] - 2026-11-19
+
+- Remove active app installation tracking from the admin dashboard and applicant app.
+- Fix the blank startup screen caused by a leftover installation tracking call.
+- Show the examination marker at Rolle Hall and separate the overlapping CCJ and Infirmary markers.
+
 ## [2.1.0] - 2026-11-18
 
 ### Added

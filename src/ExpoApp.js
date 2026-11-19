@@ -215,7 +215,6 @@ function useAdmissionContent() {
 }
 
 export default function ExpoApp() {
-  useInstallationCheckIn();
   const { content, ready: contentReady, contentUpdate } = useAdmissionContent();
   const [step, setStep] = useState(1), [profile, setProfile] = useState(''), [track, setTrack] = useState(''), [program, setProgram] = useState(''), [query, setQuery] = useState('');
   const [profilePhoto, setProfilePhoto] = useState(null);
@@ -1065,8 +1064,8 @@ const guideRoutes = {
     0: [{ x: 26, y: 80 }, { x: 20, y: 67 }, { x: 17, y: 67 }]
   },
   rolle: {
-    // Set the confirmed destination as { x, y }, or place its pin in the admin editor.
-    destination: null,
+    // Center of the highlighted Rolle Hall building on its campus map.
+    destination: { x: 51.5, y: 32.5 },
     // Gate routes list their points in walking order. The destination pin is appended.
     2: [{ x: 24, y: 52 }, { x: 22, y: 42 }, { x: 50, y: 39 }],
     3: [{ x: 55, y: 78 }, { x: 77, y: 77 }, { x: 81, y: 74 }, { x: 68, y: 38 },{ x: 50, y: 39 }],
@@ -1263,8 +1262,13 @@ function MapMarkers({ examVenue, selectedNumber, onSelect, mapSize }) {
   const alternate = examVenue && examVenue.id !== 'icon';
   const numbers = alternate && !examVenue.pin ? [1, 3] : [1, 2, 3];
   function positionFor(number) {
+    const isCcjMap = examVenue?.id === 'ccj';
+    if (isCcjMap && number === 3) {
+      return markerPoint({ ...mapMarkerPositions[3], top: '69%' }, mapSize);
+    }
     if (number !== 2 || !alternate) return markerPoint(mapMarkerPositions[number], mapSize);
-    const point = containedMapPoint(examVenue.pin, mapSize);
+    const pin = examVenue.pin;
+    const point = containedMapPoint(isCcjMap ? { ...pin, y: Math.max(0, pin.y - 4) } : pin, mapSize);
     return { left: point.x, top: point.y };
   }
   return <View pointerEvents="box-none" style={[mapStyles.mapMarkerLayer, { width: mapSize.width, height: mapSize.height }]}>{numbers.map((number) => <Pressable key={number} accessibilityLabel={`Show location ${number}`} onPress={() => onSelect(number - 1)} style={[mapStyles.mapMarker, positionFor(number), number === selectedNumber && mapStyles.mapMarkerSelected]}><Text style={mapStyles.mapMarkerText}>{number}</Text></Pressable>)}</View>;

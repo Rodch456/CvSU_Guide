@@ -2,12 +2,12 @@
   "expo": {
     "name": "CvSU VAG",
     "slug": "cvsu-admission-guide",
-    "version": "2.1.0",
+    "version": "2.2.0",
     "orientation": "portrait",
     "icon": "./assets/AppIcon.png",
     "android": {
       "package": "ph.cvsu.admissionguide",
-      "versionCode": 15
+      "versionCode": 16
     },
     "userInterfaceStyle": "light",
     "assetBundlePatterns": [
